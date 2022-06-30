@@ -20,6 +20,16 @@ const (
 
 var segmentEnd = []byte{80, 00}
 
+func PgsToSrt(pgs []byte) []byte {
+	ts := generateTimestamps(pgs)
+	srt := generateSrt(ts)
+	var output string
+	for _, s := range srt {
+		output += s
+	}
+	return []byte(output)
+}
+
 func generateTimestamps(pgs []byte) []int {
 	var output []int
 	i := 0

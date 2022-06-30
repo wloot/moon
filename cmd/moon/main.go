@@ -6,6 +6,7 @@ import (
 	"moon/pkg/api/emby"
 	"moon/pkg/charset"
 	"moon/pkg/ffmpeg"
+	"moon/pkg/pgstosrt"
 	"moon/pkg/provider/zimuku"
 	"os"
 	"os/exec"
@@ -189,6 +190,9 @@ func main() {
 				}
 				subData, err := ffmpeg.ExtractSubtitle(v.Path, bestSub)
 				if err == nil {
+					if bestSub.CodecName == "hdmv_pgs_subtitle" {
+						subData = pgstosrt.PgsToSrt(subData)
+					}
 					name := strconv.Itoa(int(time.Now().Unix())) + "." + ffmpeg.SubtitleCodecToFormat[bestSub.CodecName]
 					err = os.WriteFile(filepath.Join(os.TempDir()), subData, 0644)
 					if err == nil {
