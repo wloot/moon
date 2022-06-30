@@ -43,7 +43,10 @@ func main() {
 	emby := emby.New(SETTINGS_emby_url, SETTINGS_emby_key)
 	zimuku := zimuku.New()
 
-	for _, v := range emby.MovieItems(SETTINGS_emby_importcount) {
+	for _, id := range emby.RecentMovie(SETTINGS_emby_importcount) {
+		emby.Refresh(id, true)
+		time.Sleep(10)
+		v := emby.MovieInfo(id)
 		for old, new := range SETTNGS_videopath_map {
 			if strings.HasPrefix(v.Path, old) {
 				v.Path = new + v.Path[len(old):]
@@ -153,7 +156,7 @@ func main() {
 			continue
 		}
 
-		time.Sleep(5)
+		emby.Refresh(id, false)
 		_, err = exec.LookPath("ffsubsync")
 		if err == nil {
 			cmd := exec.Command("ffsubsync", "'"+v.Path+"' -i '"+name+"' --overwrite-input")

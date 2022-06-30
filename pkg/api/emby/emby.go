@@ -69,29 +69,48 @@ func (e *Emby) getJson(url string, v interface{}) error {
 	return nil
 }
 
-func (e *Emby) MovieItems(num int) []video.Movie {
+func (e *Emby) MovieInfo(id string) video.Movie {
+	var info videoInfo
+	e.getJson(e.buildURL("/LiveTv/Programs/"+id), &info)
+
+	video := video.Movie{
+		EmbyId: id,
+		Titles: []string{info.Name, info.OriginalTitle},
+		TmdbId: info.ProviderIds.Tmdb,
+		ImdbId: info.ProviderIds.Imdb,
+		Path:   info.Path,
+		Year:   info.ProductionYear,
+	}
+	video.Titles = []string{info.Name}
+	if info.OriginalTitle != info.Name {
+		video.Titles = append(video.Titles, info.OriginalTitle)
+	}
+
+	return video
+}
+
+func (e *Emby) RecentMovie(num int) []string {
 	var list videoList
 	e.getJson(e.buildURL("/Items?Limit="+strconv.Itoa(num)+"&IncludeItemTypes=Movie&SortBy=DateCreated&SortOrder=Descending&Recursive=true"), &list)
 
-	var result []video.Movie
+	var result []string
 	for _, v := range list.Items {
-		var info videoInfo
-		e.getJson(e.buildURL("/LiveTv/Programs/"+v.Id), &info)
-
-		video := video.Movie{
-			EmbyId: v.Id,
-			Titles: []string{info.Name, info.OriginalTitle},
-			TmdbId: info.ProviderIds.Tmdb,
-			ImdbId: info.ProviderIds.Imdb,
-			Path:   info.Path,
-			Year:   info.ProductionYear,
-		}
-		video.Titles = []string{info.Name}
-		if info.OriginalTitle != info.Name {
-			video.Titles = append(video.Titles, info.OriginalTitle)
-		}
-		result = append(result, video)
+		result = append(result, v.Id)
 	}
-
 	return result
+}
+
+func (e *Emby) Refresh(id string, replace bool) {
+	url := "/Items/" + id + "/Refresh?Recursive=true&ImageRefreshMode=Default&ReplaceAllImages=false&ReplaceAllMetadata=false"
+	if replace == true {
+		url += "&MetadataRefreshMode=FullRefresh&ReplaceAllMetadata=true"
+	} else {
+		url += "&MetadataRefreshMode=Default&ReplaceAllMetadata=false"
+	}
+	url = e.buildURL(url)
+	resp, err := e.client.Get(url)
+	if err != nil {
+		return
+	}
+	resp.Body.Close()
 }
