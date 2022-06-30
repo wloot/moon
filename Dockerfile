@@ -1,12 +1,14 @@
 FROM golang AS go
 
-WORKDIR /rod
-COPY . /rod
-RUN go build ./cmd/moon
+WORKDIR /moon
+COPY . /moon
+RUN go build ./cmd/moon && ls -l
 
 
 FROM ubuntu:bionic
-RUN apt-get update && apt-get install --no-install-recommends -y \
+
+RUN apt-get update \
+    && apt-get install --no-install-recommends -y \
     libnss3 \
     libxss1 \
     libasound2 \
@@ -17,9 +19,13 @@ RUN apt-get update && apt-get install --no-install-recommends -y \
     fonts-liberation fonts-noto-color-emoji fonts-noto-cjk \
     tzdata \
     dumb-init \
-    xvfb && rm -rf /var/lib/apt/lists/*
+    xvfb \
+    python3 \
+    python3-pip \ 
+    && rm -rf /var/lib/apt/lists/* \
+    && pip3 install ffsubsync
 
-COPY --from=go /rod/rod-manager /usr/bin/
+COPY --from=go /moon/moon /usr/bin/
 
 ENTRYPOINT ["dumb-init", "--"]
-CMD rod-manager
+CMD moon
