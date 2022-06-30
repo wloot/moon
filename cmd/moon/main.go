@@ -159,7 +159,14 @@ func main() {
 		_, err = exec.LookPath("ffsubsync")
 		if err == nil {
 			var extSub string
-			streams, _ := ffmpeg.ProbeVideo(v.Path)
+			print("we are ffmpeg.ProbeVideo() ", v.Path, "\n")
+			streams, err := ffmpeg.ProbeVideo(v.Path)
+			if err != nil {
+				print("ffmpeg.ProbeVideo() err:", err.Error(), "\n")
+			}
+			for i := range streams {
+				print("stream%d: %v", i, streams[i])
+			}
 			for i := len(streams) - 1; i >= 0; i-- {
 				ok := streams[i].CodecType == "subtitle"
 				if ok == true {
