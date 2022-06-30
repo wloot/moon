@@ -16,8 +16,7 @@ RUN apt-get update && apt-get install --no-install-recommends -y \
     ca-certificates \
     fonts-liberation fonts-noto-color-emoji fonts-noto-cjk \
     tzdatadumb-init \
-    xvfb &&
-    rm -rf /var/lib/apt/lists/*
+    xvfb && rm -rf /var/lib/apt/lists/*
 
 COPY --from=go /rod/rod-manager /usr/bin/
 
