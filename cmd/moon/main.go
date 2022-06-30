@@ -227,7 +227,7 @@ func main() {
 			if extSub != "" {
 				cmdArg = []string{extSub, "-i", name, "--overwrite-input"}
 			}
-			cmd := exec.Command("/Users/wloot/Library/Python/3.8/bin/ffsubsync", cmdArg...)
+			cmd := exec.Command("ffsubsync", cmdArg...)
 			cmd.Stdout = os.Stdout
 			cmd.Stderr = os.Stderr
 			cmd.Run()
