@@ -19,7 +19,6 @@ import (
 
 	"github.com/abadojack/whatlanggo"
 	"github.com/asticode/go-astisub"
-	"github.com/go-rod/rod/lib/utils"
 	"github.com/mholt/archiver/v4"
 )
 
@@ -39,6 +38,7 @@ var SETTINGS_emby_key string = "fe1a0f6c143043e98a1f3099bfe0a3a8"
 var SETTINGS_emby_importcount int = 100
 
 func main() {
+start:
 	emby := emby.New(SETTINGS_emby_url, SETTINGS_emby_key)
 	zimuku := zimuku.New()
 
@@ -218,5 +218,6 @@ func main() {
 			}
 		}
 	}
-	utils.Pause()
+	time.Sleep(6 * time.Hour)
+	goto start
 }
