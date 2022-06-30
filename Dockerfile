@@ -34,14 +34,14 @@ COPY --from=go /moon/moon /usr/bin/
 
 ARG S6_OVERLAY_VERSION=3.1.0.1
 ADD https://github.com/just-containers/s6-overlay/releases/download/v${S6_OVERLAY_VERSION}/s6-overlay-noarch.tar.xz /tmp
-RUN tar -C / -Jxpf /tmp/s6-overlay-noarch.tar.xz
+RUN tar -C / -Jxpf /tmp/s6-overlay-noarch.tar.xz && rm /tmp/s6-overlay-noarch.tar.xz
 ADD https://github.com/just-containers/s6-overlay/releases/download/v${S6_OVERLAY_VERSION}/s6-overlay-x86_64.tar.xz /tmp
-RUN tar -C / -Jxpf /tmp/s6-overlay-x86_64.tar.xz
+RUN tar -C / -Jxpf /tmp/s6-overlay-x86_64.tar.xz && rm /tmp/s6-overlay-x86_64.tar.xz
 
 ENV TZ=Asia/Shanghai \
     PUID=1000 \
     PGID=1000
 ENTRYPOINT ["/init"]
 RUN mkdir -p /etc/services.d/moon && printf \
-    '#!/command/with-contenv bash\nchown -R "${PUID}:${PGID}" /root\nexec s6-setuidgid "${PUID}:${PGID}" moon' \
+    '#!/command/with-contenv sh\nchown -R "${PUID}:${PGID}" /root\nmkdir /config\ncd /config\nexec s6-setuidgid "${PUID}:${PGID}" moon' \
     > /etc/services.d/moon/run && chmod +x /etc/services.d/moon/run
