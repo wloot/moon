@@ -2,7 +2,6 @@ package main
 
 import (
 	"bytes"
-	"fmt"
 	"io/fs"
 	"moon/pkg/api/emby"
 	"moon/pkg/charset"
@@ -55,6 +54,7 @@ func main() {
 				v.Path = new + v.Path[len(old):]
 			}
 		}
+
 		subFiles := zimuku.SearchMovie(v)
 		var subSorted []Subinfo
 		for _, f := range subFiles {
@@ -163,14 +163,7 @@ func main() {
 		_, err = exec.LookPath("ffsubsync")
 		if err == nil || true {
 			var extSub string
-			print("we are ffmpeg.ProbeVideo() ", v.Path, "\n")
-			streams, err := ffmpeg.ProbeVideo(v.Path)
-			if err != nil {
-				print("ffmpeg.ProbeVideo() err:", err.Error(), "\n")
-			}
-			for i := range streams {
-				fmt.Printf("0 stream%d: %v\n", i, streams[i])
-			}
+			streams, _ := ffmpeg.ProbeVideo(v.Path)
 			for i := len(streams) - 1; i >= 0; i-- {
 				ok := streams[i].CodecType == "subtitle"
 				if ok == true {
@@ -180,18 +173,12 @@ func main() {
 					streams = append(streams[:i], streams[i+1:]...)
 				}
 			}
-			for i := range streams {
-				fmt.Printf("1 stream%d: %v\n", i, streams[i])
-			}
 			if len(streams) > 0 {
 				bestSub := streams[0]
 				for i := len(streams) - 1; i >= 0; i-- {
 					if streams[i].CodecName == "hdmv_pgs_subtitle" {
 						streams = append(streams[:i], streams[i+1:]...)
 					}
-				}
-				for i := range streams {
-					fmt.Printf("2 stream%d: %v\n", i, streams[i])
 				}
 				if len(streams) > 0 {
 					bestSub = streams[0]
@@ -202,30 +189,20 @@ func main() {
 						streams = append(streams[:i], streams[i+1:]...)
 					}
 				}
-				for i := range streams {
-					fmt.Printf("3 stream%d: %v\n", i, streams[i])
-				}
 				if len(streams) > 0 {
 					bestSub = streams[0]
 				}
-				fmt.Printf("bestSub: %v\n", bestSub)
 				subData, err := ffmpeg.ExtractSubtitle(v.Path, bestSub)
 				if err == nil {
-					fmt.Printf("subdata %v\n", string(subData))
 					if bestSub.CodecName == "hdmv_pgs_subtitle" {
 						subData = pgstosrt.PgsToSrt(subData)
-						fmt.Printf("subdata2 %v\n", string(subData))
 					}
 					name := strconv.Itoa(int(time.Now().Unix())) + "." + ffmpeg.SubtitleCodecToFormat[bestSub.CodecName]
 					name = filepath.Join(os.TempDir(), name)
 					err = os.WriteFile(name, subData, 0644)
 					if err == nil {
 						extSub = name
-					} else {
-						fmt.Printf("os.WriteFile err: %v\n", err)
 					}
-				} else {
-					fmt.Printf("ffmpeg.ExtractSubtitle err: %v\n", err)
 				}
 			}
 			cmdArg := []string{v.Path, "-i", name, "--overwrite-input", "--reference-stream", "a:0"}
@@ -236,10 +213,9 @@ func main() {
 			cmd.Stdout = os.Stdout
 			cmd.Stderr = os.Stderr
 			cmd.Run()
-			print(extSub)
-			//if extSub != "" {
-			//	os.Remove(extSub)
-			//}
+			if extSub != "" {
+				os.Remove(extSub)
+			}
 		}
 	}
 	utils.Pause()

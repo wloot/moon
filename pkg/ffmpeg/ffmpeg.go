@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"os/exec"
 	"strconv"
-	"strings"
 )
 
 var SubtitleCodecToFormat map[string]string = map[string]string{
@@ -32,23 +31,18 @@ type ffprobeInfo struct {
 }
 
 func ProbeVideo(path string) ([]StreamInfo, error) {
-	const args = "-v quiet -print_format json -show_streams"
-	argExec := strings.Fields(args)
-	argExec = append(argExec, path)
-	cmd := exec.Command("ffprobe", argExec...)
+	cmd := exec.Command("ffprobe", "-v", "quiet", "-print_format", "json", "-show_streams", path)
 	buf := bytes.NewBuffer(nil)
 	cmd.Stdout = buf
 	err := cmd.Run()
 	if err != nil {
 		return []StreamInfo{}, err
 	}
-
 	var r ffprobeInfo
 	err = json.Unmarshal(buf.Bytes(), &r)
 	if err != nil {
 		return []StreamInfo{}, err
 	}
-
 	return r.Streams, nil
 }
 
@@ -61,8 +55,5 @@ func ExtractSubtitle(path string, info StreamInfo) ([]byte, error) {
 	if err != nil {
 		return []byte{}, err
 	}
-
 	return buf.Bytes(), nil
 }
-
-//ffmpeg -i '/gd/电影/2022/Firestarter (2022)/Firestarter (2022) [tmdbid=532710][Bluray-1080p][DTS 5.1][x265]-ADE.mkv' -map 0:2 -c copy 1.sup
