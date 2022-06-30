@@ -217,7 +217,8 @@ func main() {
 						fmt.Printf("subdata2 %v\n", string(subData))
 					}
 					name := strconv.Itoa(int(time.Now().Unix())) + "." + ffmpeg.SubtitleCodecToFormat[bestSub.CodecName]
-					err = os.WriteFile(filepath.Join(os.TempDir(), name), subData, 0644)
+					name = filepath.Join(os.TempDir(), name)
+					err = os.WriteFile(name, subData, 0644)
 					if err == nil {
 						extSub = name
 					} else {
