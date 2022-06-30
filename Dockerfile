@@ -26,6 +26,7 @@ RUN apt-get update \
     python3-wheel \
     gcc \
     ffmpeg \
+    xz-utils \
     && rm -rf /var/lib/apt/lists/* \
     && pip3 install ffsubsync
 
