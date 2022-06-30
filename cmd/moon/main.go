@@ -4,9 +4,9 @@ import (
 	"bytes"
 	"io/fs"
 	"io/ioutil"
-	"log"
 	"moon/pkg/api/emby"
 	"moon/pkg/charset"
+	"moon/pkg/ffmpeg"
 	"moon/pkg/provider/zimuku"
 	"os"
 	"os/exec"
@@ -149,7 +149,7 @@ func main() {
 		})
 
 		name := v.Path
-		name = name[0:len(name)-len(filepath.Ext(name))] + ".zh-cn" + filepath.Ext(subSorted[0].name)
+		name = name[:len(name)-len(filepath.Ext(name))] + ".zh-cn" + filepath.Ext(subSorted[0].name)
 		err := ioutil.WriteFile(name, subSorted[0].data, 0644)
 		if err != nil {
 			print("failed to write sub file\n")
@@ -159,10 +159,38 @@ func main() {
 		emby.Refresh(id, false)
 		_, err = exec.LookPath("ffsubsync")
 		if err == nil {
+			streams, _ := ffmpeg.ProbeVideo(v.Path)
+			for i := len(streams) - 1; i >= 0; i-- {
+				if streams[i].CodecType != "subtitle" {
+					streams = append(streams[:i], streams[i+1:]...)
+				}
+			}
+			if len(streams) > 0 {
+				bestSub := streams[0]
+				for i := len(streams) - 1; i >= 0; i-- {
+					if streams[i].CodecName == "hdmv_pgs_subtitle" {
+						streams = append(streams[:i], streams[i+1:]...)
+					}
+				}
+				if len(streams) > 0 {
+					bestSub = streams[0]
+				}
+				for i := len(streams) - 1; i >= 0; i-- {
+					m, _ := regexp.MatchString("\bSDH\b", streams[i].Tags.Title)
+					if m == true {
+						streams = append(streams[:i], streams[i+1:]...)
+					}
+				}
+				if len(streams) > 0 {
+					bestSub = streams[0]
+				}
+				// TODO
+				print(bestSub.CodecName)
+			}
 			cmd := exec.Command("ffsubsync", v.Path, "-i", name, "--overwrite-input")
 			cmd.Stdout = os.Stdout
 			cmd.Stderr = os.Stderr
-			log.Println(cmd.Run())
+			cmd.Run()
 		}
 	}
 	utils.Pause()
