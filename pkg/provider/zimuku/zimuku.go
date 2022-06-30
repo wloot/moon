@@ -41,6 +41,12 @@ func (z *Zimuku) SearchMovie(movie video.Movie) []string {
 		for _, t := range movie.Titles {
 			keywords = append(keywords, t+" "+strconv.Itoa(movie.Year))
 		}
+		// 最后一个是原产地名称
+		if len(movie.Titles) > 1 {
+			// year offset +-1
+			keywords = append(keywords, movie.Titles[len(movie.Titles)-1]+" "+strconv.Itoa(movie.Year+1))
+			keywords = append(keywords, movie.Titles[len(movie.Titles)-1]+" "+strconv.Itoa(movie.Year-1))
+		}
 	}
 
 	var page *rawRod.Page
@@ -133,6 +139,7 @@ func (z *Zimuku) SearchMovie(movie video.Movie) []string {
 
 func (z *Zimuku) searchMainPage(keyword string) (*rawRod.Page, error) {
 	page := z.browser.MustPage("https://zimuku.org/")
+	page.WaitElementsMoreThan("button", 0) // if first access
 	// 搜索框输入
 	page.MustElement("body > div.navbar.navbar-inverse.navbar-static-top > div > div.navbar-header > div > form > div > input").MustInput(keyword)
 	// 搜索按钮
