@@ -2,7 +2,7 @@ FROM golang AS go
 
 WORKDIR /moon
 COPY . /moon
-RUN go build ./cmd/moon && ls -l
+RUN go build ./cmd/moon
 
 
 FROM ubuntu:bionic
@@ -21,7 +21,8 @@ RUN apt-get update \
     dumb-init \
     xvfb \
     python3 \
-    python3-pip \ 
+    python3-pip \
+    python3-setuptools \
     && rm -rf /var/lib/apt/lists/* \
     && pip3 install ffsubsync
 
