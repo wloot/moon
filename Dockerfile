@@ -42,4 +42,6 @@ ENV TZ=Asia/Shanghai \
     PUID=1000 \
     PGID=1000
 ENTRYPOINT ["/init"]
-CMD ["s6-setuidgid", "\${PUID}:\${PGID}", "moon"]
+RUN mkdir /etc/services.d/moon && printf \
+    '#!/usr/bin/with-contenv bash\n chown -R "\${PUID}:\${PGID}" /root\n exec s6-setuidgid "\${PUID}:\${PGID}" moon' \
+    > /etc/services.d/moon/run && chmod +x /etc/services.d/moon/run
