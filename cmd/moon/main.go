@@ -152,14 +152,14 @@ func main() {
 		name = name[0:len(name)-len(filepath.Ext(name))] + ".zh-cn" + filepath.Ext(subSorted[0].name)
 		err := ioutil.WriteFile(name, subSorted[0].data, 0644)
 		if err != nil {
-			print(err, "\n")
+			print("failed to write sub file\n")
 			continue
 		}
 
 		emby.Refresh(id, false)
 		_, err = exec.LookPath("ffsubsync")
 		if err == nil {
-			cmd := exec.Command("ffsubsync", "'"+v.Path+"' -i '"+name+"' --overwrite-input")
+			cmd := exec.Command("ffsubsync", v.Path, "-i", name, "--overwrite-input")
 			cmd.Stdout = os.Stdout
 			cmd.Stderr = os.Stderr
 			log.Println(cmd.Run())
