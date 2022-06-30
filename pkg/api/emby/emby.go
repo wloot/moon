@@ -75,15 +75,14 @@ func (e *Emby) MovieInfo(id string) video.Movie {
 
 	video := video.Movie{
 		EmbyId: id,
-		Titles: []string{info.Name, info.OriginalTitle},
 		TmdbId: info.ProviderIds.Tmdb,
 		ImdbId: info.ProviderIds.Imdb,
 		Path:   info.Path,
 		Year:   info.ProductionYear,
 	}
-	video.Titles = []string{info.Name}
+	video.Titles = []string{info.OriginalTitle}
 	if info.OriginalTitle != info.Name {
-		video.Titles = append(video.Titles, info.OriginalTitle)
+		video.Titles = append(video.Titles, info.Name)
 	}
 
 	return video

@@ -2,9 +2,11 @@ package zimuku
 
 import (
 	"errors"
+	"fmt"
 	"moon/pkg/client/rod"
 	"moon/pkg/video"
 	"sort"
+	"time"
 
 	rawRod "github.com/go-rod/rod"
 
@@ -41,28 +43,41 @@ func (z *Zimuku) SearchMovie(movie video.Movie) []string {
 		for _, t := range movie.Titles {
 			keywords = append(keywords, t+" ("+strconv.Itoa(movie.Year)+")")
 		}
-		// 最后一个是原产地名称
-		if len(movie.Titles) > 1 {
-			// year offset +-1
-			keywords = append(keywords, movie.Titles[len(movie.Titles)-1]+" ("+strconv.Itoa(movie.Year+1)+")")
-			keywords = append(keywords, movie.Titles[len(movie.Titles)-1]+" ("+strconv.Itoa(movie.Year-1)+")")
-		}
+		// year offset +-1
+		keywords = append(keywords, movie.Titles[0]+" ("+strconv.Itoa(movie.Year+1)+")")
+		keywords = append(keywords, movie.Titles[0]+" ("+strconv.Itoa(movie.Year-1)+")")
 	}
 
 	var page *rawRod.Page
 	for _, k := range keywords {
-		print("zimuku: searching "+k, "\n")
+		fmt.Printf("zimuku: searching keyword %v\n", k)
 		var err error
 		page, err = z.searchMainPage(k)
-		if err == nil {
-			break
+		if err != nil {
+			fmt.Printf("zimuku: searching faild, %v\n", err)
+			continue
 		}
+		break
 	}
 	if page == nil {
+		fmt.Printf("zimuku: no detail page found, return\n")
 		return []string{}
 	}
 
-	page.WaitLoad()
+	for failed := false; true; {
+		err := page.Timeout(5 * time.Second).WaitLoad()
+		if err != nil {
+			if failed == true {
+				page.MustClose()
+				fmt.Printf("zimuku: detail page load failed, return\n")
+				return []string{}
+			}
+			page.Reload()
+			failed = true
+			continue
+		}
+		break
+	}
 	var subs []subInfo
 	for childid := 1; true; childid++ {
 		has, element, _ := page.Has("#subtb > tbody > tr:nth-child(" + strconv.Itoa(childid) + ")")
@@ -113,24 +128,29 @@ func (z *Zimuku) SearchMovie(movie video.Movie) []string {
 		if i >= downloadNumbers {
 			break
 		}
-		print("zimuku: downloading "+v.downloadURL, "\n")
-		wait := page.WaitOpen()
-		v.downloadElement.MustEval(`() => { this.target = "_blank" }`)
-		v.downloadElement.MustClick()
-		//v.downloadElement.MustEval(`() => { open(this.href, "_blank") }`)
-		page, _ := wait()
+		fmt.Printf("zimuku: downlaoding sub, %v\n", v)
+		err := rawRod.Try(func() {
+			wait := page.Timeout(5 * time.Second).MustWaitOpen()
+			v.downloadElement.MustEval(`() => { this.target = "_blank" }`)
+			v.downloadElement.MustClick()
+			page := wait()
 
-		element := page.MustElement("#down1")
-		element.MustEval(`() => { this.target = "" }`)
-		element.MustScrollIntoView()
-		page.Mouse.Scroll(0, 50/2, 1)
-		element.MustClick()
-		file := z.browser.HookDownload(func() {
-			page.MustElement("body > main > div > div > div > table > tbody > tr > td:nth-child(1) > div > ul > li:nth-child(5) > a").MustClick()
+			element := page.MustElement("#down1")
+			element.MustEval(`() => { this.target = "" }`)
+			element.MustScrollIntoView()
+			page.Mouse.Scroll(0, 50/2, 1)
+			element.MustClick()
+			file := z.browser.HookDownload(func() {
+				page.MustElement("body > main > div > div > div > table > tbody > tr > td:nth-child(1) > div > ul > li:nth-child(5) > a").MustClick()
+			})
+			page.MustClose()
+			if file != "" {
+				subFiles = append(subFiles, file)
+			}
 		})
-		page.MustClose()
-		if file != "" {
-			subFiles = append(subFiles, file)
+		if err != nil {
+			downloadNumbers += 1
+			fmt.Printf("zimuku: sub download failed, %v\n", err)
 		}
 	}
 	page.MustClose()
@@ -139,13 +159,21 @@ func (z *Zimuku) SearchMovie(movie video.Movie) []string {
 
 func (z *Zimuku) searchMainPage(keyword string) (*rawRod.Page, error) {
 	page := z.browser.MustPage("https://zimuku.org/")
-	page.WaitElementsMoreThan("button", 0) // if first access
+	err := page.Timeout(5*time.Second).WaitElementsMoreThan("button", 0) // if first access
+	if err != nil {
+		page.MustClose()
+		return nil, err
+	}
 	// 搜索框输入
 	page.MustElement("body > div.navbar.navbar-inverse.navbar-static-top > div > div.navbar-header > div > form > div > input").MustInput(keyword)
 	// 搜索按钮
 	page.MustElement("body > div.navbar.navbar-inverse.navbar-static-top > div > div.navbar-header > div > form > div > span > button").MustClick()
 
-	page.WaitLoad()
+	err = page.Timeout(5 * time.Second).WaitLoad()
+	if err != nil {
+		page.MustClose()
+		return nil, err
+	}
 	// 搜索结果页第一个结果
 	has, element, _ := page.Has("body > div.container > div > div > div.box.clearfix > div:nth-child(2) > div.litpic.hidden-xs > a")
 	if has == false {
