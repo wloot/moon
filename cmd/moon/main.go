@@ -45,7 +45,7 @@ func main() {
 
 	for _, id := range emby.RecentMovie(SETTINGS_emby_importcount) {
 		emby.Refresh(id, true)
-		time.Sleep(10)
+		time.Sleep(10 * time.Second)
 		v := emby.MovieInfo(id)
 		for old, new := range SETTNGS_videopath_map {
 			if strings.HasPrefix(v.Path, old) {
