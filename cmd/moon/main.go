@@ -156,7 +156,7 @@ func main() {
 		time.Sleep(5)
 		_, err = exec.LookPath("ffsubsync")
 		if err == nil {
-			cmd := exec.Command("ffsubsync '" + v.Path + "' -i '" + name + "' --overwrite-input")
+			cmd := exec.Command("ffsubsync", "'"+v.Path+"' -i '"+name+"' --overwrite-input")
 			cmd.Stdout = os.Stdout
 			cmd.Stderr = os.Stderr
 			log.Println(cmd.Run())
