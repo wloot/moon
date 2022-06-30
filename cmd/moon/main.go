@@ -32,7 +32,7 @@ type Subinfo struct {
 }
 
 var SETTNGS_videopath_map map[string]string = map[string]string{
-	"/gd/": "/Users/wloot/gd/",
+	"/gd/": "/gd-nocache/",
 }
 
 var SETTINGS_emby_url string = "http://play.charontv.com"
