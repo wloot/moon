@@ -4,8 +4,8 @@ WORKDIR /rod
 COPY . /rod
 RUN go build ./cmd/moon
 
-FROM ubuntu:bionic
 
+FROM ubuntu:bionic
 RUN apt-get update && apt-get install --no-install-recommends -y \
     libnss3 \
     libxss1 \
@@ -15,7 +15,8 @@ RUN apt-get update && apt-get install --no-install-recommends -y \
     libgbm1 \
     ca-certificates \
     fonts-liberation fonts-noto-color-emoji fonts-noto-cjk \
-    tzdatadumb-init \
+    tzdata \
+    dumb-init \
     xvfb && rm -rf /var/lib/apt/lists/*
 
 COPY --from=go /rod/rod-manager /usr/bin/
