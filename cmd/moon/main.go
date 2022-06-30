@@ -3,7 +3,6 @@ package main
 import (
 	"bytes"
 	"io/fs"
-	"io/ioutil"
 	"moon/pkg/api/emby"
 	"moon/pkg/charset"
 	"moon/pkg/ffmpeg"
@@ -13,6 +12,7 @@ import (
 	"path/filepath"
 	"regexp"
 	"sort"
+	"strconv"
 	"strings"
 	"time"
 
@@ -31,9 +31,7 @@ type Subinfo struct {
 	tc      bool
 }
 
-var SETTNGS_videopath_map map[string]string = map[string]string{
-	"/gd/": "/gd-nocache/",
-}
+var SETTNGS_videopath_map map[string]string = map[string]string{}
 
 var SETTINGS_emby_url string = "http://play.charontv.com"
 var SETTINGS_emby_key string = "fe1a0f6c143043e98a1f3099bfe0a3a8"
@@ -150,18 +148,23 @@ func main() {
 
 		name := v.Path
 		name = name[:len(name)-len(filepath.Ext(name))] + ".zh-cn" + filepath.Ext(subSorted[0].name)
-		err := ioutil.WriteFile(name, subSorted[0].data, 0644)
+		err := os.WriteFile(name, subSorted[0].data, 0644)
 		if err != nil {
-			print("failed to write sub file\n")
+			print("failed to write sub file: ", err.Error(), "\n")
 			continue
 		}
 
 		emby.Refresh(id, false)
 		_, err = exec.LookPath("ffsubsync")
 		if err == nil {
+			var extSub string
 			streams, _ := ffmpeg.ProbeVideo(v.Path)
 			for i := len(streams) - 1; i >= 0; i-- {
-				if streams[i].CodecType != "subtitle" {
+				ok := streams[i].CodecType == "subtitle"
+				if ok == true {
+					_, ok = ffmpeg.SubtitleCodecToFormat[streams[i].CodecName]
+				}
+				if ok == false {
 					streams = append(streams[:i], streams[i+1:]...)
 				}
 			}
@@ -184,13 +187,27 @@ func main() {
 				if len(streams) > 0 {
 					bestSub = streams[0]
 				}
-				// TODO
-				print(bestSub.CodecName)
+				subData, err := ffmpeg.ExtractSubtitle(v.Path, bestSub)
+				if err == nil {
+					name := strconv.Itoa(int(time.Now().Unix())) + "." + ffmpeg.SubtitleCodecToFormat[bestSub.CodecName]
+					err = os.WriteFile(filepath.Join(os.TempDir()), subData, 0644)
+					if err == nil {
+						extSub = name
+					}
+				}
 			}
-			cmd := exec.Command("ffsubsync", v.Path, "-i", name, "--overwrite-input")
+			cmdArg := []string{v.Path, "-i", name, "--overwrite-input", "--vad", "webrtc"}
+			if extSub != "" {
+				cmdArg = []string{extSub, "-i", name, "--overwrite-input"}
+			}
+			cmd := exec.Command("ffsubsync", cmdArg...)
 			cmd.Stdout = os.Stdout
 			cmd.Stderr = os.Stderr
 			cmd.Run()
+			print(extSub)
+			//if extSub != "" {
+			//	os.Remove(extSub)
+			//}
 		}
 	}
 	utils.Pause()

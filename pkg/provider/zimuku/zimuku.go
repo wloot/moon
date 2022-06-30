@@ -39,13 +39,13 @@ func (z *Zimuku) SearchMovie(movie video.Movie) []string {
 	}
 	if movie.Year != 0 {
 		for _, t := range movie.Titles {
-			keywords = append(keywords, t+" "+strconv.Itoa(movie.Year))
+			keywords = append(keywords, t+" ("+strconv.Itoa(movie.Year)+")")
 		}
 		// 最后一个是原产地名称
 		if len(movie.Titles) > 1 {
 			// year offset +-1
-			keywords = append(keywords, movie.Titles[len(movie.Titles)-1]+" "+strconv.Itoa(movie.Year+1))
-			keywords = append(keywords, movie.Titles[len(movie.Titles)-1]+" "+strconv.Itoa(movie.Year-1))
+			keywords = append(keywords, movie.Titles[len(movie.Titles)-1]+" ("+strconv.Itoa(movie.Year+1)+")")
+			keywords = append(keywords, movie.Titles[len(movie.Titles)-1]+" ("+strconv.Itoa(movie.Year-1)+")")
 		}
 	}
 

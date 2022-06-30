@@ -4,8 +4,18 @@ import (
 	"bytes"
 	"encoding/json"
 	"os/exec"
+	"strconv"
 	"strings"
 )
+
+var SubtitleCodecToFormat map[string]string = map[string]string{
+	"hdmv_pgs_subtitle": "sup",
+	//"dvd_subtitle": "microdvd",
+
+	"subrip": "srt",
+	"ass":    "ass",
+	"webvtt": "srt",
+}
 
 type StreamInfo struct {
 	Index     int    `json:"index"`
@@ -40,4 +50,17 @@ func ProbeVideo(path string) ([]StreamInfo, error) {
 	}
 
 	return r.Streams, nil
+}
+
+func ExtractSubtitle(path string, info StreamInfo) ([]byte, error) {
+	cmd := exec.Command("ffmpeg",
+		"-v", "quiet", "-map", "0:"+strconv.Itoa(info.Index), "-c", "copy", "-f", SubtitleCodecToFormat[info.CodecName], "-i", path, "-")
+	buf := bytes.NewBuffer(nil)
+	cmd.Stdout = buf
+	err := cmd.Run()
+	if err != nil {
+		return []byte{}, err
+	}
+
+	return buf.Bytes(), nil
 }
