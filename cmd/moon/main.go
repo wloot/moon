@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"fmt"
 	"io/fs"
 	"moon/pkg/api/emby"
 	"moon/pkg/charset"
@@ -165,7 +166,7 @@ func main() {
 				print("ffmpeg.ProbeVideo() err:", err.Error(), "\n")
 			}
 			for i := range streams {
-				print("stream%d: %v", i, streams[i])
+				fmt.Printf("stream%d: %v", i, streams[i])
 			}
 			for i := len(streams) - 1; i >= 0; i-- {
 				ok := streams[i].CodecType == "subtitle"
