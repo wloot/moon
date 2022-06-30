@@ -2,7 +2,6 @@ package main
 
 import (
 	"bytes"
-	"fmt"
 	"io/fs"
 	"io/ioutil"
 	"log"
@@ -81,7 +80,7 @@ func main() {
 				}
 
 				subSorted = append(subSorted, Subinfo{
-					//data: data,
+					data: data,
 					info: s,
 					name: d.Name(),
 				})
@@ -146,13 +145,12 @@ func main() {
 			return false
 		})
 
-		fmt.Printf("%+v\n", subSorted)
-
 		name := v.Path
 		name = name[0:len(name)-len(filepath.Ext(name))] + ".zh-cn" + filepath.Ext(subSorted[0].name)
 		err := ioutil.WriteFile(name, subSorted[0].data, 0644)
 		if err != nil {
 			print(err, "\n")
+			continue
 		}
 
 		time.Sleep(5)
