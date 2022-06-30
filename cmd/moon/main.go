@@ -33,7 +33,9 @@ type Subinfo struct {
 	tc      bool
 }
 
-var SETTNGS_videopath_map map[string]string = map[string]string{}
+var SETTNGS_videopath_map map[string]string = map[string]string{
+	"": "/users/wloot/",
+}
 
 var SETTINGS_emby_url string = "http://play.charontv.com"
 var SETTINGS_emby_key string = "fe1a0f6c143043e98a1f3099bfe0a3a8"
@@ -43,7 +45,10 @@ func main() {
 	emby := emby.New(SETTINGS_emby_url, SETTINGS_emby_key)
 	zimuku := zimuku.New()
 
-	for _, id := range emby.RecentMovie(SETTINGS_emby_importcount) {
+	for ii, id := range emby.RecentMovie(SETTINGS_emby_importcount) {
+		if ii == 0 {
+			continue
+		}
 		emby.Refresh(id, true)
 		time.Sleep(10 * time.Second)
 		v := emby.MovieInfo(id)
@@ -158,7 +163,7 @@ func main() {
 
 		emby.Refresh(id, false)
 		_, err = exec.LookPath("ffsubsync")
-		if err == nil {
+		if err == nil || true {
 			var extSub string
 			print("we are ffmpeg.ProbeVideo() ", v.Path, "\n")
 			streams, err := ffmpeg.ProbeVideo(v.Path)
@@ -166,7 +171,7 @@ func main() {
 				print("ffmpeg.ProbeVideo() err:", err.Error(), "\n")
 			}
 			for i := range streams {
-				fmt.Printf("stream%d: %v", i, streams[i])
+				fmt.Printf("0 stream%d: %v\n", i, streams[i])
 			}
 			for i := len(streams) - 1; i >= 0; i-- {
 				ok := streams[i].CodecType == "subtitle"
@@ -177,12 +182,18 @@ func main() {
 					streams = append(streams[:i], streams[i+1:]...)
 				}
 			}
+			for i := range streams {
+				fmt.Printf("1 stream%d: %v\n", i, streams[i])
+			}
 			if len(streams) > 0 {
 				bestSub := streams[0]
 				for i := len(streams) - 1; i >= 0; i-- {
 					if streams[i].CodecName == "hdmv_pgs_subtitle" {
 						streams = append(streams[:i], streams[i+1:]...)
 					}
+				}
+				for i := range streams {
+					fmt.Printf("2 stream%d: %v\n", i, streams[i])
 				}
 				if len(streams) > 0 {
 					bestSub = streams[0]
@@ -193,9 +204,13 @@ func main() {
 						streams = append(streams[:i], streams[i+1:]...)
 					}
 				}
+				for i := range streams {
+					fmt.Printf("3 stream%d: %v\n", i, streams[i])
+				}
 				if len(streams) > 0 {
 					bestSub = streams[0]
 				}
+				fmt.Printf("bestSub: %v\n", bestSub)
 				subData, err := ffmpeg.ExtractSubtitle(v.Path, bestSub)
 				if err == nil {
 					if bestSub.CodecName == "hdmv_pgs_subtitle" {
@@ -206,13 +221,15 @@ func main() {
 					if err == nil {
 						extSub = name
 					}
+				} else {
+					fmt.Printf("ffmpeg.ExtractSubtitle err: %v\n", err)
 				}
 			}
 			cmdArg := []string{v.Path, "-i", name, "--overwrite-input", "--vad", "webrtc"}
 			if extSub != "" {
 				cmdArg = []string{extSub, "-i", name, "--overwrite-input"}
 			}
-			cmd := exec.Command("ffsubsync", cmdArg...)
+			cmd := exec.Command("/Users/wloot/Library/Python/3.8/bin/ffsubsync", cmdArg...)
 			cmd.Stdout = os.Stdout
 			cmd.Stderr = os.Stderr
 			cmd.Run()

@@ -54,7 +54,7 @@ func ProbeVideo(path string) ([]StreamInfo, error) {
 
 func ExtractSubtitle(path string, info StreamInfo) ([]byte, error) {
 	cmd := exec.Command("ffmpeg",
-		"-v", "quiet", "-map", "0:"+strconv.Itoa(info.Index), "-c", "copy", "-f", SubtitleCodecToFormat[info.CodecName], "-i", path, "-")
+		"-v", "quiet", "-i", path, "-map", "0:"+strconv.Itoa(info.Index), "-c", "copy", "-f", SubtitleCodecToFormat[info.CodecName], "-")
 	buf := bytes.NewBuffer(nil)
 	cmd.Stdout = buf
 	err := cmd.Run()
