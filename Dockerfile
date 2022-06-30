@@ -5,7 +5,7 @@ COPY . /moon
 RUN go build ./cmd/moon
 
 
-FROM ubuntu:bionic
+FROM ubuntu:20.04
 
 RUN apt-get update \
     && apt-get install --no-install-recommends -y \
@@ -16,9 +16,6 @@ RUN apt-get update \
     libgtk-3-0 \
     libgbm1 \
     ca-certificates \
-    fonts-liberation fonts-noto-color-emoji fonts-noto-cjk \
-    tzdata \
-    xvfb \
     python3 \
     python3-pip \
     python3-setuptools \

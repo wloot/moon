@@ -8,6 +8,8 @@ import (
 	"strconv"
 )
 
+// Port https://github.com/boban-bmw/pgs-to-srt-ffsubsync
+
 const (
 	jumpPG          int = 2
 	jumpPTS         int = 4
