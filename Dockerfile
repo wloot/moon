@@ -30,5 +30,12 @@ RUN apt-get update \
 
 COPY --from=go /moon/moon /usr/bin/
 
-USER 1000
-CMD moon
+COPY --from=nevinee/s6-overlay:2.2.0.3-bin-is-softlink / /
+RUN mkdir /etc/services.d/moon && printf \
+    '#!/usr/bin/with-contenv bash\n exec s6-setuidgid \${PUID}:\${PGID} moon' \
+    > /etc/services.d/moon/run && chmod +x /etc/services.d/moon/run
+
+ENV TZ=Asia/Shanghai \
+    PUID=1000 \
+    PGID=1000
+ENTRYPOINT ["/init"]
