@@ -53,7 +53,7 @@ func (e *Emby) buildURL(path string) string {
 	return e.url + path + delimiter + "api_key=" + e.key
 }
 
-func (e *Emby) getJson(url string, v any) error {
+func (e *Emby) getJson(url string, v interface{}) error {
 	resp, err := e.client.Get(url)
 	if err != nil {
 		return err
