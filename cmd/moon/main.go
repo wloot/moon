@@ -211,13 +211,17 @@ func main() {
 				fmt.Printf("bestSub: %v\n", bestSub)
 				subData, err := ffmpeg.ExtractSubtitle(v.Path, bestSub)
 				if err == nil {
+					fmt.Printf("subdata %v\n", string(subData))
 					if bestSub.CodecName == "hdmv_pgs_subtitle" {
 						subData = pgstosrt.PgsToSrt(subData)
+						fmt.Printf("subdata2 %v\n", string(subData))
 					}
 					name := strconv.Itoa(int(time.Now().Unix())) + "." + ffmpeg.SubtitleCodecToFormat[bestSub.CodecName]
 					err = os.WriteFile(filepath.Join(os.TempDir()), subData, 0644)
 					if err == nil {
 						extSub = name
+					} else {
+						fmt.Printf("os.WriteFile err: %v\n", err)
 					}
 				} else {
 					fmt.Printf("ffmpeg.ExtractSubtitle err: %v\n", err)
