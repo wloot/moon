@@ -18,7 +18,6 @@ RUN apt-get update \
     ca-certificates \
     fonts-liberation fonts-noto-color-emoji fonts-noto-cjk \
     tzdata \
-    dumb-init \
     xvfb \
     python3 \
     python3-pip \
@@ -31,5 +30,5 @@ RUN apt-get update \
 
 COPY --from=go /moon/moon /usr/bin/
 
-ENTRYPOINT ["dumb-init", "--"]
+USER 1000
 CMD moon
