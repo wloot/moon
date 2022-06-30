@@ -36,7 +36,7 @@ var SETTNGS_videopath_map map[string]string = map[string]string{}
 
 var SETTINGS_emby_url string = "http://play.charontv.com"
 var SETTINGS_emby_key string = "fe1a0f6c143043e98a1f3099bfe0a3a8"
-var SETTINGS_emby_importcount int = 10
+var SETTINGS_emby_importcount int = 100
 
 func main() {
 	emby := emby.New(SETTINGS_emby_url, SETTINGS_emby_key)
