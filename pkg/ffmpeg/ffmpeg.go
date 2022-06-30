@@ -64,3 +64,5 @@ func ExtractSubtitle(path string, info StreamInfo) ([]byte, error) {
 
 	return buf.Bytes(), nil
 }
+
+//ffmpeg -i '/gd/电影/2022/Firestarter (2022)/Firestarter (2022) [tmdbid=532710][Bluray-1080p][DTS 5.1][x265]-ADE.mkv' -map 0:2 -c copy 1.sup

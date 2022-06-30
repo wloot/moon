@@ -228,7 +228,7 @@ func main() {
 					fmt.Printf("ffmpeg.ExtractSubtitle err: %v\n", err)
 				}
 			}
-			cmdArg := []string{v.Path, "-i", name, "--overwrite-input", "--vad", "webrtc"}
+			cmdArg := []string{v.Path, "-i", name, "--overwrite-input", "--reference-stream", "a:0"}
 			if extSub != "" {
 				cmdArg = []string{extSub, "-i", name, "--overwrite-input"}
 			}

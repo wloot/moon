@@ -18,7 +18,7 @@ const (
 	jumpSegmentSize int = 2
 )
 
-var segmentEnd = []byte{80, 00}
+var segmentEnd = []byte{0x80}
 
 func PgsToSrt(pgs []byte) []byte {
 	ts := generateTimestamps(pgs)
