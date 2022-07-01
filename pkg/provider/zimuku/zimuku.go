@@ -167,6 +167,7 @@ func (z *Zimuku) SearchMovie(movie emby.EmbyVideo) []string {
 			page.MustClose()
 			if file != "" {
 				if ext := filepath.Ext(file); ext == "" && maybeExt != "" {
+					fmt.Printf("zimuku: sub has no ext, use %v\n", maybeExt)
 					os.Rename(file, file+maybeExt)
 					file = file + maybeExt
 				}
