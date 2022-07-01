@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"fmt"
 	"io/fs"
 	"moon/pkg/api/emby"
 	"moon/pkg/charset"
@@ -73,6 +74,9 @@ start:
 	}
 
 	for i := range movieList {
+		if movieList[i].ProviderIds.Imdb != "tt13841850" {
+			continue
+		}
 		embyAPI.Refresh(movieList[i].Id, true)
 		time.Sleep(10 * time.Second)
 		v := embyAPI.MovieInfo(movieList[i].Id)
@@ -121,6 +125,7 @@ start:
 			})
 		}
 		if len(subSorted) == 0 {
+			fmt.Printf("total sub downloaded is 0\n")
 			continue
 		}
 
@@ -188,7 +193,7 @@ start:
 
 		embyAPI.Refresh(v.Id, false)
 		_, err = exec.LookPath("ffsubsync")
-		if err == nil || true {
+		if err == nil {
 			var extSub string
 			streams := make([]emby.EmbyVideoStream, len(v.MediaStreams))
 			copy(streams, v.MediaStreams)
