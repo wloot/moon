@@ -21,12 +21,14 @@ type videoList struct {
 }
 
 var SubtitleCodecToFormat map[string]string = map[string]string{
-	"pgssub": "sup",
+	"pgssub": "sup", // upper
 	"subrip": "srt",
 	"ass":    "ass",
+	//"mov_text": "jacosub",
+	//"dvdsub": "microdvd", // upper
 
-	"pgs": "sup",
 	"ssa": "ass",
+	"srt": "srt",
 	"vtt": "srt",
 }
 
