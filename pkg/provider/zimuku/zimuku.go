@@ -6,6 +6,8 @@ import (
 	"moon/pkg/api/emby"
 	"moon/pkg/client/rod"
 	"moon/pkg/config"
+	"os"
+	"path/filepath"
 	"sort"
 	"time"
 
@@ -137,9 +139,24 @@ func (z *Zimuku) SearchMovie(movie emby.EmbyVideo) []string {
 			v.downloadElement.MustClick()
 			page := wait()
 
+			var maybeExt string
+			has, el, _ := page.Has("body > div.container > div > div.col-md-12 > div > div.detail.prel > div.lside.prel > ul > li:nth-child(2) > span:nth-child(2)")
+			if has == true {
+				has, _, _ := page.Has("body > div.container > div > div.col-md-12 > div > div.detail.prel > div.lside.prel > ul > li:nth-child(2) > span:nth-child(3)")
+				if has == false {
+					text, _ := el.Text()
+					if text == "ASS/SSA" {
+						maybeExt = ".ass"
+					}
+					if text == "SRT" {
+						maybeExt = ".srt"
+					}
+				}
+			}
+
 			element := page.MustElement("#down1")
 			element.MustEval(`() => { this.target = "" }`)
-			if config.DEBUG {
+			if config.DEBUG && config.DEBUG_LOCAL {
 				element.MustScrollIntoView()
 				page.Mouse.Scroll(0, 50/2, 1)
 			}
@@ -149,6 +166,10 @@ func (z *Zimuku) SearchMovie(movie emby.EmbyVideo) []string {
 			})
 			page.MustClose()
 			if file != "" {
+				if ext := filepath.Ext(file); ext == "" && maybeExt != "" {
+					os.Rename(file, file+maybeExt)
+					file = file + maybeExt
+				}
 				subFiles = append(subFiles, file)
 			} else {
 				downloadNumbers += 1
@@ -166,7 +187,7 @@ func (z *Zimuku) SearchMovie(movie emby.EmbyVideo) []string {
 
 func (z *Zimuku) searchMainPage(keyword string) (*rawRod.Page, error) {
 	page := z.browser.MustPage("https://zimuku.org/")
-	err := page.Timeout(5*time.Second).WaitElementsMoreThan("button", 0) // if first access
+	err := page.Timeout(5*time.Second).WaitElementsMoreThan("button", 1) // if first access
 	if err != nil {
 		page.MustClose()
 		return nil, err

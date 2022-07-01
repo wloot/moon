@@ -22,13 +22,16 @@ var SETTINGS_rod_dir string = "rod"
 func New() *Rod {
 	l := launcher.New().
 		UserDataDir(filepath.Join(SETTINGS_rod_dir, "user-data"))
-	if config.DEBUG {
+	if config.DEBUG && config.DEBUG_LOCAL {
 		l = l.Headless(false)
 	}
 	url := l.MustLaunch()
 	rod := rod.New().ControlURL(url)
 	if config.DEBUG {
-		rod = rod.Trace(true).SlowMotion(2000 * time.Microsecond)
+		rod = rod.Trace(true)
+		if config.DEBUG_LOCAL {
+			rod = rod.SlowMotion(2000 * time.Microsecond)
+		}
 	}
 	return &Rod{
 		rod.MustConnect(),
@@ -56,11 +59,10 @@ func (r *Rod) HookDownload(action func()) string {
 	action()
 	info := wait()
 	if info != nil {
-		if info.SuggestedFilename == "download" {
-			print("oh fuck")
-			return ""
+		if info.SuggestedFilename != "download" {
+			os.Rename(filepath.Join(dir, info.GUID), filepath.Join(dir, info.SuggestedFilename))
+			return filepath.Join(dir, info.SuggestedFilename)
 		}
-		os.Rename(filepath.Join(dir, info.GUID), filepath.Join(dir, info.SuggestedFilename))
 		return filepath.Join(dir, info.GUID)
 	}
 	return ""
