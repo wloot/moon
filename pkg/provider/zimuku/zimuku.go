@@ -155,6 +155,7 @@ func (z *Zimuku) SearchMovie(movie emby.EmbyVideo) []string {
 
 	if len(subs) == 0 {
 		fmt.Printf("zimuku: no sub for now\n")
+		return []string{}
 	}
 
 	firstTime := subs[len(subs)-1].time
