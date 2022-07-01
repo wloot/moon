@@ -3,8 +3,8 @@ package zimuku
 import (
 	"errors"
 	"fmt"
+	"moon/pkg/api/emby"
 	"moon/pkg/client/rod"
-	"moon/pkg/video"
 	"sort"
 	"time"
 
@@ -34,18 +34,19 @@ func New() Zimuku {
 	}
 }
 
-func (z *Zimuku) SearchMovie(movie video.Movie) []string {
+func (z *Zimuku) SearchMovie(movie emby.EmbyVideo) []string {
 	var keywords []string
-	if movie.ImdbId != "" {
-		keywords = append(keywords, movie.ImdbId)
+	if movie.ProviderIds.Imdb != "" {
+		keywords = append(keywords, movie.ProviderIds.Imdb)
 	}
-	if movie.Year != 0 {
-		for _, t := range movie.Titles {
-			keywords = append(keywords, t+" ("+strconv.Itoa(movie.Year)+")")
+	if movie.ProductionYear != 0 {
+		keywords = append(keywords, movie.OriginalTitle+" ("+strconv.Itoa(movie.ProductionYear)+")")
+		if movie.OriginalTitle != movie.Name {
+			keywords = append(keywords, movie.Name+" ("+strconv.Itoa(movie.ProductionYear)+")")
 		}
 		// year offset +-1
-		keywords = append(keywords, movie.Titles[0]+" ("+strconv.Itoa(movie.Year+1)+")")
-		keywords = append(keywords, movie.Titles[0]+" ("+strconv.Itoa(movie.Year-1)+")")
+		keywords = append(keywords, movie.OriginalTitle+" ("+strconv.Itoa(movie.ProductionYear+1)+")")
+		keywords = append(keywords, movie.OriginalTitle+" ("+strconv.Itoa(movie.ProductionYear-1)+")")
 	}
 
 	var page *rawRod.Page

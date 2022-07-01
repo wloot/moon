@@ -35,20 +35,47 @@ var SETTNGS_videopath_map map[string]string = map[string]string{}
 
 var SETTINGS_emby_url string = "http://play.charontv.com"
 var SETTINGS_emby_key string = "fe1a0f6c143043e98a1f3099bfe0a3a8"
-var SETTINGS_emby_importcount int = 100
+var SETTINGS_emby_importcount int = 50
 
 func main() {
 start:
-	emby := emby.New(SETTINGS_emby_url, SETTINGS_emby_key)
+	embyAPI := emby.New(SETTINGS_emby_url, SETTINGS_emby_key)
 	zimuku := zimuku.New()
 
-	for ii, id := range emby.RecentMovie(SETTINGS_emby_importcount) {
-		if ii == 0 {
-			continue
+	var movieList []emby.EmbyVideo
+	for i := 0; len(movieList) < 50; i += 1 {
+		ids := embyAPI.RecentMovie(SETTINGS_emby_importcount/2, i*SETTINGS_emby_importcount/2)
+		for _, id := range ids {
+			v := embyAPI.MovieInfo(id)
+			if len(v.ProductionLocations) > 0 && v.ProductionLocations[0] == "China" {
+				continue
+			}
+			need := true
+			for _, stream := range v.MediaStreams {
+				if stream.Type == "Subtitle" &&
+					(stream.Language == "chs" || stream.Language == "chi" && stream.DisplayLanguage == "Chinese Simplified") {
+					if stream.IsExternal == false {
+						need = false
+						break
+					}
+					path := stream.Path[:len(stream.Path)-len(filepath.Ext(stream.Path))]
+					// Emby 自带的字幕下载
+					if strings.HasSuffix(path, ".zh-CN") == false {
+						need = false
+						break
+					}
+				}
+			}
+			if need == true {
+				movieList = append(movieList, v)
+			}
 		}
-		emby.Refresh(id, true)
+	}
+
+	for i := range movieList {
+		embyAPI.Refresh(movieList[i].Id, true)
 		time.Sleep(10 * time.Second)
-		v := emby.MovieInfo(id)
+		v := embyAPI.MovieInfo(movieList[i].Id)
 		for old, new := range SETTNGS_videopath_map {
 			if strings.HasPrefix(v.Path, old) {
 				v.Path = new + v.Path[len(old):]
@@ -159,15 +186,16 @@ start:
 			continue
 		}
 
-		emby.Refresh(id, false)
+		embyAPI.Refresh(v.Id, false)
 		_, err = exec.LookPath("ffsubsync")
 		if err == nil || true {
 			var extSub string
-			streams, _ := ffmpeg.ProbeVideo(v.Path)
+			streams := make([]emby.EmbyVideoStream, len(v.MediaStreams))
+			copy(streams, v.MediaStreams)
 			for i := len(streams) - 1; i >= 0; i-- {
-				ok := streams[i].CodecType == "subtitle"
+				ok := streams[i].Type == "Subtitle" && streams[i].IsExternal == false
 				if ok == true {
-					_, ok = ffmpeg.SubtitleCodecToFormat[streams[i].CodecName]
+					_, ok = emby.SubtitleCodecToFormat[strings.ToLower(streams[i].Codec)]
 				}
 				if ok == false {
 					streams = append(streams[:i], streams[i+1:]...)
@@ -176,7 +204,7 @@ start:
 			if len(streams) > 0 {
 				bestSub := streams[0]
 				for i := len(streams) - 1; i >= 0; i-- {
-					if streams[i].CodecName == "hdmv_pgs_subtitle" {
+					if strings.ToLower(streams[i].Codec) == "pgssub" {
 						streams = append(streams[:i], streams[i+1:]...)
 					}
 				}
@@ -184,7 +212,7 @@ start:
 					bestSub = streams[0]
 				}
 				for i := len(streams) - 1; i >= 0; i-- {
-					m, _ := regexp.MatchString("\bSDH\b", streams[i].Tags.Title)
+					m, _ := regexp.MatchString("\bSDH\b", streams[i].Title)
 					if m == true {
 						streams = append(streams[:i], streams[i+1:]...)
 					}
@@ -192,12 +220,12 @@ start:
 				if len(streams) > 0 {
 					bestSub = streams[0]
 				}
-				subData, err := ffmpeg.ExtractSubtitle(v.Path, bestSub)
+				subData, err := ffmpeg.ExtractSubtitle(v.Path, bestSub.Index, emby.SubtitleCodecToFormat[strings.ToLower(streams[i].Codec)])
 				if err == nil {
-					if bestSub.CodecName == "hdmv_pgs_subtitle" {
+					if strings.ToLower(streams[i].Codec) == "pgssub" {
 						subData = pgstosrt.PgsToSrt(subData)
 					}
-					name := strconv.Itoa(int(time.Now().Unix())) + "." + ffmpeg.SubtitleCodecToFormat[bestSub.CodecName]
+					name := strconv.Itoa(int(time.Now().Unix())) + "." + emby.SubtitleCodecToFormat[strings.ToLower(streams[i].Codec)]
 					name = filepath.Join(os.TempDir(), name)
 					err = os.WriteFile(name, subData, 0644)
 					if err == nil {

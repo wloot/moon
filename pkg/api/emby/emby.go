@@ -3,7 +3,6 @@ package emby
 import (
 	"encoding/json"
 	"io/ioutil"
-	"moon/pkg/video"
 	"net/http"
 	"strconv"
 	"strings"
@@ -21,7 +20,29 @@ type videoList struct {
 	} `json:"Items"`
 }
 
-type videoInfo struct {
+var SubtitleCodecToFormat map[string]string = map[string]string{
+	"pgssub": "sup",
+	"subrip": "srt",
+	"ass":    "ass",
+
+	"pgs": "sup",
+	"ssa": "ass",
+	"vtt": "srt",
+}
+
+type EmbyVideoStream struct {
+	Codec           string `json:"Codec"`
+	Language        string `json:"Language"`
+	DisplayLanguage string `json:"DisplayLanguage"`
+	Type            string `json:"Type"`
+	Title           string `json:"Title"`
+	IsExternal      bool   `json:"IsExternal"`
+	Index           int    `json:"Index"`
+	Path            string `json:"Path"`
+}
+
+type EmbyVideo struct {
+	Id            string `json:"Id"`
 	Name          string `json:"Name"`
 	OriginalTitle string `json:"OriginalTitle"`
 	Path          string `json:"Path"`
@@ -29,7 +50,9 @@ type videoInfo struct {
 		Tmdb string `json:"Tmdb"`
 		Imdb string `json:"Imdb"`
 	} `json:"ProviderIds"`
-	ProductionYear int `json:"ProductionYear"`
+	ProductionYear      int               `json:"ProductionYear"`
+	MediaStreams        []EmbyVideoStream `json:"MediaStreams"`
+	ProductionLocations []string          `json:"ProductionLocations"`
 }
 
 func New(url string, key string) *Emby {
@@ -69,28 +92,18 @@ func (e *Emby) getJson(url string, v interface{}) error {
 	return nil
 }
 
-func (e *Emby) MovieInfo(id string) video.Movie {
-	var info videoInfo
+func (e *Emby) MovieInfo(id string) EmbyVideo {
+	var info EmbyVideo
 	e.getJson(e.buildURL("/LiveTv/Programs/"+id), &info)
 
-	video := video.Movie{
-		EmbyId: id,
-		TmdbId: info.ProviderIds.Tmdb,
-		ImdbId: info.ProviderIds.Imdb,
-		Path:   info.Path,
-		Year:   info.ProductionYear,
-	}
-	video.Titles = []string{info.OriginalTitle}
-	if info.OriginalTitle != info.Name {
-		video.Titles = append(video.Titles, info.Name)
-	}
-
-	return video
+	return info
 }
 
-func (e *Emby) RecentMovie(num int) []string {
+func (e *Emby) RecentMovie(num int, start int) []string {
 	var list videoList
-	e.getJson(e.buildURL("/Items?Limit="+strconv.Itoa(num)+"&IncludeItemTypes=Movie&SortBy=DateCreated&SortOrder=Descending&Recursive=true"), &list)
+	e.getJson(e.buildURL(
+		"/Items?Limit="+strconv.Itoa(num)+"&IncludeItemTypes=Movie&SortBy=DateCreated&SortOrder=Descending&Recursive=true&StartIndex="+strconv.Itoa(start),
+	), &list)
 
 	var result []string
 	for _, v := range list.Items {
