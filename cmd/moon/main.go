@@ -36,7 +36,7 @@ var SETTNGS_videopath_map map[string]string = map[string]string{}
 
 var SETTINGS_emby_url string = "http://play.charontv.com"
 var SETTINGS_emby_key string = "fe1a0f6c143043e98a1f3099bfe0a3a8"
-var SETTINGS_emby_importcount int = 50
+var SETTINGS_emby_importcount int = 2
 
 func main() {
 start:
@@ -44,7 +44,7 @@ start:
 	zimuku := zimuku.New()
 
 	var movieList []emby.EmbyVideo
-	for i := 0; len(movieList) < 50; i += 1 {
+	for i := 0; len(movieList) < SETTINGS_emby_importcount; i += 1 {
 		ids := embyAPI.RecentMovie(SETTINGS_emby_importcount/2, i*SETTINGS_emby_importcount/2)
 		for _, id := range ids {
 			v := embyAPI.MovieInfo(id)

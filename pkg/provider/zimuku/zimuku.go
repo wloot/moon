@@ -30,6 +30,7 @@ type subInfo struct {
 	language        []string
 	downloadCount   int
 	votingScore     float64
+	time            time.Time
 }
 
 func New() Zimuku {
@@ -102,7 +103,31 @@ func (z *Zimuku) SearchMovie(movie emby.EmbyVideo) []string {
 			sub.downloadCount, _ = strconv.Atoi(count)
 		}
 		date := element.MustElement("td:nth-child(5)").MustText()
-		print(date)
+		date = regexp.MustCompile(" .*\n (.+)").FindStringSubmatch(date)[1]
+		if strings.HasSuffix(date, "天前") {
+			date = date[:len(date)-len("天前")]
+			datei, _ := strconv.ParseInt(date, 10, 64)
+			sub.time = time.Now().Add(time.Duration(datei) * time.Hour * 24)
+		}
+		if strings.HasSuffix(date, "小时前") {
+			date = date[:len(date)-len("小时前")]
+			datei, _ := strconv.ParseInt(date, 10, 64)
+			sub.time = time.Now().Add(time.Duration(datei) * time.Hour)
+		}
+		if strings.HasSuffix(date, "分钟前") {
+			date = date[:len(date)-len("分钟前")]
+			datei, _ := strconv.ParseInt(date, 10, 64)
+			sub.time = time.Now().Add(time.Duration(datei) * time.Minute)
+		}
+		if date == "刚刚" {
+			sub.time = time.Now()
+		}
+		if t, err := time.Parse("06/1/2", date); err == nil {
+			sub.time = t
+		}
+		if t, err := time.Parse("1月2日2006", date+strconv.Itoa(time.Now().Year())); err == nil {
+			sub.time = t
+		}
 		for langid := 1; true; langid++ {
 			has, image, _ := element.Has("td.tac.lang > img:nth-child(" + strconv.Itoa(langid) + ")")
 			if has == false {
@@ -128,7 +153,13 @@ func (z *Zimuku) SearchMovie(movie emby.EmbyVideo) []string {
 		}
 	}
 
+	firstTime := subs[len(subs)-1].time
 	sort.Slice(subs, func(i, j int) bool {
+		if subs[i].time.Sub(subs[j].time) > 0 {
+			if subs[j].time.Sub(firstTime) < time.Hour*24*7 {
+				return true
+			}
+		}
 		less := subs[i].downloadCount >= subs[j].downloadCount
 		if less == true && subs[i].votingScore <= 5 && subs[i].votingScore > 0 {
 			if subs[j].votingScore > subs[i].votingScore {
