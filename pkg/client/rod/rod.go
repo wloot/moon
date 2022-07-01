@@ -1,6 +1,7 @@
 package rod
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"sync"
@@ -27,8 +28,8 @@ func New() *Rod {
 	return &Rod{
 		rod.New().
 			ControlURL(url).
-			//Trace(true).
-			//SlowMotion(500 * time.Microsecond).
+			Trace(true).
+			SlowMotion(500 * time.Microsecond).
 			MustConnect(),
 		new(sync.Mutex),
 	}
@@ -54,7 +55,11 @@ func (r *Rod) HookDownload(action func()) string {
 	action()
 	info := wait()
 	if info != nil {
-		os.Rename(filepath.Join(dir, info.GUID), filepath.Join(dir, info.SuggestedFilename))
+		fmt.Printf("1 %v\n", info)
+		err := os.Rename(filepath.Join(dir, info.GUID), filepath.Join(dir, info.SuggestedFilename))
+		if err != nil {
+			fmt.Printf("2 %v\n", err)
+		}
 		return filepath.Join(dir, info.SuggestedFilename)
 	}
 	return ""

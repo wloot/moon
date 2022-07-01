@@ -147,6 +147,7 @@ func (z *Zimuku) SearchMovie(movie emby.EmbyVideo) []string {
 			})
 			page.MustClose()
 			if file != "" {
+				print(file, "\n")
 				subFiles = append(subFiles, file)
 			} else {
 				downloadNumbers += 1

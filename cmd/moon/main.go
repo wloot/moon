@@ -77,8 +77,8 @@ start:
 		if movieList[i].ProviderIds.Imdb != "tt13841850" {
 			continue
 		}
-		embyAPI.Refresh(movieList[i].Id, true)
-		time.Sleep(10 * time.Second)
+		//embyAPI.Refresh(movieList[i].Id, true)
+		//time.Sleep(10 * time.Second)
 		v := embyAPI.MovieInfo(movieList[i].Id)
 		for old, new := range SETTNGS_videopath_map {
 			if strings.HasPrefix(v.Path, old) {
