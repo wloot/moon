@@ -226,7 +226,7 @@ start:
 				}
 				subData, err := ffmpeg.ExtractSubtitle(v.Path, bestSub.Index, emby.SubtitleCodecToFormat[strings.ToLower(bestSub.Codec)])
 				if err == nil {
-					if strings.ToLower(streams[i].Codec) == "pgssub" {
+					if strings.ToLower(bestSub.Codec) == "pgssub" {
 						subData = pgstosrt.PgsToSrt(subData)
 					}
 					name := strconv.Itoa(int(time.Now().Unix())) + "." + emby.SubtitleCodecToFormat[strings.ToLower(bestSub.Codec)]
