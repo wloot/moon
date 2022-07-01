@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"moon/pkg/api/emby"
 	"moon/pkg/client/rod"
+	"moon/pkg/config"
 	"sort"
 	"time"
 
@@ -135,19 +136,19 @@ func (z *Zimuku) SearchMovie(movie emby.EmbyVideo) []string {
 			v.downloadElement.MustEval(`() => { this.target = "_blank" }`)
 			v.downloadElement.MustClick()
 			page := wait()
-			page.Timeout(5 * time.Second).MustWaitLoad()
 
 			element := page.MustElement("#down1")
 			element.MustEval(`() => { this.target = "" }`)
-			element.MustScrollIntoView()
-			page.Mouse.Scroll(0, 50/2, 1)
+			if config.DEBUG {
+				element.MustScrollIntoView()
+				page.Mouse.Scroll(0, 50/2, 1)
+			}
 			element.MustClick()
 			file := z.browser.HookDownload(func() {
-				page.MustElement("body > main > div > div > div > table > tbody > tr > td:nth-child(1) > div > ul > li:nth-child(5) > a").MustClick()
+				page.MustElement("body > main > div > div > div > table > tbody > tr > td:nth-child(1) > div > ul > li:nth-child(1) > a").MustClick()
 			})
 			page.MustClose()
 			if file != "" {
-				print(file, "\n")
 				subFiles = append(subFiles, file)
 			} else {
 				downloadNumbers += 1

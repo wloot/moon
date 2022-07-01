@@ -1,7 +1,7 @@
 package rod
 
 import (
-	"fmt"
+	"moon/pkg/config"
 	"os"
 	"path/filepath"
 	"sync"
@@ -21,16 +21,17 @@ var SETTINGS_rod_dir string = "rod"
 
 func New() *Rod {
 	l := launcher.New().
-		//Headless(false).
-		//Devtools(false).
 		UserDataDir(filepath.Join(SETTINGS_rod_dir, "user-data"))
+	if config.DEBUG {
+		l = l.Headless(false)
+	}
 	url := l.MustLaunch()
+	rod := rod.New().ControlURL(url)
+	if config.DEBUG {
+		rod = rod.Trace(true).SlowMotion(2000 * time.Microsecond)
+	}
 	return &Rod{
-		rod.New().
-			ControlURL(url).
-			Trace(true).
-			SlowMotion(500 * time.Microsecond).
-			MustConnect(),
+		rod.MustConnect(),
 		new(sync.Mutex),
 	}
 }
@@ -55,12 +56,12 @@ func (r *Rod) HookDownload(action func()) string {
 	action()
 	info := wait()
 	if info != nil {
-		fmt.Printf("1 %v\n", info)
-		err := os.Rename(filepath.Join(dir, info.GUID), filepath.Join(dir, info.SuggestedFilename))
-		if err != nil {
-			fmt.Printf("2 %v\n", err)
+		if info.SuggestedFilename == "download" {
+			print("oh fuck")
+			return ""
 		}
-		return filepath.Join(dir, info.SuggestedFilename)
+		os.Rename(filepath.Join(dir, info.GUID), filepath.Join(dir, info.SuggestedFilename))
+		return filepath.Join(dir, info.GUID)
 	}
 	return ""
 }
