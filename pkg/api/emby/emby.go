@@ -122,7 +122,7 @@ func (e *Emby) Refresh(id string, replace bool) {
 		url += "&MetadataRefreshMode=Default&ReplaceAllMetadata=false"
 	}
 	url = e.buildURL(url)
-	resp, err := e.client.Get(url)
+	resp, err := e.client.Post(url, "", nil)
 	if err != nil {
 		return
 	}
