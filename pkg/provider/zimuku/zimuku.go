@@ -9,6 +9,7 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
+	"strings"
 	"time"
 
 	rawRod "github.com/go-rod/rod"
@@ -91,7 +92,15 @@ func (z *Zimuku) SearchMovie(movie emby.EmbyVideo) []string {
 		sub := subInfo{}
 		sub.downloadElement = element.MustElement("td.first > a")
 		sub.downloadURL = *element.MustElement("td.first > a").MustAttribute("href")
-		sub.downloadCount, _ = strconv.Atoi(element.MustElement("td:nth-child(4)").MustText())
+		count := element.MustElement("td:nth-child(4)").MustText()
+		if strings.HasSuffix(count, "万") {
+			count = count[:len(count)-len("万")]
+			countf, _ := strconv.ParseFloat(count, 64)
+			countf = countf * 10000
+			sub.downloadCount = int(countf)
+		} else {
+			sub.downloadCount, _ = strconv.Atoi(count)
+		}
 		for langid := 1; true; langid++ {
 			has, image, _ := element.Has("td.tac.lang > img:nth-child(" + strconv.Itoa(langid) + ")")
 			if has == false {
@@ -126,6 +135,10 @@ func (z *Zimuku) SearchMovie(movie emby.EmbyVideo) []string {
 		}
 		return less
 	})
+
+	if config.DEBUG == true {
+		fmt.Printf("zimuku: all sub grabed are %v\n", subs)
+	}
 
 	var subFiles []string
 	for i, v := range subs {

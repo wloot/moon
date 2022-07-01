@@ -53,8 +53,14 @@ start:
 			}
 			need := true
 			for _, stream := range v.MediaStreams {
+				if stream.Index == 1 && stream.Type == "Audio" {
+					if stream.Language == "chs" || (stream.Language == "chi" && stream.DisplayLanguage == "Chinese Simplified") {
+						need = false
+						break
+					}
+				}
 				if stream.Type == "Subtitle" &&
-					(stream.Language == "chs" || stream.Language == "chi" && stream.DisplayLanguage == "Chinese Simplified") {
+					(stream.Language == "chs" || (stream.Language == "chi" && stream.DisplayLanguage == "Chinese Simplified")) {
 					if stream.IsExternal == false {
 						need = false
 						break
@@ -134,11 +140,13 @@ start:
 			countChars := 0
 			countCh := 0
 			countLines := 0
+			countAllLines := 0
 			durationLast := make(map[string]struct{})
 			for _, v := range subSorted[i].info.Items {
 				if len(v.Lines) == 0 {
 					continue
 				}
+				countAllLines += len(v.Lines)
 
 				key := v.StartAt.String() + "-" + v.EndAt.String()
 				if _, ok := durationLast[key]; ok == true {
@@ -163,9 +171,11 @@ start:
 				}
 			}
 
-			subSorted[i].chinese = true
-			if countLines/2 > countCh {
-				subSorted[i].chinese = false
+			if countLines/2 < countCh {
+				subSorted[i].chinese = true
+			}
+			if countLines*3 < countAllLines*2 {
+				subSorted[i].double = true
 			}
 			if countChars/10 <= countTC {
 				subSorted[i].tc = true
@@ -178,6 +188,9 @@ start:
 			}
 			if subSorted[i].tc != subSorted[j].tc {
 				return subSorted[i].tc == false
+			}
+			if subSorted[i].double != subSorted[j].double {
+				return subSorted[i].double == true
 			}
 			return false
 		})
@@ -228,7 +241,7 @@ start:
 				subData, err := ffmpeg.ExtractSubtitle(v.Path, bestSub.Index, emby.SubtitleCodecToFormat[strings.ToLower(bestSub.Codec)])
 				if err == nil {
 					ext := "." + emby.SubtitleCodecToFormat[strings.ToLower(bestSub.Codec)]
-					if strings.ToLower(bestSub.Codec) == "pgssub" {
+					if ext == ".sup" {
 						subData = pgstosrt.PgsToSrt(subData)
 						ext = ".srt"
 					}
