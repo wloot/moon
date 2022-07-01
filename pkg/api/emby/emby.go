@@ -20,18 +20,6 @@ type videoList struct {
 	} `json:"Items"`
 }
 
-var SubtitleToFfmpegCodec map[string]string = map[string]string{
-	"subrip":   "subrip",
-	"ass":      "ass",
-	"mov_text": "mov_text",
-	"PGSSUB":   "hdmv_pgs_subtitle",
-	//"DVDSUB": "dvd_subtitle",
-
-	"ssa": "ass",
-	"srt": "srt",
-	"vtt": "vtt",
-}
-
 type EmbyVideoStream struct {
 	Codec           string `json:"Codec"`
 	Language        string `json:"Language"`
