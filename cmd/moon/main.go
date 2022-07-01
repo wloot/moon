@@ -211,7 +211,8 @@ start:
 			for i := len(streams) - 1; i >= 0; i-- {
 				ok := streams[i].Type == "Subtitle" && streams[i].IsExternal == false
 				if ok == true {
-					_, ok = emby.SubtitleCodecToFormat[strings.ToLower(streams[i].Codec)]
+					_, format := ffmpeg.SubtitleBestExtractFormat(streams[i].SubtitleCodecToFfmpeg())
+					ok = format != ""
 				}
 				if ok == false {
 					streams = append(streams[:i], streams[i+1:]...)
@@ -237,14 +238,14 @@ start:
 					bestSub = streams[0]
 				}
 
-				subData, err := ffmpeg.ExtractSubtitle(v.Path, bestSub.Index, emby.SubtitleCodecToFormat[strings.ToLower(bestSub.Codec)])
+				subData, err := ffmpeg.ExtractSubtitle(v.Path, bestSub.Index, bestSub.SubtitleCodecToFfmpeg())
 				if err == nil {
-					ext := "." + emby.SubtitleCodecToFormat[strings.ToLower(bestSub.Codec)]
-					if ext == ".sup" {
+					_, ext := ffmpeg.SubtitleBestExtractFormat(bestSub.SubtitleCodecToFfmpeg())
+					if ext == "sup" {
 						subData = pgstosrt.PgsToSrt(subData)
-						ext = ".srt"
+						ext = "srt"
 					}
-					name := strconv.Itoa(int(time.Now().Unix())) + ext
+					name := strconv.Itoa(int(time.Now().Unix())) + "." + ext
 					name = filepath.Join(os.TempDir(), name)
 					err = os.WriteFile(name, subData, 0644)
 					if err == nil {

@@ -46,9 +46,10 @@ func ProbeVideo(path string) ([]StreamInfo, error) {
 	return r.Streams, nil
 }
 
-func ExtractSubtitle(path string, index int, format string) ([]byte, error) {
+func ExtractSubtitle(path string, index int, codec string) ([]byte, error) {
+	c, f := SubtitleBestExtractFormat(codec)
 	cmd := exec.Command("ffmpeg",
-		"-v", "quiet", "-i", path, "-map", "0:"+strconv.Itoa(index), "-c", "copy", "-f", format, "-")
+		"-v", "quiet", "-i", path, "-map", "0:"+strconv.Itoa(index), "-c", c, "-f", f, "-")
 	buf := bytes.NewBuffer(nil)
 	cmd.Stdout = buf
 	err := cmd.Run()
@@ -56,4 +57,23 @@ func ExtractSubtitle(path string, index int, format string) ([]byte, error) {
 		return []byte{}, err
 	}
 	return buf.Bytes(), nil
+}
+
+func SubtitleBestExtractFormat(c string) (codec string, format string) {
+	if c == "ass" {
+		return "copy", "ass"
+	}
+	if c == "subrip" {
+		return "copy", "srt"
+	}
+	if c == "webvtt" {
+		return "copy", "vtt"
+	}
+	if c == "mov_text" {
+		return "subrip", "srt"
+	}
+	if c == "hdmv_pgs_subtitle" {
+		return "copy", "sup"
+	}
+	return "", ""
 }

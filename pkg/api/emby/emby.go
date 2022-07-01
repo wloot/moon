@@ -20,16 +20,16 @@ type videoList struct {
 	} `json:"Items"`
 }
 
-var SubtitleCodecToFormat map[string]string = map[string]string{
-	"pgssub": "sup", // upper
-	"subrip": "srt",
-	"ass":    "ass",
-	//"mov_text": "jacosub",
-	//"dvdsub": "microdvd", // upper
+var SubtitleToFfmpegCodec map[string]string = map[string]string{
+	"subrip":   "subrip",
+	"ass":      "ass",
+	"mov_text": "mov_text",
+	"PGSSUB":   "hdmv_pgs_subtitle",
+	//"DVDSUB": "dvd_subtitle",
 
 	"ssa": "ass",
 	"srt": "srt",
-	"vtt": "srt",
+	"vtt": "vtt",
 }
 
 type EmbyVideoStream struct {
@@ -41,6 +41,16 @@ type EmbyVideoStream struct {
 	IsExternal      bool   `json:"IsExternal"`
 	Index           int    `json:"Index"`
 	Path            string `json:"Path"`
+}
+
+func (e EmbyVideoStream) SubtitleCodecToFfmpeg() string {
+	if e.Codec == "PGSSUB" {
+		return "hdmv_pgs_subtitle"
+	}
+	if e.Codec == "DVDSUB" {
+		return "dvd_subtitle"
+	}
+	return e.Codec
 }
 
 type EmbyVideo struct {

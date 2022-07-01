@@ -101,6 +101,8 @@ func (z *Zimuku) SearchMovie(movie emby.EmbyVideo) []string {
 		} else {
 			sub.downloadCount, _ = strconv.Atoi(count)
 		}
+		date := element.MustElement("td:nth-child(5)").MustText()
+		print(date)
 		for langid := 1; true; langid++ {
 			has, image, _ := element.Has("td.tac.lang > img:nth-child(" + strconv.Itoa(langid) + ")")
 			if has == false {
