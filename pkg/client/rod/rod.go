@@ -50,7 +50,7 @@ func (r *Rod) HookDownload(action func()) string {
 	defer r.mu.Unlock()
 	dir := filepath.Join(SETTINGS_rod_dir, "downloads")
 
-	wait := r.Timeout(5 * time.Second).WaitDownload(dir)
+	wait := r.Timeout(10 * time.Second).WaitDownload(dir)
 	action()
 	info := wait()
 	if info != nil {

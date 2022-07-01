@@ -147,6 +147,9 @@ func (z *Zimuku) SearchMovie(movie video.Movie) []string {
 			page.MustClose()
 			if file != "" {
 				subFiles = append(subFiles, file)
+			} else {
+				downloadNumbers += 1
+				fmt.Printf("zimuku: sub download failed, no file\n")
 			}
 		})
 		if err != nil {
