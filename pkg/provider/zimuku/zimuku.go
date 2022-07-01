@@ -130,10 +130,13 @@ func (z *Zimuku) SearchMovie(movie video.Movie) []string {
 		}
 		fmt.Printf("zimuku: downlaoding sub, %v\n", v)
 		err := rawRod.Try(func() {
+			context := page.GetContext()
 			wait := page.Timeout(5 * time.Second).MustWaitOpen()
 			v.downloadElement.MustEval(`() => { this.target = "_blank" }`)
 			v.downloadElement.MustClick()
 			page := wait()
+			page = page.Context(context)
+			//page = page.CancelTimeout()
 
 			element := page.MustElement("#down1")
 			element.MustEval(`() => { this.target = "" }`)
