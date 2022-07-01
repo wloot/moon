@@ -224,12 +224,15 @@ start:
 				if len(streams) > 0 {
 					bestSub = streams[0]
 				}
+
 				subData, err := ffmpeg.ExtractSubtitle(v.Path, bestSub.Index, emby.SubtitleCodecToFormat[strings.ToLower(bestSub.Codec)])
 				if err == nil {
+					ext := "." + emby.SubtitleCodecToFormat[strings.ToLower(bestSub.Codec)]
 					if strings.ToLower(bestSub.Codec) == "pgssub" {
 						subData = pgstosrt.PgsToSrt(subData)
+						ext = ".srt"
 					}
-					name := strconv.Itoa(int(time.Now().Unix())) + "." + emby.SubtitleCodecToFormat[strings.ToLower(bestSub.Codec)]
+					name := strconv.Itoa(int(time.Now().Unix())) + ext
 					name = filepath.Join(os.TempDir(), name)
 					err = os.WriteFile(name, subData, 0644)
 					if err == nil {
