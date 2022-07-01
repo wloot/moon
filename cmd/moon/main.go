@@ -73,10 +73,12 @@ start:
 		}
 	}
 
-	for i := range movieList {
-		embyAPI.Refresh(movieList[i].Id, true)
-		time.Sleep(10 * time.Second)
-		v := embyAPI.MovieInfo(movieList[i].Id)
+	for _, v := range movieList {
+		if v.OriginalTitle == v.Name {
+			embyAPI.Refresh(v.Id, true)
+			time.Sleep(30 * time.Second)
+			v = embyAPI.MovieInfo(v.Id)
+		}
 		for old, new := range SETTNGS_videopath_map {
 			if strings.HasPrefix(v.Path, old) {
 				v.Path = new + v.Path[len(old):]
@@ -222,12 +224,12 @@ start:
 				if len(streams) > 0 {
 					bestSub = streams[0]
 				}
-				subData, err := ffmpeg.ExtractSubtitle(v.Path, bestSub.Index, emby.SubtitleCodecToFormat[strings.ToLower(streams[i].Codec)])
+				subData, err := ffmpeg.ExtractSubtitle(v.Path, bestSub.Index, emby.SubtitleCodecToFormat[strings.ToLower(bestSub.Codec)])
 				if err == nil {
 					if strings.ToLower(streams[i].Codec) == "pgssub" {
 						subData = pgstosrt.PgsToSrt(subData)
 					}
-					name := strconv.Itoa(int(time.Now().Unix())) + "." + emby.SubtitleCodecToFormat[strings.ToLower(streams[i].Codec)]
+					name := strconv.Itoa(int(time.Now().Unix())) + "." + emby.SubtitleCodecToFormat[strings.ToLower(bestSub.Codec)]
 					name = filepath.Join(os.TempDir(), name)
 					err = os.WriteFile(name, subData, 0644)
 					if err == nil {

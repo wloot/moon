@@ -115,7 +115,7 @@ func (e *Emby) RecentMovie(num int, start int) []string {
 }
 
 func (e *Emby) Refresh(id string, replace bool) {
-	url := "/Items/" + id + "/Refresh?Recursive=true&ImageRefreshMode=Default&ReplaceAllImages=false&ReplaceAllMetadata=false"
+	url := "/Items/" + id + "/Refresh?Recursive=true&ImageRefreshMode=Default&ReplaceAllImages=false"
 	if replace == true {
 		url += "&MetadataRefreshMode=FullRefresh&ReplaceAllMetadata=true"
 	} else {
