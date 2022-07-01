@@ -203,7 +203,6 @@ start:
 			continue
 		}
 
-		embyAPI.Refresh(v.Id, false)
 		_, err = exec.LookPath("ffsubsync")
 		if err == nil {
 			var extSub string
@@ -265,6 +264,7 @@ start:
 				os.Remove(extSub)
 			}
 		}
+		embyAPI.Refresh(v.Id, false)
 	}
 	time.Sleep(6 * time.Hour)
 	goto start
