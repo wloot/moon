@@ -7,15 +7,6 @@ import (
 	"strconv"
 )
 
-var SubtitleCodecToFormat map[string]string = map[string]string{
-	"hdmv_pgs_subtitle": "sup",
-	//"dvd_subtitle": "microdvd",
-
-	"subrip": "srt",
-	"ass":    "ass",
-	"webvtt": "srt",
-}
-
 type StreamInfo struct {
 	Index     int    `json:"index"`
 	CodecName string `json:"codec_name"`

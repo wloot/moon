@@ -153,6 +153,10 @@ func (z *Zimuku) SearchMovie(movie emby.EmbyVideo) []string {
 		}
 	}
 
+	if len(subs) == 0 {
+		fmt.Printf("zimuku: no sub for now\n")
+	}
+
 	firstTime := subs[len(subs)-1].time
 	sort.Slice(subs, func(i, j int) bool {
 		if subs[i].time.Sub(subs[j].time) > 0 {
