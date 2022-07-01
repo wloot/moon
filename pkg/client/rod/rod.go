@@ -20,7 +20,7 @@ var SETTINGS_rod_dir string = "rod"
 
 func New() *Rod {
 	l := launcher.New().
-		Headless(false).
+		//Headless(false).
 		//Devtools(false).
 		UserDataDir(filepath.Join(SETTINGS_rod_dir, "user-data"))
 	url := l.MustLaunch()
@@ -28,7 +28,7 @@ func New() *Rod {
 		rod.New().
 			ControlURL(url).
 			//Trace(true).
-			SlowMotion(500 * time.Microsecond).
+			//SlowMotion(500 * time.Microsecond).
 			MustConnect(),
 		new(sync.Mutex),
 	}
