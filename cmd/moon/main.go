@@ -2,8 +2,9 @@ package main
 
 import (
 	"bytes"
+	"context"
 	"fmt"
-	"io/fs"
+	"io"
 	"moon/pkg/api/emby"
 	"moon/pkg/charset"
 	"moon/pkg/ffmpeg"
@@ -37,7 +38,7 @@ var SETTNGS_videopath_map map[string]string = map[string]string{}
 
 var SETTINGS_emby_url string = "http://play.charontv.com"
 var SETTINGS_emby_key string = "fe1a0f6c143043e98a1f3099bfe0a3a8"
-var SETTINGS_emby_importcount int = 200
+var SETTINGS_emby_importcount int = 2
 
 func main() {
 start:
@@ -86,6 +87,7 @@ start:
 			time.Sleep(30 * time.Second)
 			v = embyAPI.MovieInfo(v.Id)
 		}
+		v.ProviderIds.Imdb = "tt7983890"
 		for old, new := range SETTNGS_videopath_map {
 			if strings.HasPrefix(v.Path, old) {
 				v.Path = new + v.Path[len(old):]
@@ -94,67 +96,72 @@ start:
 
 		subFiles := zimuku.SearchMovie(v)
 		var subSorted []Subinfo
+		checkFile := func(data []byte, name string) {
+			t := strings.ToLower(filepath.Ext(name))
+			var s *astisub.Subtitles
+			var err error
+			switch t {
+			case ".ssa", ".ass":
+				s, err = astisub.ReadFromSSA(bytes.NewReader(data))
+			case ".srt":
+				s, err = astisub.ReadFromSRT(bytes.NewReader(data))
+			case ".vtt":
+				s, err = astisub.ReadFromWebVTT(bytes.NewReader(data))
+			}
+			if len(t) > 0 {
+				t = t[1:]
+			}
+			if s == nil || err != nil || len(s.Items) == 0 {
+				t = subtype.GuessingType(string(data))
+				if t == "ssa" || t == "ass" {
+					s, err = astisub.ReadFromSSA(bytes.NewReader(data))
+				}
+				if t == "srt" {
+					s, err = astisub.ReadFromSSA(bytes.NewReader(data))
+				}
+				if t == "vtt" {
+					s, err = astisub.ReadFromWebVTT(bytes.NewReader(data))
+				}
+				if err != nil || s == nil || len(s.Items) == 0 {
+					fmt.Printf("ignoring sub as not supported type, %v\n", name)
+					return
+				}
+			}
+			if t == "vtt" {
+				var buf bytes.Buffer
+				s.WriteToSRT(&buf)
+				data = buf.Bytes()
+				t = "srt"
+			}
+			subSorted = append(subSorted, Subinfo{
+				data:   data,
+				info:   s,
+				format: t,
+			})
+		}
 		for _, f := range subFiles {
-			fsys, err := archiver.FileSystem(f)
+			file, err := os.Open(f)
 			if err != nil {
 				fmt.Printf("open sub file %v faild: %v\n", f, err)
 				continue
 			}
-			fs.WalkDir(fsys, ".", func(path string, d fs.DirEntry, err error) error {
-				if d.IsDir() == true {
-					return nil
-				}
-
-				data, _ := fs.ReadFile(fsys, filepath.Join(path, d.Name()))
-				if transformed, err := charset.AnyToUTF8(data); err == nil {
-					data = transformed
-				}
-
-				t := strings.ToLower(filepath.Ext(d.Name()))
-				err = nil
-				var s *astisub.Subtitles
-				switch t {
-				case ".ssa", ".ass":
-					s, err = astisub.ReadFromSSA(bytes.NewReader(data))
-				case ".srt":
-					s, err = astisub.ReadFromSRT(bytes.NewReader(data))
-				case ".vtt":
-					s, err = astisub.ReadFromWebVTT(bytes.NewReader(data))
-				}
-				if len(t) > 0 {
-					t = t[1:]
-				}
-				if s == nil || err != nil || len(s.Items) == 0 {
-					t = subtype.GuessingType(string(data))
-					if t == "ssa" || t == "ass" {
-						s, err = astisub.ReadFromSSA(bytes.NewReader(data))
+			format, input, err := archiver.Identify(f, file)
+			if err == archiver.ErrNoMatch {
+				data, _ := io.ReadAll(input)
+				checkFile(data, f)
+			} else if ex, ok := format.(archiver.Extractor); ok {
+				ex.Extract(context.Background(), input, nil, func(ctx context.Context, f archiver.File) error {
+					rc, err := f.Open()
+					if err != nil {
+						return err
 					}
-					if t == "srt" {
-						s, err = astisub.ReadFromSSA(bytes.NewReader(data))
-					}
-					if t == "vtt" {
-						s, err = astisub.ReadFromWebVTT(bytes.NewReader(data))
-					}
-					if err != nil || s == nil || len(s.Items) == 0 {
-						fmt.Printf("ignoring sub as not supported type, %v\n", filepath.Join(path, d.Name()))
-						return nil
-					}
-				}
-
-				if t == "vtt" {
-					var buf bytes.Buffer
-					s.WriteToSRT(&buf)
-					data = buf.Bytes()
-					t = "srt"
-				}
-
-				subSorted = append(subSorted, Subinfo{
-					data:   data,
-					info:   s,
-					format: t,
+					defer rc.Close()
+					data, err := io.ReadAll(rc)
+					checkFile(data, f.Name())
+					return err
 				})
-				return nil
-			})
+			}
+			file.Close()
 		}
 		if len(subSorted) == 0 {
 			fmt.Printf("total sub downloaded is 0\n")

@@ -57,8 +57,8 @@ type EmbyVideo struct {
 
 func New(url string, key string) *Emby {
 	tr := http.DefaultTransport.(*http.Transport).Clone()
-	tr.MaxIdleConnsPerHost = tr.MaxIdleConns
-	tr.ForceAttemptHTTP2 = false
+	//tr.MaxIdleConnsPerHost = tr.MaxIdleConns
+	//tr.ForceAttemptHTTP2 = false
 	return &Emby{
 		url: url,
 		key: key,

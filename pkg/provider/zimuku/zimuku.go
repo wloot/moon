@@ -238,7 +238,7 @@ func (z *Zimuku) SearchMovie(movie emby.EmbyVideo) []string {
 
 func (z *Zimuku) searchMainPage(keyword string) (*rawRod.Page, error) {
 	page := z.browser.MustPage("https://zimuku.org/")
-	err := page.Timeout(5*time.Second).WaitElementsMoreThan("button", 1) // if first access
+	err := page.Timeout(5 * time.Second).WaitLoad()
 	if err != nil {
 		page.MustClose()
 		return nil, err
@@ -248,7 +248,7 @@ func (z *Zimuku) searchMainPage(keyword string) (*rawRod.Page, error) {
 	// 搜索按钮
 	page.MustElement("body > div.navbar.navbar-inverse.navbar-static-top > div > div.navbar-header > div > form > div > span > button").MustClick()
 
-	err = page.Timeout(5 * time.Second).WaitLoad()
+	err = page.Timeout(5*time.Second).WaitElementsMoreThan("button", 1) // if first access
 	if err != nil {
 		page.MustClose()
 		return nil, err
