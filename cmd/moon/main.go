@@ -156,6 +156,10 @@ start:
 				return nil
 			})
 		}
+		if len(subSorted) == 0 {
+			fmt.Printf("total sub downloaded is 0\n")
+			continue
+		}
 
 		jianfan := charset.NewJianfan()
 		for i := range subSorted {
@@ -217,12 +221,6 @@ start:
 			}
 			return false
 		})
-
-		if len(subSorted) == 0 {
-			fmt.Printf("total sub downloaded is 0\n")
-			continue
-		}
-		fmt.Printf("sorted subs are %v\n", subSorted)
 
 		name := v.Path
 		name = name[:len(name)-len(filepath.Ext(name))] + ".zh-cn." + subSorted[0].format
