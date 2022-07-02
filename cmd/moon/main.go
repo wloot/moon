@@ -9,6 +9,7 @@ import (
 	"moon/pkg/ffmpeg"
 	"moon/pkg/pgstosrt"
 	"moon/pkg/provider/zimuku"
+	"moon/pkg/subtype"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -111,17 +112,30 @@ start:
 					data = transformed
 				}
 
+				err = nil
 				var s *astisub.Subtitles
 				switch filepath.Ext(strings.ToLower(d.Name())) {
-				case ".srt":
-					s, err = astisub.ReadFromSRT(bytes.NewReader(data))
 				case ".ssa", ".ass":
 					s, err = astisub.ReadFromSSA(bytes.NewReader(data))
-				default:
-					return nil
+				case ".srt":
+					s, err = astisub.ReadFromSRT(bytes.NewReader(data))
+				case ".vtt":
+					s, err = astisub.ReadFromWebVTT(bytes.NewReader(data))
 				}
-				if err != nil {
-					return nil
+				if s == nil || err != nil || len(s.Items) == 0 {
+					t := subtype.GuessingType(string(data))
+					if t == "ssa" || t == "ass" {
+						s, err = astisub.ReadFromSSA(bytes.NewReader(data))
+					}
+					if t == "srt" {
+						s, err = astisub.ReadFromSSA(bytes.NewReader(data))
+					}
+					if t == "vtt" {
+						s, err = astisub.ReadFromWebVTT(bytes.NewReader(data))
+					}
+					if err != nil || s == nil || len(s.Items) == 0 {
+						return nil
+					}
 				}
 
 				subSorted = append(subSorted, Subinfo{
