@@ -207,10 +207,8 @@ func (z *Zimuku) SearchMovie(movie emby.EmbyVideo) []string {
 
 			element := page.MustElement("#down1")
 			element.MustEval(`() => { this.target = "" }`)
-			if config.DEBUG && config.DEBUG_LOCAL {
-				element.MustScrollIntoView()
-				page.Mouse.Scroll(0, 50/2, 1)
-			}
+			element.MustScrollIntoView()
+			page.Mouse.Scroll(0, 50/2, 1)
 			element.MustClick()
 			file := z.browser.HookDownload(func() {
 				page.MustElement("body > main > div > div > div > table > tbody > tr > td:nth-child(1) > div > ul > li:nth-child(1) > a").MustClick()
