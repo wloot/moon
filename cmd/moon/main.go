@@ -25,7 +25,7 @@ import (
 )
 
 type Subinfo struct {
-	name    string
+	format  string
 	data    []byte
 	info    *astisub.Subtitles
 	chinese bool
@@ -112,9 +112,10 @@ start:
 					data = transformed
 				}
 
+				t := strings.ToLower(filepath.Ext(d.Name()))
 				err = nil
 				var s *astisub.Subtitles
-				switch filepath.Ext(strings.ToLower(d.Name())) {
+				switch t {
 				case ".ssa", ".ass":
 					s, err = astisub.ReadFromSSA(bytes.NewReader(data))
 				case ".srt":
@@ -123,7 +124,7 @@ start:
 					s, err = astisub.ReadFromWebVTT(bytes.NewReader(data))
 				}
 				if s == nil || err != nil || len(s.Items) == 0 {
-					t := subtype.GuessingType(string(data))
+					t = subtype.GuessingType(string(data))
 					if t == "ssa" || t == "ass" {
 						s, err = astisub.ReadFromSSA(bytes.NewReader(data))
 					}
@@ -139,9 +140,9 @@ start:
 				}
 
 				subSorted = append(subSorted, Subinfo{
-					data: data,
-					info: s,
-					name: d.Name(),
+					data:   data,
+					info:   s,
+					format: t,
 				})
 				return nil
 			})
@@ -213,7 +214,7 @@ start:
 		})
 
 		name := v.Path
-		name = name[:len(name)-len(filepath.Ext(name))] + ".zh-cn" + filepath.Ext(subSorted[0].name)
+		name = name[:len(name)-len(filepath.Ext(name))] + ".zh-cn." + subSorted[0].format
 		err := os.WriteFile(name, subSorted[0].data, 0644)
 		if err != nil {
 			print("failed to write sub file: ", err.Error(), "\n")
@@ -238,7 +239,8 @@ start:
 			if len(streams) > 0 {
 				bestSub := streams[0]
 				for i := len(streams) - 1; i >= 0; i-- {
-					if streams[i].Codec == "PGSSUB" {
+					m, _ := regexp.MatchString(`\bSDH\b`, streams[i].Title)
+					if m == true {
 						streams = append(streams[:i], streams[i+1:]...)
 					}
 				}
@@ -246,8 +248,7 @@ start:
 					bestSub = streams[0]
 				}
 				for i := len(streams) - 1; i >= 0; i-- {
-					m, _ := regexp.MatchString(`\bSDH\b`, streams[i].Title)
-					if m == true {
+					if streams[i].Codec == "PGSSUB" {
 						streams = append(streams[:i], streams[i+1:]...)
 					}
 				}
