@@ -81,9 +81,6 @@ start:
 	}
 
 	for i, v := range movieList {
-		if i < 40 {
-			continue
-		}
 		if v.OriginalTitle == v.Name {
 			embyAPI.Refresh(v.Id, true)
 			time.Sleep(30 * time.Second)
@@ -281,9 +278,9 @@ start:
 					}
 				}
 			}
-			cmdArg := []string{v.Path, "-i", name, "--overwrite-input", "--reference-stream", "a:0", "--suppress-output-if-offset-less-than", "0.5"}
+			cmdArg := []string{v.Path, "-i", name, "--overwrite-input", "--reference-stream", "a:0"}
 			if extSub != "" {
-				cmdArg = []string{extSub, "-i", name, "--overwrite-input", "--suppress-output-if-offset-less-than", "0.5"}
+				cmdArg = []string{extSub, "-i", name, "--overwrite-input"}
 			}
 			cmd := exec.Command("ffsubsync", cmdArg...)
 			cmd.Stdout = os.Stdout
