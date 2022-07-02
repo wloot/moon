@@ -246,7 +246,7 @@ start:
 					bestSub = streams[0]
 				}
 				for i := len(streams) - 1; i >= 0; i-- {
-					m, _ := regexp.MatchString("\bSDH\b", streams[i].Title)
+					m, _ := regexp.MatchString(`\bSDH\b`, streams[i].Title)
 					if m == true {
 						streams = append(streams[:i], streams[i+1:]...)
 					}
