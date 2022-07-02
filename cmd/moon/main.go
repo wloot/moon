@@ -97,6 +97,7 @@ start:
 		for _, f := range subFiles {
 			fsys, err := archiver.FileSystem(f)
 			if err != nil {
+				fmt.Printf("open sub file %v faild: %v\n", f, err)
 				continue
 			}
 			fs.WalkDir(fsys, ".", func(path string, d fs.DirEntry, err error) error {
@@ -135,6 +136,7 @@ start:
 						s, err = astisub.ReadFromWebVTT(bytes.NewReader(data))
 					}
 					if err != nil || s == nil || len(s.Items) == 0 {
+						fmt.Printf("ignoring sub as not supported type%v\n", path)
 						return nil
 					}
 				}
@@ -220,13 +222,16 @@ start:
 			return false
 		})
 
+		fmt.Printf("sorted subs are %v\n", subSorted)
+
 		name := v.Path
 		name = name[:len(name)-len(filepath.Ext(name))] + ".zh-cn." + subSorted[0].format
 		err := os.WriteFile(name, subSorted[0].data, 0644)
 		if err != nil {
-			print("failed to write sub file: ", err.Error(), "\n")
+			fmt.Printf("failed to write sub file: %v\n", err)
 			continue
 		}
+		fmt.Printf("sub written to %v\n", name)
 
 		_, err = exec.LookPath("ffsubsync")
 		if err == nil {
@@ -263,6 +268,7 @@ start:
 					bestSub = streams[0]
 				}
 
+				fmt.Printf("extract inter sub from %v for sync: %v\n", v.Path, bestSub)
 				subData, err := ffmpeg.ExtractSubtitle(v.Path, bestSub.Index, bestSub.SubtitleCodecToFfmpeg())
 				if err == nil {
 					_, ext := ffmpeg.SubtitleBestExtractFormat(bestSub.SubtitleCodecToFfmpeg())
