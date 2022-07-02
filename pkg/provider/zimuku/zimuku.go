@@ -43,15 +43,16 @@ func (z *Zimuku) SearchMovie(movie emby.EmbyVideo) []string {
 	var keywords []string
 	if movie.ProviderIds.Imdb != "" {
 		keywords = append(keywords, movie.ProviderIds.Imdb)
-	}
-	if movie.ProductionYear != 0 {
-		keywords = append(keywords, movie.OriginalTitle+" ("+strconv.Itoa(movie.ProductionYear)+")")
-		if movie.OriginalTitle != movie.Name {
-			keywords = append(keywords, movie.Name+" ("+strconv.Itoa(movie.ProductionYear)+")")
+	} else {
+		if movie.ProductionYear != 0 {
+			keywords = append(keywords, movie.OriginalTitle+" ("+strconv.Itoa(movie.ProductionYear)+")")
+			if movie.OriginalTitle != movie.Name {
+				keywords = append(keywords, movie.Name+" ("+strconv.Itoa(movie.ProductionYear)+")")
+			}
+			// year offset +-1
+			keywords = append(keywords, movie.OriginalTitle+" ("+strconv.Itoa(movie.ProductionYear+1)+")")
+			keywords = append(keywords, movie.OriginalTitle+" ("+strconv.Itoa(movie.ProductionYear-1)+")")
 		}
-		// year offset +-1
-		keywords = append(keywords, movie.OriginalTitle+" ("+strconv.Itoa(movie.ProductionYear+1)+")")
-		keywords = append(keywords, movie.OriginalTitle+" ("+strconv.Itoa(movie.ProductionYear-1)+")")
 	}
 
 	var page *rawRod.Page
