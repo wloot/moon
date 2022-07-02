@@ -58,7 +58,7 @@ func SubtitleBestExtractFormat(c string) (codec string, format string) {
 		return "copy", "srt"
 	}
 	if c == "webvtt" {
-		return "copy", "vtt"
+		return "subrip", "srt"
 	}
 	if c == "mov_text" {
 		return "subrip", "srt"

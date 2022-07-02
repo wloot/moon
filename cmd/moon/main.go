@@ -36,7 +36,7 @@ var SETTNGS_videopath_map map[string]string = map[string]string{}
 
 var SETTINGS_emby_url string = "http://play.charontv.com"
 var SETTINGS_emby_key string = "fe1a0f6c143043e98a1f3099bfe0a3a8"
-var SETTINGS_emby_importcount int = 50
+var SETTINGS_emby_importcount int = 200
 
 func main() {
 start:
@@ -221,7 +221,7 @@ start:
 			if len(streams) > 0 {
 				bestSub := streams[0]
 				for i := len(streams) - 1; i >= 0; i-- {
-					if strings.ToLower(streams[i].Codec) == "pgssub" {
+					if streams[i].Codec == "PGSSUB" {
 						streams = append(streams[:i], streams[i+1:]...)
 					}
 				}
@@ -253,9 +253,9 @@ start:
 					}
 				}
 			}
-			cmdArg := []string{v.Path, "-i", name, "--overwrite-input", "--reference-stream", "a:0"}
+			cmdArg := []string{v.Path, "-i", name, "--overwrite-input", "--reference-stream", "a:0", "--suppress-output-if-offset-less-than", "0.5"}
 			if extSub != "" {
-				cmdArg = []string{extSub, "-i", name, "--overwrite-input"}
+				cmdArg = []string{extSub, "-i", name, "--overwrite-input", "--suppress-output-if-offset-less-than", "0.5"}
 			}
 			cmd := exec.Command("ffsubsync", cmdArg...)
 			cmd.Stdout = os.Stdout
