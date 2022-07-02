@@ -22,6 +22,7 @@ import (
 
 	"github.com/abadojack/whatlanggo"
 	"github.com/asticode/go-astisub"
+	"github.com/bodgit/sevenzip"
 	"github.com/mholt/archiver/v4"
 )
 
@@ -138,16 +139,39 @@ start:
 				format: t,
 			})
 		}
-		for _, f := range subFiles {
-			file, err := os.Open(f)
+		for _, subName := range subFiles {
+			file, err := os.Open(subName)
 			if err != nil {
-				fmt.Printf("open sub file %v faild: %v\n", f, err)
+				fmt.Printf("open sub file %v faild: %v\n", subName, err)
 				continue
 			}
-			format, input, err := archiver.Identify(f, file)
+			format, input, err := archiver.Identify(subName, file)
 			if err == archiver.ErrNoMatch {
-				data, _ := io.ReadAll(input)
-				checkFile(data, f)
+				var r *sevenzip.ReadCloser
+				if strings.ToLower(filepath.Ext(subName)) == ".7z" {
+					r, err = sevenzip.OpenReader(subName)
+					if err != nil {
+						r = nil
+					}
+				}
+				if r != nil {
+					defer r.Close()
+					for _, f := range r.File {
+						if f.FileInfo().IsDir() {
+							continue
+						}
+						rc, err := f.Open()
+						if err != nil {
+							continue
+						}
+						defer rc.Close()
+						data, _ := io.ReadAll(rc)
+						checkFile(data, f.Name)
+					}
+				} else {
+					data, _ := io.ReadAll(input)
+					checkFile(data, subName)
+				}
 			} else if ex, ok := format.(archiver.Extractor); ok {
 				ex.Extract(context.Background(), input, nil, func(ctx context.Context, f archiver.File) error {
 					if f.IsDir() {
@@ -155,12 +179,12 @@ start:
 					}
 					rc, err := f.Open()
 					if err != nil {
-						return err
+						return nil
 					}
 					defer rc.Close()
-					data, err := io.ReadAll(rc)
+					data, _ := io.ReadAll(rc)
 					checkFile(data, f.Name())
-					return err
+					return nil
 				})
 			}
 			file.Close()
@@ -275,7 +299,7 @@ start:
 					bestSub = streams[0]
 				}
 
-				fmt.Printf("extract inter sub from %v for sync: %v\n", v.Path, bestSub)
+				fmt.Printf("extract inter sub for sync: %v\n", bestSub)
 				subData, err := ffmpeg.ExtractSubtitle(v.Path, bestSub.Index, bestSub.SubtitleCodecToFfmpeg())
 				if err == nil {
 					_, ext := ffmpeg.SubtitleBestExtractFormat(bestSub.SubtitleCodecToFfmpeg())
