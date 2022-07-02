@@ -38,7 +38,7 @@ var SETTNGS_videopath_map map[string]string = map[string]string{}
 
 var SETTINGS_emby_url string = "http://play.charontv.com"
 var SETTINGS_emby_key string = "fe1a0f6c143043e98a1f3099bfe0a3a8"
-var SETTINGS_emby_importcount int = 2
+var SETTINGS_emby_importcount int = 200
 
 func main() {
 start:
@@ -87,7 +87,6 @@ start:
 			time.Sleep(30 * time.Second)
 			v = embyAPI.MovieInfo(v.Id)
 		}
-		v.ProviderIds.Imdb = "tt7983890"
 		for old, new := range SETTNGS_videopath_map {
 			if strings.HasPrefix(v.Path, old) {
 				v.Path = new + v.Path[len(old):]
@@ -151,6 +150,9 @@ start:
 				checkFile(data, f)
 			} else if ex, ok := format.(archiver.Extractor); ok {
 				ex.Extract(context.Background(), input, nil, func(ctx context.Context, f archiver.File) error {
+					if f.IsDir() {
+						return nil
+					}
 					rc, err := f.Open()
 					if err != nil {
 						return err

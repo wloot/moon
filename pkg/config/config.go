@@ -1,4 +1,4 @@
 package config
 
-var DEBUG = true
+var DEBUG = false
 var DEBUG_LOCAL = false
