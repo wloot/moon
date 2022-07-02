@@ -123,6 +123,9 @@ start:
 				case ".vtt":
 					s, err = astisub.ReadFromWebVTT(bytes.NewReader(data))
 				}
+				if len(t) > 0 {
+					t = t[1:]
+				}
 				if s == nil || err != nil || len(s.Items) == 0 {
 					t = subtype.GuessingType(string(data))
 					if t == "ssa" || t == "ass" {
@@ -137,6 +140,13 @@ start:
 					if err != nil || s == nil || len(s.Items) == 0 {
 						return nil
 					}
+				}
+
+				if t == "vtt" {
+					var buf bytes.Buffer
+					s.WriteToSRT(&buf)
+					data = buf.Bytes()
+					t = "srt"
 				}
 
 				subSorted = append(subSorted, Subinfo{
