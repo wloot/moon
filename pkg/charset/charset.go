@@ -19,7 +19,7 @@ func AnyToUTF8(data []byte) ([]byte, error) {
 		return []byte{}, err
 	}
 	if charset.Charset == "UTF-8" {
-		return data, nil
+		return removeBOM(data), nil
 	}
 
 	encoding, err := ianaindex.MIB.Encoding(charset.Charset)
@@ -30,9 +30,13 @@ func AnyToUTF8(data []byte) ([]byte, error) {
 	if err != nil {
 		return []byte{}, err
 	}
-	if transformed[0] == 0xef && transformed[1] == 0xbb && transformed[2] == 0xbf {
-		transformed = transformed[3:]
-	}
 
-	return transformed, nil
+	return removeBOM(transformed), nil
+}
+
+func removeBOM(utf8 []byte) []byte {
+	if utf8[0] == 0xef && utf8[1] == 0xbb && utf8[2] == 0xbf {
+		utf8 = utf8[3:]
+	}
+	return utf8
 }
