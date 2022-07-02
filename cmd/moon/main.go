@@ -105,7 +105,7 @@ start:
 					return nil
 				}
 
-				data, _ := fs.ReadFile(fsys, path)
+				data, _ := fs.ReadFile(fsys, filepath.Join(path, d.Name()))
 				if transformed, err := charset.AnyToUTF8(data); err == nil {
 					data = transformed
 				}
@@ -136,7 +136,7 @@ start:
 						s, err = astisub.ReadFromWebVTT(bytes.NewReader(data))
 					}
 					if err != nil || s == nil || len(s.Items) == 0 {
-						fmt.Printf("ignoring sub as not supported type, %v\n", path)
+						fmt.Printf("ignoring sub as not supported type, %v\n", filepath.Join(path, d.Name()))
 						return nil
 					}
 				}
