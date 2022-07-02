@@ -80,7 +80,7 @@ start:
 		}
 	}
 
-	for i, v := range movieList {
+	for _, v := range movieList {
 		if v.OriginalTitle == v.Name {
 			embyAPI.Refresh(v.Id, true)
 			time.Sleep(30 * time.Second)
