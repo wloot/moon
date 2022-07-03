@@ -97,33 +97,30 @@ start:
 		subFiles := zimuku.SearchMovie(v)
 		var subSorted []Subinfo
 		checkFile := func(data []byte, name string) {
-			t := strings.ToLower(filepath.Ext(name))
-			var s *astisub.Subtitles
-			var err error
-			switch t {
-			case ".ssa", ".ass":
-				s, err = astisub.ReadFromSSA(bytes.NewReader(data))
-			case ".srt":
-				s, err = astisub.ReadFromSRT(bytes.NewReader(data))
-			case ".vtt":
-				s, err = astisub.ReadFromWebVTT(bytes.NewReader(data))
+			readSub := func(data []byte, ext string) (*astisub.Subtitles, error) {
+				var s *astisub.Subtitles
+				var err error
+				if ext == "ssa" || ext == "ass" {
+					s, err = astisub.ReadFromSSA(bytes.NewReader(data))
+				}
+				if ext == "srt" {
+					s, err = astisub.ReadFromSSA(bytes.NewReader(data))
+				}
+				if ext == "vtt" {
+					s, err = astisub.ReadFromWebVTT(bytes.NewReader(data))
+				}
+				return s, err
 			}
+			t := strings.ToLower(filepath.Ext(name))
 			if len(t) > 0 {
 				t = t[1:]
 			}
+			s, err := readSub(data, t)
 			if s == nil || err != nil || len(s.Items) == 0 {
 				t = subtype.GuessingType(string(data))
-				if t == "ssa" || t == "ass" {
-					s, err = astisub.ReadFromSSA(bytes.NewReader(data))
-				}
-				if t == "srt" {
-					s, err = astisub.ReadFromSSA(bytes.NewReader(data))
-				}
-				if t == "vtt" {
-					s, err = astisub.ReadFromWebVTT(bytes.NewReader(data))
-				}
+				s, err = readSub(data, t)
 				if err != nil || s == nil || len(s.Items) == 0 {
-					fmt.Printf("ignoring sub %v as err %v or guessed type %v\n", name, err, s)
+					fmt.Printf("ignoring sub %v as err %v or guessed type %v\n", name, err, t)
 					return
 				}
 			}
