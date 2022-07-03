@@ -2,28 +2,24 @@ package main
 
 import (
 	"bytes"
-	"context"
 	"fmt"
 	"io"
+	"io/fs"
 	"moon/pkg/api/emby"
 	"moon/pkg/charset"
-	"moon/pkg/ffmpeg"
-	"moon/pkg/pgstosrt"
+	"moon/pkg/ffsubsync"
 	"moon/pkg/provider/zimuku"
 	"moon/pkg/subtype"
+	"moon/pkg/unpack"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"regexp"
 	"sort"
-	"strconv"
 	"strings"
 	"time"
 
 	"github.com/abadojack/whatlanggo"
 	"github.com/asticode/go-astisub"
-	"github.com/bodgit/sevenzip"
-	"github.com/mholt/archiver/v4"
 )
 
 type Subinfo struct {
@@ -52,6 +48,9 @@ start:
 		for _, id := range ids {
 			v := embyAPI.MovieInfo(id)
 			if len(v.ProductionLocations) > 0 && v.ProductionLocations[0] == "China" {
+				continue
+			}
+			if whatlanggo.Detect(v.OriginalTitle).Lang == whatlanggo.Cmn {
 				continue
 			}
 			need := true
@@ -96,102 +95,61 @@ start:
 
 		subFiles := zimuku.SearchMovie(v)
 		var subSorted []Subinfo
-		checkFile := func(data []byte, name string) {
-			readSub := func(data []byte, ext string) (*astisub.Subtitles, error) {
-				var s *astisub.Subtitles
-				var err error
-				if ext == "ssa" || ext == "ass" {
-					s, err = astisub.ReadFromSSA(bytes.NewReader(data))
+		for _, subName := range subFiles {
+			err := unpack.WalkUnpacked(subName, func(reader io.Reader, info fs.FileInfo) {
+				name := info.Name()
+				t := strings.ToLower(filepath.Ext(name))
+				if len(t) > 0 {
+					t = t[1:]
 				}
-				if ext == "srt" {
-					s, err = astisub.ReadFromSRT(bytes.NewReader(data))
+				data, _ := io.ReadAll(reader)
+				if transformed, err := charset.AnyToUTF8(data); err == nil {
+					data = transformed
 				}
-				if ext == "vtt" {
-					s, err = astisub.ReadFromWebVTT(bytes.NewReader(data))
-				}
-				return s, err
-			}
-			t := strings.ToLower(filepath.Ext(name))
-			if len(t) > 0 {
-				t = t[1:]
-			}
-			if transformed, err := charset.AnyToUTF8(data); err == nil {
-				data = transformed
-			}
-			if len(data) == 0 {
-				fmt.Printf("ignoring empty sub %v\n", name)
-				return
-			}
-			s, err := readSub(data, t)
-			if s == nil || err != nil || len(s.Items) == 0 {
-				t = subtype.GuessingType(string(data))
-				s, err = readSub(data, t)
-				if err != nil || s == nil || len(s.Items) == 0 {
-					fmt.Printf("ignoring sub %v as err %v or guessed type '%v'\n", name, err, t)
+				if len(data) == 0 {
+					fmt.Printf("ignoring empty sub %v\n", name)
 					return
 				}
-			}
-			if t == "vtt" {
-				var buf bytes.Buffer
-				s.WriteToSRT(&buf)
-				data = buf.Bytes()
-				t = "srt"
-			}
-			subSorted = append(subSorted, Subinfo{
-				data:   data,
-				info:   s,
-				format: t,
+
+				readSub := func(data []byte, ext string) (*astisub.Subtitles, error) {
+					var s *astisub.Subtitles
+					var err error
+					if ext == "ssa" || ext == "ass" {
+						s, err = astisub.ReadFromSSA(bytes.NewReader(data))
+					}
+					if ext == "srt" {
+						s, err = astisub.ReadFromSRT(bytes.NewReader(data))
+					}
+					if ext == "vtt" {
+						s, err = astisub.ReadFromWebVTT(bytes.NewReader(data))
+					}
+					return s, err
+				}
+				s, err := readSub(data, t)
+				if s == nil || err != nil || len(s.Items) == 0 {
+					t = subtype.GuessingType(string(data))
+					s, err = readSub(data, t)
+					if err != nil || s == nil || len(s.Items) == 0 {
+						fmt.Printf("ignoring sub %v as err %v or guessed type '%v'\n", name, err, t)
+						return
+					}
+				}
+
+				if t == "vtt" {
+					var buf bytes.Buffer
+					s.WriteToSRT(&buf)
+					data = buf.Bytes()
+					t = "srt"
+				}
+				subSorted = append(subSorted, Subinfo{
+					data:   data,
+					info:   s,
+					format: t,
+				})
 			})
-		}
-		for _, subName := range subFiles {
-			file, err := os.Open(subName)
 			if err != nil {
 				fmt.Printf("open sub file %v faild: %v\n", subName, err)
-				continue
 			}
-			format, input, err := archiver.Identify(subName, file)
-			if err == archiver.ErrNoMatch {
-				var r *sevenzip.ReadCloser
-				if strings.ToLower(filepath.Ext(subName)) == ".7z" {
-					r, err = sevenzip.OpenReader(subName)
-					if err != nil {
-						r = nil
-					}
-				}
-				if r != nil {
-					defer r.Close()
-					for _, f := range r.File {
-						if f.FileInfo().IsDir() {
-							continue
-						}
-						rc, err := f.Open()
-						if err != nil {
-							continue
-						}
-						defer rc.Close()
-						data, _ := io.ReadAll(rc)
-						checkFile(data, f.Name)
-					}
-				} else {
-					data, _ := io.ReadAll(input)
-					checkFile(data, subName)
-				}
-			} else if ex, ok := format.(archiver.Extractor); ok {
-				ex.Extract(context.Background(), input, nil, func(ctx context.Context, f archiver.File) error {
-					if f.IsDir() {
-						return nil
-					}
-					rc, err := f.Open()
-					if err != nil {
-						return nil
-					}
-					defer rc.Close()
-					data, _ := io.ReadAll(rc)
-					checkFile(data, f.Name())
-					return nil
-				})
-			}
-			file.Close()
 		}
 		if len(subSorted) == 0 {
 			fmt.Printf("total sub downloaded is 0\n")
@@ -262,76 +220,35 @@ start:
 			return false
 		})
 
-		name := v.Path
-		name = name[:len(name)-len(filepath.Ext(name))] + ".zh-cn." + subSorted[0].format
-		err := os.WriteFile(name, subSorted[0].data, 0644)
+		backupType := "srt"
+		if subSorted[0].format == "srt" {
+			backupType = "ass"
+		}
+		var reference string
+		selectedSub := subSorted[0]
+	savesub:
+		name := v.Path[:len(v.Path)-len(filepath.Ext(v.Path))] + ".zh-cn." + selectedSub.format
+		err := os.WriteFile(name, selectedSub.data, 0644)
 		if err != nil {
 			fmt.Printf("failed to write sub file: %v\n", err)
 			continue
 		}
 		fmt.Printf("sub written to %v\n", name)
-
-		_, err = exec.LookPath("ffsubsync")
-		if err == nil {
-			var extSub string
-			streams := make([]emby.EmbyVideoStream, len(v.MediaStreams))
-			copy(streams, v.MediaStreams)
-			for i := len(streams) - 1; i >= 0; i-- {
-				ok := streams[i].Type == "Subtitle" && streams[i].IsExternal == false
-				if ok == true {
-					_, format := ffmpeg.SubtitleBestExtractFormat(streams[i].SubtitleCodecToFfmpeg())
-					ok = format != ""
+		if reference == "" && backupType != "" {
+			reference = ffsubsync.FindBestReferenceSub(v)
+		}
+		if reference == "" {
+			ffsubsync.DoSync(name, v.Path, false)
+		} else {
+			ffsubsync.DoSync(name, reference, true)
+		}
+		if backupType != "" {
+			for i := range subSorted {
+				if subSorted[i].format == backupType {
+					backupType = ""
+					selectedSub = subSorted[i]
+					goto savesub
 				}
-				if ok == false {
-					streams = append(streams[:i], streams[i+1:]...)
-				}
-			}
-			if len(streams) > 0 {
-				bestSub := streams[0]
-				for i := len(streams) - 1; i >= 0; i-- {
-					m, _ := regexp.MatchString(`\bSDH\b`, streams[i].Title)
-					if m == true {
-						streams = append(streams[:i], streams[i+1:]...)
-					}
-				}
-				if len(streams) > 0 {
-					bestSub = streams[0]
-				}
-				for i := len(streams) - 1; i >= 0; i-- {
-					if streams[i].Codec == "PGSSUB" {
-						streams = append(streams[:i], streams[i+1:]...)
-					}
-				}
-				if len(streams) > 0 {
-					bestSub = streams[0]
-				}
-
-				fmt.Printf("extract inter sub for sync: %v\n", bestSub)
-				subData, err := ffmpeg.ExtractSubtitle(v.Path, bestSub.Index, bestSub.SubtitleCodecToFfmpeg())
-				if err == nil {
-					_, ext := ffmpeg.SubtitleBestExtractFormat(bestSub.SubtitleCodecToFfmpeg())
-					if ext == "sup" {
-						subData = pgstosrt.PgsToSrt(subData)
-						ext = "srt"
-					}
-					name := strconv.Itoa(int(time.Now().Unix())) + "." + ext
-					name = filepath.Join(os.TempDir(), name)
-					err = os.WriteFile(name, subData, 0644)
-					if err == nil {
-						extSub = name
-					}
-				}
-			}
-			cmdArg := []string{v.Path, "-i", name, "--overwrite-input", "--reference-stream", "a:0"}
-			if extSub != "" {
-				cmdArg = []string{extSub, "-i", name, "--overwrite-input"}
-			}
-			cmd := exec.Command("ffsubsync", cmdArg...)
-			cmd.Stdout = os.Stdout
-			cmd.Stderr = os.Stderr
-			cmd.Run()
-			if extSub != "" {
-				os.Remove(extSub)
 			}
 		}
 		embyAPI.Refresh(v.Id, false)
