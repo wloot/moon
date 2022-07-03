@@ -123,7 +123,7 @@ start:
 				t = subtype.GuessingType(string(data))
 				s, err = readSub(data, t)
 				if err != nil || s == nil || len(s.Items) == 0 {
-					fmt.Printf("ignoring sub %v as err %v or guessed type %v\n", name, err, t)
+					fmt.Printf("ignoring sub %v as err %v or guessed type '%v'\n", name, err, t)
 					return
 				}
 			}
