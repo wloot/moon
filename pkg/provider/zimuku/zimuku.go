@@ -131,7 +131,7 @@ func (z *Zimuku) SearchMovie(movie emby.EmbyVideo) []string {
 			sub.time = t.Unix() + 28800 // UTC + 8
 		}
 		format := element.MustElement("td.first > span:nth-child(2)").MustText()
-		if element.MustElement("td.first > span:nth-child(3)").MustDescribe().NodeName == "BR" {
+		if has, _, _ := element.Has("td.first > span:nth-child(3)"); has == false {
 			if format == "ASS/SSA" {
 				sub.format = "ass"
 			}
