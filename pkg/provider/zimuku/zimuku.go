@@ -30,7 +30,8 @@ type subInfo struct {
 	language        []string
 	downloadCount   int
 	votingScore     float64
-	time            time.Time
+	time            int64
+	format          string
 }
 
 func New() Zimuku {
@@ -108,26 +109,42 @@ func (z *Zimuku) SearchMovie(movie emby.EmbyVideo) []string {
 		if strings.HasSuffix(date, "天前") {
 			date = date[:len(date)-len("天前")]
 			datei, _ := strconv.ParseInt(date, 10, 64)
-			sub.time = time.Now().Add(time.Duration(datei) * time.Hour * 24)
+			sub.time = time.Now().Add(time.Duration(datei) * time.Hour * 24).Unix()
 		}
 		if strings.HasSuffix(date, "小时前") {
 			date = date[:len(date)-len("小时前")]
 			datei, _ := strconv.ParseInt(date, 10, 64)
-			sub.time = time.Now().Add(time.Duration(datei) * time.Hour)
+			sub.time = time.Now().Add(time.Duration(datei) * time.Hour).Unix()
 		}
 		if strings.HasSuffix(date, "分钟前") {
 			date = date[:len(date)-len("分钟前")]
 			datei, _ := strconv.ParseInt(date, 10, 64)
-			sub.time = time.Now().Add(time.Duration(datei) * time.Minute)
+			sub.time = time.Now().Add(time.Duration(datei) * time.Minute).Unix()
 		}
 		if date == "刚刚" {
-			sub.time = time.Now()
+			sub.time = time.Now().Unix()
 		}
 		if t, err := time.Parse("06/1/2", date); err == nil {
-			sub.time = t
+			sub.time = t.Unix() + 28800 // UTC + 8
 		}
 		if t, err := time.Parse("1月2日2006", date+strconv.Itoa(time.Now().Year())); err == nil {
-			sub.time = t
+			sub.time = t.Unix() + 28800 // UTC + 8
+		}
+		has, format, _ := element.Has("td.first > span:nth-child(2)")
+		if has == true {
+			has, _, _ := element.Has("td.first > span:nth-child(3)")
+			if has == false {
+				text, _ := format.Text()
+				if text == "ASS/SSA" {
+					sub.format = "ass"
+				}
+				if text == "SRT" {
+					sub.format = "srt"
+				}
+				if text == "SUP" {
+					sub.format = "sup"
+				}
+			}
 		}
 		for langid := 1; true; langid++ {
 			has, image, _ := element.Has("td.tac.lang > img:nth-child(" + strconv.Itoa(langid) + ")")
@@ -149,6 +166,9 @@ func (z *Zimuku) SearchMovie(movie emby.EmbyVideo) []string {
 				break
 			}
 		}
+		if subs[i].format == "sup" {
+			need = false
+		}
 		if need == false {
 			subs = append(subs[:i], subs[i+1:]...)
 		}
@@ -161,8 +181,8 @@ func (z *Zimuku) SearchMovie(movie emby.EmbyVideo) []string {
 
 	firstTime := subs[len(subs)-1].time
 	sort.Slice(subs, func(i, j int) bool {
-		if subs[i].time.Sub(subs[j].time) > 0 {
-			if subs[j].time.Sub(firstTime) < time.Hour*24*7 {
+		if subs[i].time-subs[j].time > 0 {
+			if subs[j].time-firstTime < 604800 { // 7 days
 				return true
 			}
 		}
@@ -191,21 +211,6 @@ func (z *Zimuku) SearchMovie(movie emby.EmbyVideo) []string {
 			v.downloadElement.MustClick()
 			page := wait()
 
-			var maybeExt string
-			has, el, _ := page.Has("body > div.container > div > div.col-md-12 > div > div.detail.prel > div.lside.prel > ul > li:nth-child(2) > span:nth-child(2)")
-			if has == true {
-				has, _, _ := page.Has("body > div.container > div > div.col-md-12 > div > div.detail.prel > div.lside.prel > ul > li:nth-child(2) > span:nth-child(3)")
-				if has == false {
-					text, _ := el.Text()
-					if text == "ASS/SSA" {
-						maybeExt = ".ass"
-					}
-					if text == "SRT" {
-						maybeExt = ".srt"
-					}
-				}
-			}
-
 			element := page.MustElement("#down1")
 			element.MustEval(`() => { this.target = "" }`)
 			element.MustScrollIntoView()
@@ -216,10 +221,10 @@ func (z *Zimuku) SearchMovie(movie emby.EmbyVideo) []string {
 			})
 			page.MustClose()
 			if file != "" {
-				if ext := filepath.Ext(file); ext == "" && maybeExt != "" {
-					fmt.Printf("zimuku: sub has no ext, use %v\n", maybeExt)
-					os.Rename(file, file+maybeExt)
-					file = file + maybeExt
+				if ext := filepath.Ext(file); ext == "" && v.format != "" {
+					fmt.Printf("zimuku: sub has no ext, use %v\n", v.format)
+					os.Rename(file, file+"."+v.format)
+					file = file + "." + v.format
 				}
 				subFiles = append(subFiles, file)
 			} else {

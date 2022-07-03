@@ -118,6 +118,10 @@ start:
 			if transformed, err := charset.AnyToUTF8(data); err == nil {
 				data = transformed
 			}
+			if len(data) == 0 {
+				fmt.Printf("ignoring empty sub %v\n", name)
+				return
+			}
 			s, err := readSub(data, t)
 			if s == nil || err != nil || len(s.Items) == 0 {
 				t = subtype.GuessingType(string(data))
