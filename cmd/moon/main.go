@@ -230,7 +230,7 @@ start:
 		var reference string
 		selectedSub := subSorted[0]
 	savesub:
-		name := v.Path[:len(v.Path)-len(filepath.Ext(v.Path))] + ".zh-cn." + selectedSub.format
+		name := v.Path[:len(v.Path)-len(filepath.Ext(v.Path))] + ".chs." + selectedSub.format
 		err := os.WriteFile(name, selectedSub.data, 0644)
 		if err != nil {
 			fmt.Printf("failed to write sub file: %v\n", err)
