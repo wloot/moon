@@ -123,7 +123,7 @@ start:
 					s, err = astisub.ReadFromWebVTT(bytes.NewReader(data))
 				}
 				if err != nil || s == nil || len(s.Items) == 0 {
-					fmt.Printf("ignoring sub as not supported type, %v\n", name)
+					fmt.Printf("ignoring sub %v as err %v or guessed type %v\n", name, err, s)
 					return
 				}
 			}
