@@ -151,10 +151,6 @@ start:
 				fmt.Printf("open sub file %v faild: %v\n", subName, err)
 			}
 		}
-		if len(subSorted) == 0 {
-			fmt.Printf("total sub downloaded is 0\n")
-			continue
-		}
 
 		jianfan := charset.NewJianfan()
 		for i := range subSorted {
@@ -203,14 +199,24 @@ start:
 				subSorted[i].tc = true
 			}
 		}
+		for i := len(subSorted) - 1; i >= 0; i-- {
+			need := true
+			if subSorted[i].chinese == false {
+				need = false
+			}
+			if subSorted[i].tc == true {
+				need = false
+			}
+			if need == false {
+				subSorted = append(subSorted[:i], subSorted[i+1:]...)
+			}
+		}
 
+		if len(subSorted) == 0 {
+			fmt.Printf("total sub downloaded is 0\n")
+			continue
+		}
 		sort.Slice(subSorted, func(i, j int) bool {
-			if subSorted[i].chinese != subSorted[j].chinese {
-				return subSorted[i].chinese == true
-			}
-			if subSorted[i].tc != subSorted[j].tc {
-				return subSorted[i].tc == false
-			}
 			if subSorted[i].double != subSorted[j].double {
 				return subSorted[i].double == true
 			}
