@@ -130,20 +130,16 @@ func (z *Zimuku) SearchMovie(movie emby.EmbyVideo) []string {
 		if t, err := time.Parse("1月2日2006", date+strconv.Itoa(time.Now().Year())); err == nil {
 			sub.time = t.Unix() + 28800 // UTC + 8
 		}
-		has, format, _ := element.Has("td.first > span:nth-child(2)")
-		if has == true {
-			has, _, _ := element.Has("td.first > span:nth-child(3)")
-			if has == false {
-				text, _ := format.Text()
-				if text == "ASS/SSA" {
-					sub.format = "ass"
-				}
-				if text == "SRT" {
-					sub.format = "srt"
-				}
-				if text == "SUP" {
-					sub.format = "sup"
-				}
+		format := element.MustElement("td.first > span:nth-child(2)").MustText()
+		if element.MustElement("td.first > span:nth-child(3)").MustDescribe().NodeName != "BR" {
+			if format == "ASS/SSA" {
+				sub.format = "ass"
+			}
+			if format == "SRT" {
+				sub.format = "srt"
+			}
+			if format == "SUP" {
+				sub.format = "sup"
 			}
 		}
 		for langid := 1; true; langid++ {
