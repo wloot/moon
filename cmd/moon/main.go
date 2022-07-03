@@ -115,6 +115,9 @@ start:
 			if len(t) > 0 {
 				t = t[1:]
 			}
+			if transformed, err := charset.AnyToUTF8(data); err == nil {
+				data = transformed
+			}
 			s, err := readSub(data, t)
 			if s == nil || err != nil || len(s.Items) == 0 {
 				t = subtype.GuessingType(string(data))
