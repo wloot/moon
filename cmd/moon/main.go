@@ -214,9 +214,6 @@ start:
 			if subSorted[i].double != subSorted[j].double {
 				return subSorted[i].double == true
 			}
-			if subSorted[i].format != subSorted[j].format {
-				return subSorted[i].format == "ass"
-			}
 			return false
 		})
 
