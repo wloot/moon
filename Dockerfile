@@ -25,7 +25,7 @@ RUN apt-get update \
     ffmpeg \
     xz-utils \
     && rm -rf /var/lib/apt/lists/* \
-    && pip3 install ffsubsync
+    && pip3 install --no-cache-dir ffsubsync
 
 COPY --from=go /moon/moon /usr/bin/
 
@@ -39,6 +39,11 @@ ENV TZ=Asia/Shanghai \
     PUID=1000 \
     PGID=1000
 ENTRYPOINT ["/init"]
-RUN mkdir -p /etc/services.d/moon && printf \
-    '#!/command/with-contenv sh\nmkdir -p /config\nchown -R "${PUID}:${PGID}" /root /config\ncd /config\nexec s6-setuidgid "${PUID}:${PGID}" moon' \
-    > /etc/services.d/moon/run && chmod +x /etc/services.d/moon/run
+RUN mkdir -p /etc/services.d/moon \
+    && printf '#!/command/with-contenv sh \n\
+    mkdir -p /config/browser/ /root/.cache/rod/ \n\
+    chown -R "${PUID}:${PGID}" /root /config \n\
+    ln -sf /config/browser /root/.cache/rod/ \n\
+    cd /config \n\
+    exec s6-setuidgid "${PUID}:${PGID}" moon' > /etc/services.d/moon/run \
+    && chmod +x /etc/services.d/moon/run

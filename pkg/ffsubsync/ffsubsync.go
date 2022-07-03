@@ -2,7 +2,7 @@ package ffsubsync
 
 import (
 	"fmt"
-	"moon/pkg/api/emby"
+	"moon/pkg/emby"
 	"moon/pkg/ffmpeg"
 	"moon/pkg/pgstosrt"
 	"os"
