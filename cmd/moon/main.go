@@ -104,7 +104,7 @@ start:
 					s, err = astisub.ReadFromSSA(bytes.NewReader(data))
 				}
 				if ext == "srt" {
-					s, err = astisub.ReadFromSSA(bytes.NewReader(data))
+					s, err = astisub.ReadFromSRT(bytes.NewReader(data))
 				}
 				if ext == "vtt" {
 					s, err = astisub.ReadFromWebVTT(bytes.NewReader(data))
