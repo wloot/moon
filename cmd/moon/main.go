@@ -61,18 +61,6 @@ start:
 					need = false
 					break
 				}
-				if stream.Type == "Subtitle" && stream.DisplayLanguage == "Chinese Simplified" {
-					if stream.IsExternal == false {
-						need = false
-						break
-					}
-					path := stream.Path[:len(stream.Path)-len(filepath.Ext(stream.Path))]
-					// Emby 自带的字幕下载
-					if strings.HasSuffix(path, ".zh-CN") == false {
-						need = false
-						break
-					}
-				}
 			}
 			if need == true {
 				movieList = append(movieList, v)
@@ -81,7 +69,32 @@ start:
 	}
 
 	for _, v := range movieList {
-		ok, err := cache.StatKey(time.Hour*24, v.Path)
+		var hasSub = false
+		for _, stream := range v.MediaStreams {
+			if stream.Type == "Subtitle" && stream.DisplayLanguage == "Chinese Simplified" {
+				if stream.IsExternal == false {
+					hasSub = true
+					break
+				}
+				path := stream.Path[:len(stream.Path)-len(filepath.Ext(stream.Path))]
+				// Emby 自带的字幕下载
+				if strings.HasSuffix(path, ".zh-CN") == false {
+					hasSub = true
+					break
+				}
+			}
+		}
+		interval := time.Hour * 24 * 7
+		if hasSub == true {
+			interval = time.Hour * 24 * 30
+			if time.Now().Sub(v.GetPremiereDate()) > 180*time.Hour*24 {
+				interval = time.Hour * 24 * 180
+			}
+		}
+		if time.Now().Sub(v.GetDateCreated()) <= time.Hour*24*3 || time.Now().Sub(v.GetPremiereDate()) <= time.Hour*24*30 {
+			interval = time.Hour * 24
+		}
+		ok, err := cache.StatKey(interval, v.Path)
 		if !ok || err != nil {
 			if err != nil {
 				fmt.Printf("cache dir may wrong: %v\n", err)

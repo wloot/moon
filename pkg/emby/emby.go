@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 )
 
 type Emby struct {
@@ -53,6 +54,21 @@ type EmbyVideo struct {
 	ProductionYear      int               `json:"ProductionYear"`
 	MediaStreams        []EmbyVideoStream `json:"MediaStreams"`
 	ProductionLocations []string          `json:"ProductionLocations"`
+	DateCreated         string            `json:"DateCreated"`
+	PremiereDate        string            `json:"PremiereDate"`
+}
+
+func (e EmbyVideo) parseTime(s string) time.Time {
+	t, _ := time.Parse("2006-01-02T15:04:05.0000000Z", s)
+	return t
+}
+
+func (e EmbyVideo) GetDateCreated() time.Time {
+	return e.parseTime(e.DateCreated)
+}
+
+func (e EmbyVideo) GetPremiereDate() time.Time {
+	return e.parseTime(e.PremiereDate)
 }
 
 func New(url string, key string) *Emby {
