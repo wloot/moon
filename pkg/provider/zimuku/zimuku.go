@@ -109,17 +109,17 @@ func (z *Zimuku) SearchMovie(movie emby.EmbyVideo) []string {
 		if strings.HasSuffix(date, "天前") {
 			date = date[:len(date)-len("天前")]
 			datei, _ := strconv.ParseInt(date, 10, 64)
-			sub.time = time.Now().Add(time.Duration(datei) * time.Hour * 24).Unix()
+			sub.time = time.Now().Add(-time.Duration(datei) * time.Hour * 24).Unix()
 		}
 		if strings.HasSuffix(date, "小时前") {
 			date = date[:len(date)-len("小时前")]
 			datei, _ := strconv.ParseInt(date, 10, 64)
-			sub.time = time.Now().Add(time.Duration(datei) * time.Hour).Unix()
+			sub.time = time.Now().Add(-time.Duration(datei) * time.Hour).Unix()
 		}
 		if strings.HasSuffix(date, "分钟前") {
 			date = date[:len(date)-len("分钟前")]
 			datei, _ := strconv.ParseInt(date, 10, 64)
-			sub.time = time.Now().Add(time.Duration(datei) * time.Minute).Unix()
+			sub.time = time.Now().Add(-time.Duration(datei) * time.Minute).Unix()
 		}
 		if date == "刚刚" {
 			sub.time = time.Now().Unix()
