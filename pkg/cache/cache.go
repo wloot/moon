@@ -34,12 +34,14 @@ func checkDir(d string) error {
 	return nil
 }
 
+// TODO: see if we need to replace string with interface{}
+
 func md5Key(k string) string {
 	hash := md5.Sum([]byte(k))
 	return hex.EncodeToString(hash[:])
 }
 
-func MergeKeys(k ...interface{}) string {
+func MergeKeys(k ...string) string {
 	return fmt.Sprintf("%v", k)
 }
 

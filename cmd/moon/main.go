@@ -8,6 +8,7 @@ import (
 	"moon/pkg/cache"
 	"moon/pkg/charset"
 	"moon/pkg/emby"
+	"moon/pkg/ffmpeg"
 	"moon/pkg/ffsubsync"
 	"moon/pkg/provider/zimuku"
 	"moon/pkg/subtype"
@@ -231,12 +232,12 @@ start:
 			return false
 		})
 
-		var reference string
 		selectedSub := subSorted[0]
 		backupType := "srt"
 		if selectedSub.format == "srt" {
 			backupType = "ass"
 		}
+		var reference string
 	savesub:
 		name := v.Path[:len(v.Path)-len(filepath.Ext(v.Path))] + ".chs." + selectedSub.format
 		err = os.WriteFile(name, selectedSub.data, 0644)
@@ -246,7 +247,13 @@ start:
 		}
 		fmt.Printf("sub written to %v\n", name)
 		if reference == "" && backupType != "" {
-			reference = ffsubsync.FindBestReferenceSub(v)
+			reference = cache.TryGet(v.Path, func() string {
+				reference := ffsubsync.FindBestReferenceSub(v)
+				if reference == "" {
+					reference, _ = ffmpeg.KeepAudio(v.Path)
+				}
+				return ""
+			})
 		}
 		if reference == "" {
 			ffsubsync.DoSync(name, v.Path, false)

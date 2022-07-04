@@ -3,7 +3,9 @@ package ffmpeg
 import (
 	"bytes"
 	"encoding/json"
+	"os"
 	"os/exec"
+	"path/filepath"
 	"strconv"
 )
 
@@ -48,6 +50,16 @@ func ExtractSubtitle(path string, index int, codec string) ([]byte, error) {
 		return []byte{}, err
 	}
 	return buf.Bytes(), nil
+}
+
+func KeepAudio(path string) (string, error) {
+	out := filepath.Join(os.TempDir(), filepath.Base(path))
+	cmd := exec.Command("ffmpeg", "-v", "quiet", "-i", path, "-map", "0:a:0", "-c", "copy", out)
+	err := cmd.Run()
+	if err != nil {
+		return "", err
+	}
+	return out, nil
 }
 
 func SubtitleBestExtractFormat(c string) (codec string, format string) {
