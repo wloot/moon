@@ -266,6 +266,7 @@ start:
 			reference = cache.TryGet(v.Path, func() string {
 				reference := ffsubsync.FindBestReferenceSub(v)
 				if reference == "" {
+					fmt.Printf("no fit inter sub so extract audio for sync\n")
 					reference, _ = ffmpeg.KeepAudio(v.Path)
 				}
 				return reference
