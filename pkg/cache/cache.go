@@ -19,24 +19,17 @@ var cacheDir = "cache"
 
 func checkDir(d string) error {
 	if d != cacheDir {
-		err := checkDir(cacheDir)
-		if err != nil {
+		if err := checkDir(cacheDir); err != nil {
 			return err
 		}
 	}
 	info, err := os.Stat(d)
 	if err != nil {
-		if err == os.ErrNotExist {
-			return os.Mkdir(cacheDir, 0755)
-		}
-		return err
+		return os.Mkdir(d, 0755)
 	}
 	if info.IsDir() == false {
-		err := os.Remove(cacheDir)
-		if err == nil {
-			return os.Mkdir(cacheDir, 0755)
-		}
-		return err
+		os.Remove(d)
+		return os.Mkdir(d, 0755)
 	}
 	return nil
 }
