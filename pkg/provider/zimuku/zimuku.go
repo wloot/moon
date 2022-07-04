@@ -158,7 +158,7 @@ func (z *Zimuku) SearchMovie(movie emby.EmbyVideo) []string {
 		fmt.Printf("zimuku: downlaoding sub, %v\n", v)
 		file := cache.TryGet(cache.MergeKeys("zimuku", v.downloadURL), func() string {
 			var file string
-			ctx, cancel := context.WithTimeout(page.GetContext(), 30*time.Second)
+			ctx, cancel := context.WithTimeout(z.browser.GetContext(), 30*time.Second)
 			err := rawRod.Try(func() {
 				file = z.downloadSub(ctx, pageGC, page, v.downloadElement)
 			})
@@ -192,7 +192,6 @@ func (z *Zimuku) downloadSub(ctx context.Context, gc []*rawRod.Page, prePage *ra
 	preElement.MustEval(`() => { this.target = "_blank" }`)
 	preElement.MustClick()
 	page := wait()
-	page = page.Context(ctx) // ??
 	gc = append(gc, page)
 
 	element := page.MustElement("#down1")
