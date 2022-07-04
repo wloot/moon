@@ -76,7 +76,9 @@ func (z *Zimuku) SearchMovie(movie emby.EmbyVideo) []string {
 			}
 			break
 		}
-		page.MustWaitLoad()
+		if page != nil {
+			page.MustWaitLoad()
+		}
 	})
 	if err != nil {
 		fmt.Printf("zimuku: failed getting detail page, %v\n", err)
