@@ -51,7 +51,9 @@ func (z *Zimuku) SearchMovie(movie emby.EmbyVideo) []string {
 				keywords = append(keywords, movie.Name+" ("+strconv.Itoa(movie.ProductionYear)+")")
 			}
 			// year offset +-1
-			keywords = append(keywords, movie.OriginalTitle+" ("+strconv.Itoa(movie.ProductionYear+1)+")")
+			if movie.ProductionYear != time.Now().Year() {
+				keywords = append(keywords, movie.OriginalTitle+" ("+strconv.Itoa(movie.ProductionYear+1)+")")
+			}
 			keywords = append(keywords, movie.OriginalTitle+" ("+strconv.Itoa(movie.ProductionYear-1)+")")
 		}
 	}
@@ -62,14 +64,14 @@ func (z *Zimuku) SearchMovie(movie emby.EmbyVideo) []string {
 			pageGC[i].Close()
 		}
 	}()
-	ctx, cancel := context.WithTimeout(z.browser.GetContext(), 5*time.Minute)
+	ctx, cancel := context.WithTimeout(z.browser.GetContext(), 3*time.Minute)
 	defer cancel()
 
 	var page *rawRod.Page
 	err := rawRod.Try(func() {
 		for _, k := range keywords {
 			fmt.Printf("zimuku: searching keyword %v\n", k)
-			page = z.searchMainPage(ctx, k, pageGC)
+			page = z.searchMainPage(ctx, pageGC, k)
 			if page == nil {
 				fmt.Printf("zimuku: searching faild, not found\n")
 				continue
@@ -249,7 +251,7 @@ func (z *Zimuku) parseInfo(element *rawRod.Element) subInfo {
 	return sub
 }
 
-func (z *Zimuku) searchMainPage(ctx context.Context, keyword string, gc []*rawRod.Page) *rawRod.Page {
+func (z *Zimuku) searchMainPage(ctx context.Context, gc []*rawRod.Page, keyword string) *rawRod.Page {
 	page := z.browser.Context(ctx).MustPage("https://zimuku.org/")
 	gc = append(gc, page)
 	// 搜索框输入
