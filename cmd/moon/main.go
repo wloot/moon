@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"io/fs"
+	"moon/pkg/cache"
 	"moon/pkg/charset"
 	"moon/pkg/emby"
 	"moon/pkg/ffsubsync"
@@ -78,10 +79,15 @@ start:
 		}
 	}
 
-	for i, v := range movieList {
-		if i > 10 && i < 100 {
+	for _, v := range movieList {
+		ok, err := cache.StatKey(time.Hour*24, v.Path)
+		if !ok || err != nil {
+			if err != nil {
+				fmt.Printf("cache dir may wrong: %v\n", err)
+			}
 			continue
 		}
+
 		if v.OriginalTitle == v.Name {
 			embyAPI.Refresh(v.Id, true)
 			time.Sleep(30 * time.Second)
@@ -225,15 +231,15 @@ start:
 			return false
 		})
 
-		backupType := "srt"
-		if subSorted[0].format == "srt" {
-			backupType = "ass"
-		}
 		var reference string
 		selectedSub := subSorted[0]
+		backupType := "srt"
+		if selectedSub.format == "srt" {
+			backupType = "ass"
+		}
 	savesub:
 		name := v.Path[:len(v.Path)-len(filepath.Ext(v.Path))] + ".chs." + selectedSub.format
-		err := os.WriteFile(name, selectedSub.data, 0644)
+		err = os.WriteFile(name, selectedSub.data, 0644)
 		if err != nil {
 			fmt.Printf("failed to write sub file: %v\n", err)
 			continue

@@ -3,6 +3,7 @@ package zimuku
 import (
 	"context"
 	"fmt"
+	"moon/pkg/cache"
 	"moon/pkg/config"
 	"moon/pkg/emby"
 	"moon/pkg/rod"
@@ -154,43 +155,55 @@ func (z *Zimuku) SearchMovie(movie emby.EmbyVideo) []string {
 			fmt.Printf("zimuku: stop download as main context timeout\n")
 			return subFiles
 		}
-		ctx, cancel := context.WithTimeout(page.GetContext(), 30*time.Second)
 		fmt.Printf("zimuku: downlaoding sub, %v\n", v)
-		err := rawRod.Try(func() {
-			wait := page.Context(ctx).MustWaitOpen()
-			v.downloadElement.MustEval(`() => { this.target = "_blank" }`)
-			v.downloadElement.MustClick()
-			page := wait()
-			page = page.Context(ctx) // ??
-			pageGC = append(pageGC, page)
-
-			element := page.MustElement("#down1")
-			element.MustEval(`() => { this.target = "" }`)
-			element.MustScrollIntoView()
-			page.Mouse.Scroll(0, 50/2, 1)
-			element.MustClick()
-			file := z.browser.HookDownload(func() {
-				page.MustElement("body > main > div > div > div > table > tbody > tr > td:nth-child(1) > div > ul > li:nth-child(1) > a").MustClick()
+		file := cache.TryGet(cache.MergeKeys("zimuku", v.downloadURL), func() string {
+			var file string
+			ctx, cancel := context.WithTimeout(page.GetContext(), 30*time.Second)
+			err := rawRod.Try(func() {
+				file = z.downloadSub(ctx, pageGC, page, v.downloadElement)
 			})
+			cancel()
+
 			if file != "" {
 				if ext := filepath.Ext(file); ext == "" && v.format != "" {
 					fmt.Printf("zimuku: sub has no ext, use %v\n", v.format)
 					os.Rename(file, file+"."+v.format)
 					file = file + "." + v.format
 				}
-				subFiles = append(subFiles, file)
 			} else {
 				downloadNumbers += 1
-				fmt.Printf("zimuku: sub download failed, no file\n")
+				if err != nil {
+					fmt.Printf("zimuku: sub download failed, %v\n", err)
+				} else {
+					fmt.Printf("zimuku: sub download failed, no file\n")
+				}
 			}
+			return file
 		})
-		cancel()
-		if err != nil {
-			downloadNumbers += 1
-			fmt.Printf("zimuku: sub download failed, %v\n", err)
+		if file != "" {
+			subFiles = append(subFiles, file)
 		}
 	}
 	return subFiles
+}
+
+func (z *Zimuku) downloadSub(ctx context.Context, gc []*rawRod.Page, prePage *rawRod.Page, preElement *rawRod.Element) string {
+	wait := prePage.Context(ctx).MustWaitOpen()
+	preElement.MustEval(`() => { this.target = "_blank" }`)
+	preElement.MustClick()
+	page := wait()
+	page = page.Context(ctx) // ??
+	gc = append(gc, page)
+
+	element := page.MustElement("#down1")
+	element.MustEval(`() => { this.target = "" }`)
+	element.MustScrollIntoView()
+	page.Mouse.Scroll(0, 50/2, 1)
+	element.MustClick()
+	file := z.browser.HookDownload(func() {
+		page.MustElement("body > main > div > div > div > table > tbody > tr > td:nth-child(1) > div > ul > li:nth-child(1) > a").MustClick()
+	})
+	return file
 }
 
 func (z *Zimuku) parseInfo(element *rawRod.Element) subInfo {
