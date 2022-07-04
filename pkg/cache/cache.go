@@ -95,6 +95,7 @@ func TryGet(k string, or func() string) string {
 		if err == nil {
 			return new
 		}
+		fmt.Printf("cache: save failed %v\n", err)
 	}
 	return s
 }
