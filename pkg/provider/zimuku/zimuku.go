@@ -161,6 +161,7 @@ func (z *Zimuku) SearchMovie(movie emby.EmbyVideo) []string {
 			v.downloadElement.MustEval(`() => { this.target = "_blank" }`)
 			v.downloadElement.MustClick()
 			page := wait()
+			page = page.Context(ctx) // ??
 			pageGC = append(pageGC, page)
 
 			element := page.MustElement("#down1")
