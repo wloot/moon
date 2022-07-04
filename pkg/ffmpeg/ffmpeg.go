@@ -54,10 +54,7 @@ func ExtractSubtitle(path string, index int, codec string) ([]byte, error) {
 
 func KeepAudio(path string) (string, error) {
 	out := filepath.Join(os.TempDir(), filepath.Base(path))
-	cmd := exec.Command("ffmpeg", "-i", path, "-map", "0:a:0", "-c", "copy", out)
-	// debug
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
+	cmd := exec.Command("ffmpeg", "-v", "quiet", "-i", path, "-map", "0:a:0", "-c", "copy", out)
 	err := cmd.Run()
 	if err != nil {
 		return "", err
