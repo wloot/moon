@@ -150,6 +150,10 @@ func (z *Zimuku) SearchMovie(movie emby.EmbyVideo) []string {
 		if i >= downloadNumbers {
 			break
 		}
+		if deadline, ok := page.GetContext().Deadline(); ok && deadline.Sub(time.Now()) <= 0 {
+			fmt.Printf("zimuku: stop download as main context timeout\n")
+			return subFiles
+		}
 		ctx, cancel := context.WithTimeout(page.GetContext(), 30*time.Second)
 		fmt.Printf("zimuku: downlaoding sub, %v\n", v)
 		err := rawRod.Try(func() {
