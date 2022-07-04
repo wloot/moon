@@ -51,7 +51,7 @@ func FindBestReferenceSub(v emby.EmbyVideo) string {
 			_, ext := ffmpeg.SubtitleBestExtractFormat(bestSub.SubtitleCodecToFfmpeg())
 			if ext == "sup" {
 				subData = pgstosrt.PgsToSrt(subData)
-				ext = "srt"
+				ext += ".srt"
 			}
 			name := filepath.Base(v.Path)
 			name = name[:len(name)-len(filepath.Ext(name))] + "." + strconv.FormatInt(int64(bestSub.Index), 10) + "." + ext

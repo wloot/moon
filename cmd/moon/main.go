@@ -55,16 +55,10 @@ start:
 			if whatlanggo.Detect(v.OriginalTitle).Lang == whatlanggo.Cmn {
 				continue
 			}
-			need := true
-			for _, stream := range v.MediaStreams {
-				if stream.Index == 1 && stream.Type == "Audio" && stream.DisplayLanguage == "Chinese Simplified" {
-					need = false
-					break
-				}
+			if v.MediaStreams[1].Type == "Audio" && v.MediaStreams[1].DisplayLanguage == "Chinese Simplified" {
+				continue
 			}
-			if need == true {
-				movieList = append(movieList, v)
-			}
+			movieList = append(movieList, v)
 		}
 	}
 
