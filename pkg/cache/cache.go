@@ -90,6 +90,7 @@ func TryGet(k string, or func() string) string {
 		var v []fs.DirEntry
 		v, err = f.ReadDir(-1)
 		if err == nil && len(v) > 0 {
+			fmt.Printf("cache: got %v\n", v[0].Name())
 			return filepath.Join(fn, v[0].Name())
 		}
 	}
