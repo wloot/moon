@@ -52,7 +52,7 @@ func StatKey(interval time.Duration, k string) (bool, error) {
 	fn := filepath.Join(cacheDir, md5Key(k))
 	s, err := os.Stat(fn)
 	if err != nil {
-		_, err = os.Create(fn)
+		err := os.Mkdir(fn, 0755)
 		if err == nil {
 			return true, nil
 		}
