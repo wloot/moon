@@ -252,7 +252,7 @@ start:
 				if reference == "" {
 					reference, _ = ffmpeg.KeepAudio(v.Path)
 				}
-				return ""
+				return reference
 			})
 		}
 		if reference == "" {
