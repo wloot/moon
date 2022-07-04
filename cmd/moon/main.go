@@ -81,7 +81,10 @@ start:
 		}
 	}
 
-	for _, v := range movieList {
+	for i, v := range movieList {
+		if i > 10 && i < 100 {
+			continue
+		}
 		if v.OriginalTitle == v.Name {
 			embyAPI.Refresh(v.Id, true)
 			time.Sleep(30 * time.Second)
