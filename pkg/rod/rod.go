@@ -9,7 +9,6 @@ import (
 
 	"github.com/go-rod/rod"
 	"github.com/go-rod/rod/lib/launcher"
-	"github.com/go-rod/rod/lib/proto"
 )
 
 type Rod struct {
@@ -39,23 +38,12 @@ func New() *Rod {
 	}
 }
 
-func (r *Rod) MustWaitNewPage(action func()) *rod.Page {
-	r.mu.Lock()
-	defer r.mu.Unlock()
-	event := proto.PageWindowOpen{}
-	wait := r.WaitEvent(&event)
-	action()
-	wait()
-	time.Sleep(time.Second)
-	return r.MustPages().MustFindByURL(event.URL)
-}
-
 func (r *Rod) HookDownload(action func()) string {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	dir := filepath.Join(SETTINGS_rod_dir, "downloads")
 
-	wait := r.Timeout(10 * time.Second).WaitDownload(dir)
+	wait := r.WaitDownload(dir)
 	action()
 	info := wait()
 	if info != nil {
