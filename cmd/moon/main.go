@@ -113,7 +113,10 @@ start:
 			}
 		}
 
-		subFiles := zimuku.SearchMovie(v)
+		subFiles, failed := zimuku.SearchMovie(v)
+		if failed == true {
+			cache.DelEmpty(v.Path)
+		}
 		var subSorted []Subinfo
 		for _, subName := range subFiles {
 			err := unpack.WalkUnpacked(subName, func(reader io.Reader, info fs.FileInfo) {

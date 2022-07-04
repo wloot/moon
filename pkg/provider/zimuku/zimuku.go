@@ -41,7 +41,7 @@ func New() Zimuku {
 	}
 }
 
-func (z *Zimuku) SearchMovie(movie emby.EmbyVideo) []string {
+func (z *Zimuku) SearchMovie(movie emby.EmbyVideo) ([]string, bool) {
 	var keywords []string
 	if movie.ProviderIds.Imdb != "" {
 		keywords = append(keywords, movie.ProviderIds.Imdb)
@@ -85,11 +85,11 @@ func (z *Zimuku) SearchMovie(movie emby.EmbyVideo) []string {
 	})
 	if err != nil {
 		fmt.Printf("zimuku: failed getting detail page, %v\n", err)
-		return []string{}
+		return []string{}, true
 	}
 	if page == nil {
 		fmt.Printf("zimuku: no detail page found, return\n")
-		return []string{}
+		return []string{}, false
 	}
 
 	var subs []subInfo
@@ -104,7 +104,7 @@ func (z *Zimuku) SearchMovie(movie emby.EmbyVideo) []string {
 	})
 	if err != nil {
 		fmt.Printf("zimuku: parse detail page failed, %v\n", err)
-		return []string{}
+		return []string{}, true
 	}
 	for i := len(subs) - 1; i >= 0; i-- {
 		need := false
@@ -123,7 +123,7 @@ func (z *Zimuku) SearchMovie(movie emby.EmbyVideo) []string {
 	}
 	if len(subs) == 0 {
 		fmt.Printf("zimuku: no sub for now\n")
-		return []string{}
+		return []string{}, false
 	}
 
 	firstTime := subs[len(subs)-1].time
@@ -153,7 +153,11 @@ func (z *Zimuku) SearchMovie(movie emby.EmbyVideo) []string {
 		}
 		if deadline, ok := page.GetContext().Deadline(); ok && deadline.Sub(time.Now()) <= 0 {
 			fmt.Printf("zimuku: stop download as main context timeout\n")
-			return subFiles
+			if len(subFiles) == 0 {
+				return subFiles, true
+			} else {
+				return subFiles, false
+			}
 		}
 		fmt.Printf("zimuku: downlaoding sub, %v\n", v)
 		file := cache.TryGet(cache.MergeKeys("zimuku", v.downloadURL), func() string {
@@ -184,7 +188,11 @@ func (z *Zimuku) SearchMovie(movie emby.EmbyVideo) []string {
 			subFiles = append(subFiles, file)
 		}
 	}
-	return subFiles
+	if len(subFiles) == 0 {
+		return subFiles, true
+	} else {
+		return subFiles, false
+	}
 }
 
 func (z *Zimuku) downloadSub(ctx context.Context, gc []*rawRod.Page, prePage *rawRod.Page, preElement *rawRod.Element) string {

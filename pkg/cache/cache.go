@@ -46,6 +46,14 @@ func MergeKeys(k ...string) string {
 	return fmt.Sprintf("%v", k)
 }
 
+func DelEmpty(k string) {
+	err := checkDir(cacheDir)
+	if err == nil {
+		fn := filepath.Join(cacheDir, md5Key(k))
+		os.Remove(fn)
+	}
+}
+
 func StatKey(interval time.Duration, k string) (bool, error) {
 	err := checkDir(cacheDir)
 	if err != nil {
