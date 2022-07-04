@@ -53,13 +53,15 @@ func ExtractSubtitle(path string, index int, codec string) ([]byte, error) {
 }
 
 func KeepAudio(path string) (string, error) {
-	out := filepath.Join(os.TempDir(), filepath.Base(path))
-	cmd := exec.Command("ffmpeg", "-v", "quiet", "-i", path, "-map", "0:a:0", "-c", "copy", out)
+	name := filepath.Base(path)
+	name = name[:len(name)-len(filepath.Ext(name))] + ".1" + filepath.Ext(name)
+	name = filepath.Join(os.TempDir(), name)
+	cmd := exec.Command("ffmpeg", "-v", "quiet", "-i", path, "-map", "0:a:0", "-c", "copy", name)
 	err := cmd.Run()
 	if err != nil {
 		return "", err
 	}
-	return out, nil
+	return name, nil
 }
 
 func SubtitleBestExtractFormat(c string) (codec string, format string) {

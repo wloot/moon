@@ -10,7 +10,6 @@ import (
 	"path/filepath"
 	"regexp"
 	"strconv"
-	"time"
 )
 
 func FindBestReferenceSub(v emby.EmbyVideo) string {
@@ -54,7 +53,8 @@ func FindBestReferenceSub(v emby.EmbyVideo) string {
 				subData = pgstosrt.PgsToSrt(subData)
 				ext = "srt"
 			}
-			name := strconv.Itoa(int(time.Now().Unix())) + "." + ext
+			name := filepath.Base(v.Path)
+			name = name[:len(name)-len(filepath.Ext(name))] + "." + strconv.FormatInt(int64(bestSub.Index), 10) + "." + ext
 			name = filepath.Join(os.TempDir(), name)
 			err = os.WriteFile(name, subData, 0644)
 			if err == nil {
