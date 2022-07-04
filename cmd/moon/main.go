@@ -55,14 +55,11 @@ start:
 			}
 			need := true
 			for _, stream := range v.MediaStreams {
-				if stream.Index == 1 && stream.Type == "Audio" {
-					if stream.Language == "chs" || (stream.Language == "chi" && stream.DisplayLanguage == "Chinese Simplified") {
-						need = false
-						break
-					}
+				if stream.Index == 1 && stream.Type == "Audio" && stream.DisplayLanguage == "Chinese Simplified" {
+					need = false
+					break
 				}
-				if stream.Type == "Subtitle" &&
-					(stream.Language == "chs" || (stream.Language == "chi" && stream.DisplayLanguage == "Chinese Simplified")) {
+				if stream.Type == "Subtitle" && stream.DisplayLanguage == "Chinese Simplified" {
 					if stream.IsExternal == false {
 						need = false
 						break
