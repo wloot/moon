@@ -45,13 +45,12 @@ start:
 	embyAPI := emby.New(SETTINGS_emby_url, SETTINGS_emby_key)
 	zimukuAPI := zimuku.New()
 
-	var videoList []emby.EmbyVideo
 	failedTimes := 0
 	processedItems := 0
 
 start_continue:
-	ids := embyAPI.RecentItems(SETTINGS_emby_importcount/2, processedItems, "Movie,Season")
-	for _, id := range ids {
+	var videoList []emby.EmbyVideo
+	for _, id := range embyAPI.RecentItems(SETTINGS_emby_importcount/2, processedItems, "Movie,Season") {
 		v := embyAPI.ItemInfo(id)
 		if v.Type == "Movie" {
 			if len(v.ProductionLocations) > 0 && v.ProductionLocations[0] == "China" {
