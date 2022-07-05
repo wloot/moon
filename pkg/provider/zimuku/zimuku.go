@@ -70,7 +70,7 @@ func (z *Zimuku) SeasonKeywords(season emby.EmbyVideo, series emby.EmbyVideo, ep
 
 	for _, v := range episodes {
 		if v.IndexNumber == 1 {
-			if v.ProviderIds.Imdb == "" {
+			if v.ProviderIds.Imdb != "" {
 				keywords = append(keywords, v.ProviderIds.Imdb)
 			}
 		}
