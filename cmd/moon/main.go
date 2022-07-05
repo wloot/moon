@@ -237,6 +237,7 @@ start_continue:
 	}
 	fmt.Printf("all work done, sleep 6 hours")
 end:
+	zimukuAPI.Close()
 	time.Sleep(6 * time.Hour)
 	goto start
 }

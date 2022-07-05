@@ -44,6 +44,9 @@ func New() Zimuku {
 		browser: rod.New(),
 	}
 }
+func (z *Zimuku) Close() {
+	z.browser.Close()
+}
 
 func (z *Zimuku) movieKeywords(movie emby.EmbyVideo) []string {
 	var keywords []string
