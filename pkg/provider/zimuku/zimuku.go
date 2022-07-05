@@ -68,12 +68,16 @@ func (z *Zimuku) movieKeywords(movie emby.EmbyVideo) []string {
 func (z *Zimuku) SeasonKeywords(season emby.EmbyVideo, series emby.EmbyVideo, episodes []emby.EmbyVideo) []string {
 	var keywords []string
 
-	for _, v := range episodes {
-		if v.IndexNumber == 1 {
-			if v.ProviderIds.Imdb != "" {
-				keywords = append(keywords, v.ProviderIds.Imdb)
+	if season.IndexNumber != 1 {
+		for _, v := range episodes {
+			if v.IndexNumber == 1 {
+				if v.ProviderIds.Imdb != "" {
+					keywords = append(keywords, v.ProviderIds.Imdb)
+				}
 			}
 		}
+	} else {
+		keywords = append(keywords, series.ProviderIds.Imdb)
 	}
 
 	originalTitle := series.OriginalTitle
@@ -85,13 +89,13 @@ func (z *Zimuku) SeasonKeywords(season emby.EmbyVideo, series emby.EmbyVideo, ep
 		keywords = append(keywords, originalTitle+" ("+seasonYear+")")
 	}
 	keywords = append(keywords, originalTitle+" 第"+seasonNumber+"季")
-	if seasonYear == "一" {
-		keywords = append(keywords, originalTitle)
-	}
 	if originalTitle != chineseTitle {
 		if seasonYear != "0" && seasonYear != "" {
 			keywords = append(keywords, chineseTitle+" ("+seasonYear+")")
 		}
+	}
+	if seasonYear == "一" {
+		keywords = append(keywords, originalTitle)
 	}
 
 	return keywords

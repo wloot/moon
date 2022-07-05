@@ -94,7 +94,7 @@ start:
 					}
 				}
 			}
-			if series.OriginalTitle == series.Name {
+			if series.OriginalTitle == series.Name || series.ProviderIds.Imdb == "" {
 				embyAPI.Refresh(series.Id, true)
 				time.Sleep(30 * time.Second)
 				series = embyAPI.ItemInfo(series.Id)
