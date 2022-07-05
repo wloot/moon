@@ -132,10 +132,12 @@ start:
 			subFilesEP := zimukuAPI.SearchSeason(keywords, episodes)
 			for i, subFiles := range subFilesEP {
 				v := episodes[i]
-				succ := writeSub(subFiles, v)
-				if succ == true {
-					cache.UpdateKey(v.Path)
-					embyAPI.Refresh(v.Id, false)
+				cache.UpdateKey(v.Path)
+				if len(subFiles) > 0 {
+					succ := writeSub(subFiles, v)
+					if succ == true {
+						embyAPI.Refresh(v.Id, false)
+					}
 				}
 			}
 			continue
