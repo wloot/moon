@@ -129,6 +129,8 @@ start:
 				}
 				if time.Now().Sub(v.GetDateCreated()) <= time.Hour*24*3 || time.Now().Sub(v.GetPremiereDate()) <= time.Hour*24*30 {
 					interval = time.Hour * 24
+				} else if hasSub == true {
+					continue // speedup
 				}
 				if ok := cache.StatKey(interval, v.Path); !ok {
 					episodes = append(episodes[:i], episodes[i+1:]...)
@@ -187,6 +189,8 @@ start:
 		}
 		if time.Now().Sub(v.GetDateCreated()) <= time.Hour*24*3 || time.Now().Sub(v.GetPremiereDate()) <= time.Hour*24*30 {
 			interval = time.Hour * 24
+		} else if hasSub == true {
+			continue // speedup
 		}
 		if ok := cache.StatKey(interval, v.Path); !ok {
 			continue
