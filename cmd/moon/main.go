@@ -146,12 +146,14 @@ start:
 						v.Path = new + v.Path[len(old):]
 					}
 				}
-				cache.UpdateKey(v.Path)
 				if len(subFiles) > 0 {
 					succ := writeSub(subFiles, v)
 					if succ == true {
+						cache.UpdateKey(v.Path)
 						embyAPI.Refresh(v.Id, false)
 					}
+				} else {
+					cache.UpdateKey(v.Path)
 				}
 			}
 			if len(subFilesEP) != len(episodes) {
@@ -205,6 +207,9 @@ start:
 		if failed == true || len(subFiles) == 0 {
 			if failed == true {
 				failedTimes += 1
+			}
+			if len(subFiles) == 0 {
+				cache.UpdateKey(v.Path)
 			}
 			continue
 		}
