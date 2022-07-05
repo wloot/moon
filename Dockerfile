@@ -10,7 +10,7 @@ FROM python:3.8 AS py
 
 RUN apt-get update \
     && apt-get install --no-install-recommends -y gcc
-RUN mkidr /ffsubsync && pip install --target /ffsubsync ffsubsync
+RUN mkdir /ffsubsync && pip install --target /ffsubsync ffsubsync
 
 FROM ubuntu:20.04
 
