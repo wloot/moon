@@ -22,6 +22,7 @@ RUN apt-get update \
     python3-pip \
     python3-wheel \
     python3-setuptools \
+    python3-dev \
     gcc \
     ffmpeg \
     xz-utils \
