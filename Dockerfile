@@ -35,6 +35,7 @@ COPY --from=go /moon/moon /usr/bin/
 
 COPY --from=py /ffsubsync/ /ffsubsync/
 RUN ln -s /usr/bin/python3 /usr/local/bin/python
+ENV PATH="/ffsubsync/bin:${PATH}"
 ENV PYTHONPATH='/ffsubsync'
 
 ARG S6_OVERLAY_VERSION=3.1.0.1
