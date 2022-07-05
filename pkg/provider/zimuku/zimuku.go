@@ -293,9 +293,9 @@ func (z *Zimuku) searchMainPage(ctx context.Context, gc []*rawRod.Page, keyword 
 		var text string
 		if err == nil {
 			client := gosseract.NewClient()
-			defer client.Close()
 			client.SetImageFromBytes(b)
 			text, err = client.Text()
+			client.Close()
 		}
 		if err != nil {
 			fmt.Printf("zimuku: verify code: %v\n", err)
