@@ -210,6 +210,7 @@ func (z *Zimuku) downloadSub(ctx context.Context, gc []*rawRod.Page, prePage *ra
 	file := z.browser.HookDownload(func() {
 		page.MustElement("body > main > div > div > div > table > tbody > tr > td:nth-child(1) > div > ul > li:nth-child(1) > a").MustClick()
 	})
+	page.Close()
 	return file
 }
 
