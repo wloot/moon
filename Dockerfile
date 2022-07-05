@@ -6,6 +6,17 @@ RUN apt-get update -qq && apt-get install -y -qq libtesseract-dev libleptonica-d
 RUN go build ./cmd/moon
 
 
+FROM python as py
+
+ENV PYTHONDONTWRITEBYTECODE 1
+ENV PYTHONUNBUFFERED 1
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends gcc
+RUN python -m venv /opt/venv
+ENV PATH="/opt/venv/bin:$PATH"
+RUN pip install ffsubsync
+
+
 FROM ubuntu:20.04
 
 RUN apt-get update \
@@ -18,19 +29,16 @@ RUN apt-get update \
     libgbm1 \
     ca-certificates \
     python3 \
-    python3-pip \
-    python3-setuptools \
-    python3-dev \
-    python3-wheel \
-    gcc \
     ffmpeg \
     xz-utils \
     libtesseract-dev \
     libleptonica-dev \
-    && rm -rf /var/lib/apt/lists/* \
-    && pip3 install --no-cache-dir ffsubsync
+    && rm -rf /var/lib/apt/lists/*
 
 COPY --from=go /moon/moon /usr/bin/
+
+COPY --from=py /opt/venv/ /opt/venv/
+ENV PATH="/opt/venv/bin:$PATH"
 
 ARG S6_OVERLAY_VERSION=3.1.0.1
 ADD https://github.com/just-containers/s6-overlay/releases/download/v${S6_OVERLAY_VERSION}/s6-overlay-noarch.tar.xz /tmp
