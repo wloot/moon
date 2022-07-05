@@ -7,6 +7,7 @@ import (
 	"moon/pkg/cache"
 	"moon/pkg/config"
 	"moon/pkg/emby"
+	"moon/pkg/episode"
 	"moon/pkg/rod"
 	"os"
 	"path/filepath"
@@ -35,6 +36,7 @@ type subInfo struct {
 	votingScore     float64
 	time            int64
 	format          string
+	name            string
 }
 
 func New() Zimuku {
@@ -43,7 +45,7 @@ func New() Zimuku {
 	}
 }
 
-func (z *Zimuku) SearchMovie(movie emby.EmbyVideo) ([]string, bool) {
+func (z *Zimuku) movieKeywords(movie emby.EmbyVideo) []string {
 	var keywords []string
 	if movie.ProviderIds.Imdb != "" {
 		keywords = append(keywords, movie.ProviderIds.Imdb)
@@ -60,7 +62,186 @@ func (z *Zimuku) SearchMovie(movie emby.EmbyVideo) ([]string, bool) {
 			keywords = append(keywords, movie.OriginalTitle+" ("+strconv.Itoa(movie.ProductionYear-1)+")")
 		}
 	}
+	return keywords
+}
 
+func (z *Zimuku) SeasonKeywords(season emby.EmbyVideo, series emby.EmbyVideo, episodes []emby.EmbyVideo) []string {
+	var keywords []string
+
+	for _, v := range episodes {
+		if v.IndexNumber == 1 {
+			if v.ProviderIds.Imdb == "" {
+				keywords = append(keywords, v.ProviderIds.Imdb)
+			}
+		}
+	}
+
+	originalTitle := series.OriginalTitle
+	chineseTitle := series.Name
+	seasonYear := strconv.Itoa(season.ProductionYear)
+	seasonNumber := episode.ToChineseDigital(season.IndexNumber)
+	if seasonYear != "0" && seasonYear != "" {
+		keywords = append(keywords, originalTitle+" ("+seasonYear+")")
+	}
+	keywords = append(keywords, originalTitle+" 第"+seasonNumber+"季")
+	if seasonYear == "一" {
+		keywords = append(keywords, originalTitle)
+	}
+	if originalTitle != chineseTitle {
+		if seasonYear != "0" && seasonYear != "" {
+			keywords = append(keywords, chineseTitle+" ("+seasonYear+")")
+		}
+	}
+
+	return keywords
+}
+
+func (z *Zimuku) SearchSeason(keywords []string, eps []emby.EmbyVideo) [][]string {
+	var pageGC []*rawRod.Page
+	defer func() {
+		for i := range pageGC {
+			pageGC[i].Close()
+		}
+	}()
+	ctx, cancel := context.WithTimeout(z.browser.GetContext(), 10*time.Minute)
+	defer cancel()
+
+	var page *rawRod.Page
+	err := rawRod.Try(func() {
+		for _, k := range keywords {
+			fmt.Printf("zimuku: searching keyword %v\n", k)
+			page = z.searchMainPage(ctx, pageGC, k)
+			if page == nil {
+				fmt.Printf("zimuku: searching faild, not found\n")
+				continue
+			}
+			break
+		}
+		if page != nil {
+			page.MustWaitLoad()
+		}
+	})
+	if err != nil {
+		fmt.Printf("zimuku: failed getting detail page, %v\n", err)
+		return [][]string{}
+	}
+	if page == nil {
+		fmt.Printf("zimuku: no detail page found, return\n")
+		return make([][]string, len(eps))
+	}
+
+	var subs []subInfo
+	err = rawRod.Try(func() {
+		for childid := 1; true; childid++ {
+			has, element, _ := page.Has("#subtb > tbody > tr:nth-child(" + strconv.Itoa(childid) + ")")
+			if has == false {
+				break
+			}
+			subs = append(subs, z.parseInfo(element))
+		}
+	})
+	if err != nil {
+		fmt.Printf("zimuku: parse detail page failed, %v\n", err)
+		return [][]string{}
+	}
+
+	for i := len(subs) - 1; i >= 0; i-- {
+		need := false
+		for _, l := range subs[i].language {
+			if l == "简体中文" || l == "双语" {
+				need = true
+				break
+			}
+		}
+		if subs[i].format == "sup" {
+			need = false
+		}
+		if need == false {
+			subs = append(subs[:i], subs[i+1:]...)
+		}
+	}
+	if len(subs) == 0 {
+		fmt.Printf("zimuku: no sub for now\n")
+		return make([][]string, len(eps))
+	}
+
+	var perEp = make(map[int][]subInfo)
+	for _, v := range subs {
+		ep := episode.NameToEpisode(v.name)
+		if ep <= 0 {
+			ep = 0
+		}
+		perEp[ep] = append(perEp[ep], v)
+	}
+
+	var out [][]string
+	for i := range eps {
+		e := eps[i].IndexNumber
+		subs, ok := perEp[e]
+		if ok == false {
+			out = append(out, []string{})
+			continue
+		}
+		sort.Slice(subs, func(i, j int) bool {
+			less := subs[i].downloadCount >= subs[j].downloadCount
+			if less == true && subs[i].votingScore <= 5 && subs[i].votingScore > 0 {
+				if subs[j].votingScore > subs[i].votingScore {
+					less = false
+				}
+			}
+			return less
+		})
+		var subFiles []string
+		for i, v := range subs {
+			if i >= downloadNumbers-1 || i > 5 {
+				break
+			}
+			if deadline, ok := page.GetContext().Deadline(); ok && deadline.Sub(time.Now()) <= 0 {
+				fmt.Printf("zimuku: stop download as main context timeout\n")
+				if len(subFiles) > 0 {
+					out = append(out, subFiles)
+				}
+				return out
+			}
+			fmt.Printf("zimuku: downlaoding sub, %v\n", v)
+			file := cache.TryGet(cache.MergeKeys("zimuku", v.downloadURL), func() string {
+				var file string
+				ctx, cancel := context.WithTimeout(z.browser.GetContext(), 30*time.Second)
+				err := rawRod.Try(func() {
+					file = z.downloadSub(ctx, pageGC, page, v.downloadElement)
+				})
+				cancel()
+
+				if file != "" {
+					if ext := filepath.Ext(file); ext == "" && v.format != "" {
+						fmt.Printf("zimuku: sub has no ext, use %v\n", v.format)
+						os.Rename(file, file+"."+v.format)
+						file = file + "." + v.format
+					}
+				} else {
+					downloadNumbers += 1
+					if err != nil {
+						fmt.Printf("zimuku: sub download failed, %v\n", err)
+					} else {
+						fmt.Printf("zimuku: sub download failed, no file\n")
+					}
+				}
+				return file
+			})
+			if file != "" {
+				subFiles = append(subFiles, file)
+			}
+		}
+		if len(subFiles) > 0 {
+			out = append(out, subFiles)
+		} else {
+			return out
+		}
+	}
+	return out
+}
+
+func (z *Zimuku) SearchMovie(movie emby.EmbyVideo) ([]string, bool) {
 	var pageGC []*rawRod.Page
 	defer func() {
 		for i := range pageGC {
@@ -71,6 +252,7 @@ func (z *Zimuku) SearchMovie(movie emby.EmbyVideo) ([]string, bool) {
 	defer cancel()
 
 	var page *rawRod.Page
+	keywords := z.movieKeywords(movie)
 	err := rawRod.Try(func() {
 		for _, k := range keywords {
 			fmt.Printf("zimuku: searching keyword %v\n", k)
@@ -108,6 +290,7 @@ func (z *Zimuku) SearchMovie(movie emby.EmbyVideo) ([]string, bool) {
 		fmt.Printf("zimuku: parse detail page failed, %v\n", err)
 		return []string{}, true
 	}
+
 	for i := len(subs) - 1; i >= 0; i-- {
 		need := false
 		for _, l := range subs[i].language {
@@ -219,8 +402,36 @@ func (z *Zimuku) downloadSub(ctx context.Context, gc []*rawRod.Page, prePage *ra
 func (z *Zimuku) parseInfo(element *rawRod.Element) subInfo {
 	sub := subInfo{}
 	sub.downloadElement = element.MustElement("td.first > a")
-	sub.downloadURL = *element.MustElement("td.first > a").MustAttribute("href")
-	count := element.MustElement("td:nth-child(4)").MustText()
+	sub.downloadURL = *sub.downloadElement.MustAttribute("href")
+	sub.name = *sub.downloadElement.MustAttribute("title")
+
+	format := element.MustElement("td.first > span:nth-child(2)").MustText()
+	if has, _, _ := element.Has("td.first > span:nth-child(3)"); has == false {
+		if format == "ASS/SSA" {
+			sub.format = "ass"
+		}
+		if format == "SRT" {
+			sub.format = "srt"
+		}
+		if format == "SUP" {
+			sub.format = "sup"
+		}
+	}
+
+	for langid := 1; true; langid++ {
+		has, image, _ := element.Has("td.tac.lang > img:nth-child(" + strconv.Itoa(langid) + ")")
+		if has == false {
+			break
+		}
+		sub.language = append(sub.language, *image.MustAttribute("alt"))
+	}
+
+	es := element.MustElements("td.tac.hidden-xs")
+
+	votingStr := *es.First().MustAttribute("data-original-title")
+	sub.votingScore, _ = strconv.ParseFloat(regexp.MustCompile("[0-9.]+").FindString(votingStr), 64)
+
+	count := es.Last().MustText()
 	if strings.HasSuffix(count, "万") {
 		count = count[:len(count)-len("万")]
 		countf, _ := strconv.ParseFloat(count, 64)
@@ -229,7 +440,8 @@ func (z *Zimuku) parseInfo(element *rawRod.Element) subInfo {
 	} else {
 		sub.downloadCount, _ = strconv.Atoi(count)
 	}
-	date := element.MustElement("td:nth-child(5)").MustText()
+
+	date := element.MustElement("td.last.hidden-xs").MustText()
 	date = regexp.MustCompile(" .*\n (.+)").FindStringSubmatch(date)[1]
 	if strings.HasSuffix(date, "天前") {
 		date = date[:len(date)-len("天前")]
@@ -255,27 +467,7 @@ func (z *Zimuku) parseInfo(element *rawRod.Element) subInfo {
 	if t, err := time.Parse("1月2日2006", date+strconv.Itoa(time.Now().Year())); err == nil {
 		sub.time = t.Unix() + 28800 // UTC + 8
 	}
-	format := element.MustElement("td.first > span:nth-child(2)").MustText()
-	if has, _, _ := element.Has("td.first > span:nth-child(3)"); has == false {
-		if format == "ASS/SSA" {
-			sub.format = "ass"
-		}
-		if format == "SRT" {
-			sub.format = "srt"
-		}
-		if format == "SUP" {
-			sub.format = "sup"
-		}
-	}
-	for langid := 1; true; langid++ {
-		has, image, _ := element.Has("td.tac.lang > img:nth-child(" + strconv.Itoa(langid) + ")")
-		if has == false {
-			break
-		}
-		sub.language = append(sub.language, *image.MustAttribute("alt"))
-	}
-	votingStr := *element.MustElement("td:nth-child(3) > i").MustAttribute("data-original-title")
-	sub.votingScore, _ = strconv.ParseFloat(regexp.MustCompile("[0-9.]+").FindString(votingStr), 64)
+
 	return sub
 }
 
@@ -314,6 +506,7 @@ func (z *Zimuku) searchMainPage(ctx context.Context, gc []*rawRod.Page, keyword 
 	// 搜索结果页第一个结果
 	has, element, _ = page.Has("body > div.container > div > div > div.box.clearfix > div:nth-child(2) > div.litpic.hidden-xs > a")
 	if has == false {
+		page.Close()
 		return nil
 	}
 	element.MustEval(`() => { this.target = "" }`)

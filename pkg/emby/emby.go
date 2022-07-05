@@ -21,6 +21,10 @@ type videoList struct {
 	} `json:"Items"`
 }
 
+type episodeList struct {
+	Items []EmbyVideo `json:"Items"`
+}
+
 type EmbyVideoStream struct {
 	Codec           string `json:"Codec"`
 	Language        string `json:"Language"`
@@ -56,6 +60,9 @@ type EmbyVideo struct {
 	ProductionLocations []string          `json:"ProductionLocations"`
 	DateCreated         string            `json:"DateCreated"`
 	PremiereDate        string            `json:"PremiereDate"`
+	Type                string            `json:"Type"`
+	SeriesId            string            `json:"SeriesId"`
+	IndexNumber         int               `json:"IndexNumber"`
 }
 
 func (e EmbyVideo) parseTime(s string) time.Time {
@@ -108,17 +115,24 @@ func (e *Emby) getJson(url string, v interface{}) error {
 	return nil
 }
 
-func (e *Emby) MovieInfo(id string) EmbyVideo {
+func (e *Emby) ItemInfo(id string) EmbyVideo {
 	var info EmbyVideo
 	e.getJson(e.buildURL("/LiveTv/Programs/"+id), &info)
 
 	return info
 }
 
-func (e *Emby) RecentMovie(num int, start int) []string {
+func (e *Emby) Episodes(seriesId string, seasonId string) []EmbyVideo {
+	var list episodeList
+	e.getJson(e.buildURL("/Shows/"+seriesId+"/Episodes?SeasonId="+seasonId), &list)
+
+	return list.Items
+}
+
+func (e *Emby) RecentVideo(num int, start int, types string) []string {
 	var list videoList
 	e.getJson(e.buildURL(
-		"/Items?Limit="+strconv.Itoa(num)+"&IncludeItemTypes=Movie&SortBy=DateCreated&SortOrder=Descending&Recursive=true&StartIndex="+strconv.Itoa(start),
+		"/Items?Limit="+strconv.Itoa(num)+"&IncludeItemTypes="+types+"&SortBy=DateCreated&SortOrder=Descending&Recursive=true&StartIndex="+strconv.Itoa(start),
 	), &list)
 
 	var result []string
