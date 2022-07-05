@@ -134,7 +134,6 @@ start:
 			subFilesEP := zimukuAPI.SearchSeason(keywords, episodes)
 			for i, subFiles := range subFilesEP {
 				v := episodes[i]
-				subFiles = append(subFiles, subFilesEP[0]...)
 				cache.UpdateKey(v.Path)
 				if len(subFiles) > 0 {
 					succ := writeSub(subFiles, v)

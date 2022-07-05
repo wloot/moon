@@ -177,9 +177,15 @@ func (z *Zimuku) SearchSeason(keywords []string, eps []emby.EmbyVideo) [][]strin
 
 	var out [][]string
 	for i := range eps {
+		var subs []subInfo
 		e := eps[i].IndexNumber
-		subs, ok := perEp[e]
-		if ok == false {
+		if _, ok := perEp[e]; ok {
+			subs = append(subs, perEp[e]...)
+		}
+		if _, ok := perEp[0]; ok {
+			subs = append(subs, perEp[0]...)
+		}
+		if len(subs) == 0 {
 			out = append(out, []string{})
 			continue
 		}
