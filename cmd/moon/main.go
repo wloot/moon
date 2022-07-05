@@ -48,7 +48,7 @@ func main() {
 	client.SetImageFromBytes(b)
 	t, e := client.Text()
 	if e != nil {
-		print(e, "\n")
+		fmt.Printf("haha %v\n", e)
 	}
 	print(t, "\n")
 	return
