@@ -51,6 +51,7 @@ func main() {
 		fmt.Printf("haha %v\n", e)
 	}
 	print(t, "\n")
+	fmt.Scanln()
 	return
 
 start:
