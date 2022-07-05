@@ -8,7 +8,7 @@ RUN go build ./cmd/moon
 
 FROM python:3.8 AS py
 
-RUN apt-get update  \
+RUN apt-get update \
     && apt-get install --no-install-recommends -y gcc
 RUN mkidr /ffsubsync && pip install --target /ffsubsync ffsubsync
 
@@ -32,7 +32,7 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/* 
 
 COPY --from=go /moon/moon /usr/bin/
-COPY --from=go /ffsubsync/ /ffsubsync/
+COPY --from=py /ffsubsync/ /ffsubsync/
 
 ARG S6_OVERLAY_VERSION=3.1.0.1
 ADD https://github.com/just-containers/s6-overlay/releases/download/v${S6_OVERLAY_VERSION}/s6-overlay-noarch.tar.xz /tmp
