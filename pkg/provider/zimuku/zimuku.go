@@ -287,17 +287,23 @@ func (z *Zimuku) searchMainPage(ctx context.Context, gc []*rawRod.Page, keyword 
 	has, element, _ := page.Has("body > div > div:nth-child(4) > table > tbody > tr:nth-child(1) > td:nth-child(3) > img")
 	if has == true {
 		fmt.Printf("zimuku: trying to resolve verify code\n")
-		rawRod.Try(func() {
-			img := *element.MustAttribute("src")
-			img = img[len("data:image/bmp;base64,"):]
-			b, _ := base64.StdEncoding.DecodeString(img)
+		img := *element.MustAttribute("src")
+		img = img[len("data:image/bmp;base64,"):]
+		b, err := base64.StdEncoding.DecodeString(img)
+		var text string
+		if err == nil {
 			client := gosseract.NewClient()
 			defer client.Close()
 			client.SetImageFromBytes(b)
-			text, _ := client.Text()
+			text, err = client.Text()
+		}
+		if err != nil {
+			fmt.Printf("zimuku: verify code: %v\n", err)
+		} else {
+			fmt.Printf("zimuku: verify code: resolved '%v'\n", text)
 			page.MustElement("#intext").MustInput(text)
 			page.MustElement("body > div > div:nth-child(4) > table > tbody > tr:nth-child(2) > td > input[type=submit]").MustClick()
-		})
+		}
 	}
 	// 搜索框输入
 	page.MustElement("body > div.navbar.navbar-inverse.navbar-static-top > div > div.navbar-header > div > form > div > input").MustInput(keyword)
