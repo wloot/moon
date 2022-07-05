@@ -46,40 +46,46 @@ start:
 	zimukuAPI := zimuku.New()
 
 	var videoList []emby.EmbyVideo
-	for i := 0; len(videoList) < SETTINGS_emby_importcount; i += 1 {
-		ids := embyAPI.RecentVideo(SETTINGS_emby_importcount/2, i*SETTINGS_emby_importcount/2, "Movie,Season")
-		for _, id := range ids {
-			v := embyAPI.ItemInfo(id)
-			if v.Type == "Movie" {
-				if len(v.ProductionLocations) > 0 && v.ProductionLocations[0] == "China" {
-					continue
-				}
-				if v.MediaStreams[1].Type == "Audio" && v.MediaStreams[1].DisplayLanguage == "Chinese Simplified" {
-					continue
-				}
-			} else if v.Type == "Season" {
-				if strings.HasPrefix(v.Path, "/gd/国产剧/") || strings.HasPrefix(v.Path, "/gd/动画/") {
-					continue
-				}
-			}
-			originalTitle := v.OriginalTitle
-			if v.Type == "Season" {
-				s := embyAPI.ItemInfo(v.SeriesId)
-				originalTitle = s.OriginalTitle
-			}
-			if whatlanggo.Detect(originalTitle).Lang == whatlanggo.Cmn {
+	failedTimes := 0
+	processedItems := 0
+
+start_continue:
+	ids := embyAPI.RecentItems(SETTINGS_emby_importcount/2, processedItems, "Movie,Season")
+	for _, id := range ids {
+		v := embyAPI.ItemInfo(id)
+		if v.Type == "Movie" {
+			if len(v.ProductionLocations) > 0 && v.ProductionLocations[0] == "China" {
 				continue
 			}
-			videoList = append(videoList, v)
+			if v.MediaStreams[1].Type == "Audio" && v.MediaStreams[1].DisplayLanguage == "Chinese Simplified" {
+				continue
+			}
+		} else if v.Type == "Season" {
+			if strings.HasPrefix(v.Path, "/gd/国产剧/") || strings.HasPrefix(v.Path, "/gd/动画/") {
+				continue
+			}
 		}
+		originalTitle := v.OriginalTitle
+		if v.Type == "Season" {
+			s := embyAPI.ItemInfo(v.SeriesId)
+			originalTitle = s.OriginalTitle
+		}
+		if whatlanggo.Detect(originalTitle).Lang == whatlanggo.Cmn {
+			continue
+		}
+		videoList = append(videoList, v)
 	}
 
-	failedTimes := 0
 	for _, v := range videoList {
 		if failedTimes >= 5 {
 			fmt.Printf("it seems to much errors, sleep\n")
 			goto end
 		}
+		if processedItems > SETTINGS_emby_importcount {
+			fmt.Printf("processed %v items this time, sleep\n", processedItems)
+			goto end
+		}
+
 		if v.Type == "Season" {
 			season := v
 			series := embyAPI.ItemInfo(v.SeriesId)
@@ -140,6 +146,7 @@ start:
 				continue
 			}
 
+			processedItems += 1
 			subFilesEP := zimukuAPI.SearchSeason(keywords, episodes)
 			for i, subFiles := range subFilesEP {
 				v := episodes[i]
@@ -207,6 +214,7 @@ start:
 			}
 		}
 
+		processedItems += 1
 		subFiles, failed := zimukuAPI.SearchMovie(v)
 		if failed == true || len(subFiles) == 0 {
 			if failed == true {
@@ -223,6 +231,9 @@ start:
 			cache.UpdateKey(v.Path)
 			embyAPI.Refresh(v.Id, false)
 		}
+	}
+	if processedItems < SETTINGS_emby_importcount {
+		goto start_continue
 	}
 	fmt.Printf("all work done, sleep 6 hours")
 end:

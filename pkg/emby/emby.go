@@ -130,7 +130,7 @@ func (e *Emby) Episodes(seriesId string, seasonId string) []EmbyVideo {
 	return list.Items
 }
 
-func (e *Emby) RecentVideo(num int, start int, types string) []string {
+func (e *Emby) RecentItems(num int, start int, types string) []string {
 	var list videoList
 	e.getJson(e.buildURL(
 		"/Items?Limit="+strconv.Itoa(num)+"&IncludeItemTypes="+types+"&SortBy=DateCreated&SortOrder=Descending&Recursive=true&StartIndex="+strconv.Itoa(start),
