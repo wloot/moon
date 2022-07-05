@@ -58,7 +58,10 @@ start:
 					continue
 				}
 			} else if v.Type == "Season" {
-				if strings.HasPrefix(v.Path, "/gd/国产剧/") || strings.HasPrefix(v.Path, "/gd/动画/") {
+				//if strings.HasPrefix(v.Path, "/gd/国产剧/") || strings.HasPrefix(v.Path, "/gd/动画/") {
+				//	continue
+				//}
+				if strings.HasPrefix(v.Path, "/gd/欧美剧/") {
 					continue
 				}
 			}
@@ -141,6 +144,7 @@ start:
 			}
 			continue
 		}
+		continue
 
 		var hasSub = false
 		for _, stream := range v.MediaStreams {
