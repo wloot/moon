@@ -297,7 +297,6 @@ func (z *Zimuku) searchMainPage(ctx context.Context, gc []*rawRod.Page, keyword 
 			text, _ := client.Text()
 			page.MustElement("#intext").MustInput(text)
 			page.MustElement("body > div > div:nth-child(4) > table > tbody > tr:nth-child(2) > td > input[type=submit]").MustClick()
-
 		})
 	}
 	// 搜索框输入
