@@ -26,6 +26,7 @@ require (
 	github.com/klauspost/compress v1.15.7 // indirect
 	github.com/klauspost/pgzip v1.2.5 // indirect
 	github.com/nwaples/rardecode/v2 v2.0.0-beta.2 // indirect
+	github.com/otiai10/gosseract/v2 v2.3.1
 	github.com/pierrec/lz4/v4 v4.1.15 // indirect
 	github.com/therootcompany/xz v1.0.1 // indirect
 	github.com/ulikunitz/xz v0.5.10 // indirect

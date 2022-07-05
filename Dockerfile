@@ -2,6 +2,7 @@ FROM golang AS go
 
 WORKDIR /moon
 COPY . /moon
+RUN apt-get update -qq && apt-get install -y -qq libtesseract-dev libleptonica-dev
 RUN go build ./cmd/moon
 
 
