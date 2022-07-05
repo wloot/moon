@@ -80,6 +80,9 @@ func (z *Zimuku) SeasonKeywords(season emby.EmbyVideo, series emby.EmbyVideo, ep
 	chineseTitle := series.Name
 	seasonYear := strconv.Itoa(season.ProductionYear)
 	seasonNumber := episode.ToChineseDigital(season.IndexNumber)
+
+	fmt.Printf("originalTitle: '%v', chineseTitle: '%v', seasonYear: '%v', seasonNumber: '%v'", originalTitle, chineseTitle, seasonYear, seasonNumber)
+
 	if seasonYear != "0" && seasonYear != "" {
 		keywords = append(keywords, originalTitle+" ("+seasonYear+")")
 	}

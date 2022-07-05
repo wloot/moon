@@ -94,6 +94,7 @@ start:
 				time.Sleep(30 * time.Second)
 				series = embyAPI.ItemInfo(series.Id)
 			}
+			fmt.Printf("series: %v, season: %v, episodes: %v", series, season, episodes)
 			keywords := zimukuAPI.SeasonKeywords(season, series, episodes)
 
 			for i := len(episodes) - 1; i >= 0; i-- {
