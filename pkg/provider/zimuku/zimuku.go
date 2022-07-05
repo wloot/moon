@@ -2,6 +2,7 @@ package zimuku
 
 import (
 	"context"
+	"encoding/base64"
 	"fmt"
 	"moon/pkg/cache"
 	"moon/pkg/config"
@@ -14,6 +15,7 @@ import (
 	"time"
 
 	rawRod "github.com/go-rod/rod"
+	"github.com/otiai10/gosseract/v2"
 
 	"regexp"
 	"strconv"
@@ -280,6 +282,24 @@ func (z *Zimuku) parseInfo(element *rawRod.Element) subInfo {
 func (z *Zimuku) searchMainPage(ctx context.Context, gc []*rawRod.Page, keyword string) *rawRod.Page {
 	page := z.browser.Context(ctx).MustPage("https://zimuku.org/")
 	gc = append(gc, page)
+
+	page.MustWaitLoad()
+	has, element, _ := page.Has("body > div > div:nth-child(4) > table > tbody > tr:nth-child(1) > td:nth-child(3) > img")
+	if has == true {
+		fmt.Printf("zimuku: trying to resolve verify code\n")
+		rawRod.Try(func() {
+			img := *element.MustAttribute("src")
+			img = img[len("data:image/bmp;base64,"):]
+			b, _ := base64.StdEncoding.DecodeString(img)
+			client := gosseract.NewClient()
+			defer client.Close()
+			client.SetImageFromBytes(b)
+			text, _ := client.Text()
+			page.MustElement("#intext").MustInput(text)
+			page.MustElement("body > div > div:nth-child(4) > table > tbody > tr:nth-child(2) > td > input[type=submit]").MustClick()
+
+		})
+	}
 	// 搜索框输入
 	page.MustElement("body > div.navbar.navbar-inverse.navbar-static-top > div > div.navbar-header > div > form > div > input").MustInput(keyword)
 	// 搜索按钮
@@ -287,7 +307,7 @@ func (z *Zimuku) searchMainPage(ctx context.Context, gc []*rawRod.Page, keyword 
 
 	page.WaitElementsMoreThan("button", 1) // if first access
 	// 搜索结果页第一个结果
-	has, element, _ := page.Has("body > div.container > div > div > div.box.clearfix > div:nth-child(2) > div.litpic.hidden-xs > a")
+	has, element, _ = page.Has("body > div.container > div > div > div.box.clearfix > div:nth-child(2) > div.litpic.hidden-xs > a")
 	if has == false {
 		return nil
 	}

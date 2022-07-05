@@ -35,8 +35,8 @@ COPY --from=go /moon/moon /usr/bin/
 
 COPY --from=py /ffsubsync/ /ffsubsync/
 RUN ln -s /usr/bin/python3 /usr/local/bin/python
-ENV PATH="/ffsubsync/bin:${PATH}"
 ENV PYTHONPATH='/ffsubsync'
+ENV PATH="/ffsubsync/bin:${PATH}"
 
 ARG S6_OVERLAY_VERSION=3.1.0.1
 ADD https://github.com/just-containers/s6-overlay/releases/download/v${S6_OVERLAY_VERSION}/s6-overlay-noarch.tar.xz /tmp
