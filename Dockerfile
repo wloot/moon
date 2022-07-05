@@ -25,6 +25,8 @@ RUN apt-get update \
     gcc \
     ffmpeg \
     xz-utils \
+    libtesseract-dev \
+    libleptonica-dev \
     && rm -rf /var/lib/apt/lists/* \
     && pip3 install --no-cache-dir ffsubsync
 
