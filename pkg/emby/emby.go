@@ -122,6 +122,7 @@ func (e *Emby) ItemInfo(id string) EmbyVideo {
 	return info
 }
 
+// 返回的信息是不完整的
 func (e *Emby) Episodes(seriesId string, seasonId string) []EmbyVideo {
 	var list episodeList
 	e.getJson(e.buildURL("/Shows/"+seriesId+"/Episodes?SeasonId="+seasonId), &list)

@@ -85,6 +85,7 @@ start:
 
 			for i, episode := range episodes {
 				if episode.IndexNumber == 1 {
+					episodes[i] = embyAPI.ItemInfo(episode.Id)
 					if episode.ProviderIds.Imdb == "" {
 						embyAPI.Refresh(episode.Id, true)
 						time.Sleep(30 * time.Second)
