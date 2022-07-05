@@ -61,7 +61,7 @@ start:
 				//if strings.HasPrefix(v.Path, "/gd/国产剧/") || strings.HasPrefix(v.Path, "/gd/动画/") {
 				//	continue
 				//}
-				if strings.HasPrefix(v.Path, "/gd/欧美剧/") {
+				if strings.HasPrefix(v.Path, "/gd/欧美剧/") == false {
 					continue
 				}
 			}
