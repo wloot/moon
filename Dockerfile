@@ -7,15 +7,11 @@ RUN apt-get update -qq \
 RUN go build ./cmd/moon
 
 
-FROM python as py
+FROM python:3.8 as py
 
-ENV PYTHONDONTWRITEBYTECODE 1
-ENV PYTHONUNBUFFERED 1
 RUN apt-get update \
     && apt-get install -y --no-install-recommends gcc
-RUN python3 -m venv /opt/venv
-ENV PATH="/opt/venv/bin:$PATH"
-RUN pip3 install ffsubsync
+RUN pip install ffsubsync
 
 
 FROM ubuntu:20.04
@@ -38,8 +34,8 @@ RUN apt-get update \
 
 COPY --from=go /moon/moon /usr/bin/
 
-COPY --from=py /opt/venv/ /opt/venv/
-ENV PATH="/opt/venv/bin:$PATH"
+COPY --from=py /usr/local/lib/python3.8/dist-packages/ /usr/local/lib/python3.8/dist-packages/
+COPY --from=py /usr/local/bin/ffsubsync /usr/local/bin/ffsubsync
 
 ARG S6_OVERLAY_VERSION=3.1.0.1
 ADD https://github.com/just-containers/s6-overlay/releases/download/v${S6_OVERLAY_VERSION}/s6-overlay-noarch.tar.xz /tmp
