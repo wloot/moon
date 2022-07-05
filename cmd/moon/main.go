@@ -84,8 +84,9 @@ start:
 			episodes := embyAPI.Episodes(v.SeriesId, v.Id)
 
 			for i := range episodes {
+				// 获取完整信息
+				episodes[i] = embyAPI.ItemInfo(episodes[i].Id)
 				if episodes[i].IndexNumber == 1 {
-					episodes[i] = embyAPI.ItemInfo(episodes[i].Id)
 					if episodes[i].ProviderIds.Imdb == "" {
 						embyAPI.Refresh(episodes[i].Id, true)
 						time.Sleep(30 * time.Second)
@@ -129,8 +130,6 @@ start:
 				}
 				if ok := cache.StatKey(interval, v.Path); !ok {
 					episodes = append(episodes[:i], episodes[i+1:]...)
-				} else if episodes[i].IndexNumber != 1 {
-					episodes[i] = embyAPI.ItemInfo(episodes[i].Id)
 				}
 			}
 			if len(episodes) == 0 {
