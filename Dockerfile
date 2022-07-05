@@ -22,13 +22,14 @@ RUN apt-get update \
     python3-pip \
     python3-wheel \
     python3-setuptools \
+    gcc \
     ffmpeg \
     xz-utils \
     libtesseract-dev \
     libleptonica-dev \
-    && rm -rf /var/lib/apt/lists/* \
-    && pip3 install --no-cache-dir ffsubsync
+    && rm -rf /var/lib/apt/lists/* 
 
+RUN pip3 install --no-cache-dir ffsubsync
 COPY --from=go /moon/moon /usr/bin/
 
 ARG S6_OVERLAY_VERSION=3.1.0.1
