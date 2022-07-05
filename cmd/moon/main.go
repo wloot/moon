@@ -128,6 +128,8 @@ start:
 				}
 				if ok := cache.StatKey(interval, v.Path); !ok {
 					episodes = append(episodes[:i], episodes[i+1:]...)
+				} else {
+					episodes[i] = embyAPI.ItemInfo(episodes[i].Id)
 				}
 			}
 
