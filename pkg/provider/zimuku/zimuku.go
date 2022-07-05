@@ -148,7 +148,7 @@ func (z *Zimuku) SearchMovie(movie emby.EmbyVideo) ([]string, bool) {
 
 	var subFiles []string
 	for i, v := range subs {
-		if i >= downloadNumbers {
+		if i >= downloadNumbers || i > 5 {
 			break
 		}
 		if deadline, ok := page.GetContext().Deadline(); ok && deadline.Sub(time.Now()) <= 0 {
