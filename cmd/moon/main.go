@@ -83,13 +83,13 @@ start:
 			series := embyAPI.ItemInfo(v.SeriesId)
 			episodes := embyAPI.Episodes(v.SeriesId, v.Id)
 
-			for i, episode := range episodes {
-				if episode.IndexNumber == 1 {
-					episodes[i] = embyAPI.ItemInfo(episode.Id)
-					if episode.ProviderIds.Imdb == "" {
-						embyAPI.Refresh(episode.Id, true)
+			for i := range episodes {
+				if episodes[i].IndexNumber == 1 {
+					episodes[i] = embyAPI.ItemInfo(episodes[i].Id)
+					if episodes[i].ProviderIds.Imdb == "" {
+						embyAPI.Refresh(episodes[i].Id, true)
 						time.Sleep(30 * time.Second)
-						episodes[i] = embyAPI.ItemInfo(episode.Id)
+						episodes[i] = embyAPI.ItemInfo(episodes[i].Id)
 					}
 				}
 			}
