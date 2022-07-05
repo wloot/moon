@@ -6,6 +6,11 @@ RUN apt-get update -qq \
     && apt-get install -y -qq libtesseract-dev libleptonica-dev
 RUN go build ./cmd/moon
 
+FROM python:3.8 AS py
+
+RUN apt-get update  \
+    && apt-get install --no-install-recommends -y gcc
+RUN mkidr /ffsubsync && pip install --target /ffsubsync ffsubsync
 
 FROM ubuntu:20.04
 
@@ -19,11 +24,6 @@ RUN apt-get update \
     libgbm1 \
     ca-certificates \
     python3 \
-    python3-pip \
-    python3-wheel \
-    python3-setuptools \
-    python3-dev \
-    gcc \
     ffmpeg \
     xz-utils \
     libtesseract4 \
@@ -31,8 +31,8 @@ RUN apt-get update \
     tesseract-ocr-eng \
     && rm -rf /var/lib/apt/lists/* 
 
-RUN pip3 install --no-cache-dir ffsubsync
 COPY --from=go /moon/moon /usr/bin/
+COPY --from=go /ffsubsync/ /ffsubsync/
 
 ARG S6_OVERLAY_VERSION=3.1.0.1
 ADD https://github.com/just-containers/s6-overlay/releases/download/v${S6_OVERLAY_VERSION}/s6-overlay-noarch.tar.xz /tmp
