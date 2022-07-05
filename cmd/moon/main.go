@@ -58,10 +58,7 @@ start:
 					continue
 				}
 			} else if v.Type == "Season" {
-				//if strings.HasPrefix(v.Path, "/gd/国产剧/") || strings.HasPrefix(v.Path, "/gd/动画/") {
-				//	continue
-				//}
-				if strings.HasPrefix(v.Path, "/gd/欧美剧/") == false {
+				if strings.HasPrefix(v.Path, "/gd/国产剧/") || strings.HasPrefix(v.Path, "/gd/动画/") {
 					continue
 				}
 			}
@@ -139,6 +136,11 @@ start:
 			subFilesEP := zimukuAPI.SearchSeason(keywords, episodes)
 			for i, subFiles := range subFilesEP {
 				v := episodes[i]
+				for old, new := range SETTNGS_videopath_map {
+					if strings.HasPrefix(v.Path, old) {
+						v.Path = new + v.Path[len(old):]
+					}
+				}
 				cache.UpdateKey(v.Path)
 				if len(subFiles) > 0 {
 					succ := writeSub(subFiles, v)
@@ -149,8 +151,6 @@ start:
 			}
 			continue
 		}
-		continue
-
 		var hasSub = false
 		for _, stream := range v.MediaStreams {
 			if stream.Type == "Subtitle" && stream.DisplayLanguage == "Chinese Simplified" {
