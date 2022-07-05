@@ -58,7 +58,7 @@ start:
 					continue
 				}
 			} else if v.Type == "Season" {
-				if strings.HasPrefix(v.Path, "/gd/国产剧/") {
+				if strings.HasPrefix(v.Path, "/gd/国产剧/") || strings.HasPrefix(v.Path, "/gd/动画/") {
 					continue
 				}
 			}
