@@ -74,7 +74,12 @@ start:
 		}
 	}
 
+	failedTimes := 0
 	for _, v := range videoList {
+		if failedTimes >= 5 {
+			fmt.Printf("it seems to much errors, sleep\n")
+			goto end
+		}
 		if v.Type == "Season" {
 			season := v
 			series := embyAPI.ItemInfo(v.SeriesId)
@@ -149,6 +154,11 @@ start:
 					}
 				}
 			}
+			if len(subFilesEP) != len(episodes) {
+				failedTimes += 1
+			} else {
+				failedTimes = 0
+			}
 			continue
 		}
 		var hasSub = false
@@ -192,15 +202,21 @@ start:
 		}
 
 		subFiles, failed := zimukuAPI.SearchMovie(v)
-		if failed == false {
-			cache.UpdateKey(v.Path)
+		if failed == true || len(subFiles) == 0 {
+			if failed == true {
+				failedTimes += 1
+			}
+			continue
 		}
+		failedTimes = 0
 		succ := writeSub(subFiles, v)
 		if succ == true {
+			cache.UpdateKey(v.Path)
 			embyAPI.Refresh(v.Id, false)
 		}
 	}
 	fmt.Printf("all work done, sleep 6 hours")
+end:
 	time.Sleep(6 * time.Hour)
 	goto start
 }
