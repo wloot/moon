@@ -7,14 +7,14 @@ import (
 )
 
 func NameToEpisode(name string) int {
-	match := regexp.MustCompile(`(\b|\d)[eE](0*[1-9]+)\b`).FindStringSubmatch(name)
+	match := regexp.MustCompile(`(\b|\d)[eE](\d+)\b`).FindStringSubmatch(name)
 	if len(match) == 3 {
 		i, err := strconv.ParseInt(match[2], 10, 64)
 		if err == nil {
 			return int(i)
 		}
 	}
-	match = regexp.MustCompile(`第(0*[1-9]+)集`).FindStringSubmatch(name)
+	match = regexp.MustCompile(`第(\d+)集`).FindStringSubmatch(name)
 	if len(match) == 2 {
 		i, err := strconv.ParseInt(match[1], 10, 64)
 		if err == nil {
