@@ -149,7 +149,7 @@ func (z *Zimuku) SearchSeason(keywords []string, eps []emby.EmbyVideo) [][]strin
 	for i := len(subs) - 1; i >= 0; i-- {
 		need := false
 		for _, l := range subs[i].language {
-			if l == "简体中文" || l == "双语" {
+			if l == "简体中文字幕" || l == "双语字幕" {
 				need = true
 				break
 			}
@@ -433,12 +433,10 @@ func (z *Zimuku) parseInfo(element *rawRod.Element) subInfo {
 		sub.language = append(sub.language, *image.MustAttribute("alt"))
 	}
 
-	es := element.MustElements("td.tac.hidden-xs")
+	voting := *element.MustElements("td.tac.hidden-xs")[0].MustElement("i").MustAttribute("data-original-title")
+	sub.votingScore, _ = strconv.ParseFloat(regexp.MustCompile("[0-9.]+").FindString(voting), 64)
 
-	votingStr := *es.First().MustAttribute("data-original-title")
-	sub.votingScore, _ = strconv.ParseFloat(regexp.MustCompile("[0-9.]+").FindString(votingStr), 64)
-
-	count := es.Last().MustText()
+	count := element.MustElements("td.tac.hidden-xs")[1].MustText()
 	if strings.HasSuffix(count, "万") {
 		count = count[:len(count)-len("万")]
 		countf, _ := strconv.ParseFloat(count, 64)
