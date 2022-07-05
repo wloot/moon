@@ -133,6 +133,9 @@ start:
 					episodes[i] = embyAPI.ItemInfo(episodes[i].Id)
 				}
 			}
+			if len(episodes) == 0 {
+				continue
+			}
 
 			subFilesEP := zimukuAPI.SearchSeason(keywords, episodes)
 			for i, subFiles := range subFilesEP {
