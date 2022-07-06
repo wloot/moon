@@ -7,6 +7,12 @@ import (
 )
 
 func NameToEpisode(name string) int {
+	if regexp.MustCompile(`(\b|\d)[eE]\d+-[eE]\d+\b`).MatchString(name) {
+		return -1
+	}
+	if regexp.MustCompile(`全([一二三四五六七八九十]+|[\d]+)集`).MatchString(name) {
+		return -1
+	}
 	match := regexp.MustCompile(`(\b|\d)[eE](\d+)\b`).FindStringSubmatch(name)
 	if len(match) == 3 {
 		i, err := strconv.ParseInt(match[2], 10, 64)
