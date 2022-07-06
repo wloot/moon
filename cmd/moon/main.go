@@ -132,6 +132,7 @@ start_continue:
 					}
 				}
 				if hasIntSub {
+					episodes = append(episodes[:i], episodes[i+1:]...)
 					continue
 				}
 				var interval time.Duration
