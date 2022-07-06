@@ -47,10 +47,12 @@ start:
 
 	failedTimes := 0
 	processedItems := 0
+	loopCount := -1
 
 start_continue:
+	loopCount += 1
 	var videoList []emby.EmbyVideo
-	for _, id := range embyAPI.RecentItems(SETTINGS_emby_importcount/2, processedItems, "Movie,Season") {
+	for _, id := range embyAPI.RecentItems(SETTINGS_emby_importcount/2, SETTINGS_emby_importcount/2*loopCount, "Movie,Season") {
 		v := embyAPI.ItemInfo(id)
 		if v.Type == "Movie" {
 			if len(v.ProductionLocations) > 0 && v.ProductionLocations[0] == "China" {
