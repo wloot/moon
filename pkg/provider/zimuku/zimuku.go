@@ -396,6 +396,7 @@ func (z *Zimuku) SearchMovie(movie emby.EmbyVideo) ([]string, bool) {
 
 func (z *Zimuku) downloadSub(ctx context.Context, gc []*rawRod.Page, prePage *rawRod.Page, preElement *rawRod.Element) string {
 	wait := prePage.Context(ctx).MustWaitOpen()
+	preElement = preElement.Context(ctx)
 	preElement.MustEval(`() => { this.target = "_blank" }`)
 	preElement.MustClick()
 	page := wait()
