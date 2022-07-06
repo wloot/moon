@@ -94,14 +94,14 @@ start_continue:
 				// 获取完整信息
 				episodes[i] = embyAPI.ItemInfo(episodes[i].Id)
 				if episodes[i].IndexNumber == 1 {
-					if episodes[i].ProviderIds.Imdb == "" {
+					if episodes[i].ProviderIds.Imdb == "" && season.IndexNumber != 1 {
 						embyAPI.Refresh(episodes[i].Id, true)
 						time.Sleep(30 * time.Second)
 						episodes[i] = embyAPI.ItemInfo(episodes[i].Id)
 					}
 				}
 			}
-			if series.OriginalTitle == series.Name || series.ProviderIds.Imdb == "" {
+			if series.OriginalTitle == series.Name || (series.ProviderIds.Imdb == "" && season.IndexNumber == 1) {
 				embyAPI.Refresh(series.Id, true)
 				time.Sleep(30 * time.Second)
 				series = embyAPI.ItemInfo(series.Id)
