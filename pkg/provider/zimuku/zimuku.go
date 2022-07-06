@@ -111,7 +111,7 @@ func (z *Zimuku) SearchSeason(keywords []string, eps []emby.EmbyVideo) [][]strin
 			pageGC[i].Close()
 		}
 	}()
-	ctx, cancel := context.WithTimeout(z.browser.GetContext(), 10*time.Minute)
+	ctx, cancel := context.WithTimeout(z.browser.GetContext(), 7*time.Minute)
 	defer cancel()
 
 	var page *rawRod.Page
