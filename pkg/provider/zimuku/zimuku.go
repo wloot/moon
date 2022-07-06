@@ -210,8 +210,7 @@ func (z *Zimuku) SearchSeason(keywords []string, eps []emby.EmbyVideo) [][]strin
 			downloadNumbers := downloadNumbers - 1
 			if _, ok := perEp[0]; ok {
 				downloadNumbers += 1
-			}
-			if downloadNumbers < 1 {
+			} else if downloadNumbers < 1 {
 				downloadNumbers = 1
 			}
 			if i >= downloadNumbers || i > 5 {
