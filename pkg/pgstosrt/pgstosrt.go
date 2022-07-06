@@ -68,7 +68,7 @@ func generateSrt(timstamps []int) []string {
 		lines = append(lines, strconv.Itoa(counter)+"\n")
 		lines = append(lines, timestampToSrt(timstamps[i])+" --> "+timestampToSrt(timstamps[i+1])+"\n")
 
-		lines = append(lines, strconv.Itoa(counter)+"\n")
+		lines = append(lines, "PLACEHOLDER\n")
 		lines = append(lines, "\n")
 
 		counter += 1

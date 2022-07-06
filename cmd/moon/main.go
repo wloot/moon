@@ -401,7 +401,7 @@ savesub:
 	fmt.Printf("sub written to %v\n", name)
 	if reference == "" && backupType != "" {
 		reference = cache.TryGet(v.Path, func() string {
-			time.Sleep(5 * time.Second)
+			//time.Sleep(5 * time.Second)
 			reference := ffsubsync.FindBestReferenceSub(v)
 			if reference == "" {
 				fmt.Printf("no fit inter sub so extract audio for sync\n")
