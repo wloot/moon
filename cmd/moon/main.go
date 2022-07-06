@@ -96,14 +96,14 @@ start_continue:
 				if episodes[i].IndexNumber == 1 {
 					if episodes[i].ProviderIds.Imdb == "" && season.IndexNumber != 1 {
 						embyAPI.Refresh(episodes[i].Id, true)
-						time.Sleep(30 * time.Second)
+						time.Sleep(20 * time.Second)
 						episodes[i] = embyAPI.ItemInfo(episodes[i].Id)
 					}
 				}
 			}
 			if series.OriginalTitle == series.Name || (series.ProviderIds.Imdb == "" && season.IndexNumber == 1) {
 				embyAPI.Refresh(series.Id, true)
-				time.Sleep(30 * time.Second)
+				time.Sleep(20 * time.Second)
 				series = embyAPI.ItemInfo(series.Id)
 			}
 			keywords := zimukuAPI.SeasonKeywords(season, series, episodes)
@@ -204,7 +204,7 @@ start_continue:
 
 		if v.OriginalTitle == v.Name {
 			embyAPI.Refresh(v.Id, true)
-			time.Sleep(30 * time.Second)
+			time.Sleep(20 * time.Second)
 			v = embyAPI.ItemInfo(v.Id)
 		}
 		for old, new := range SETTNGS_videopath_map {
@@ -401,6 +401,7 @@ savesub:
 	fmt.Printf("sub written to %v\n", name)
 	if reference == "" && backupType != "" {
 		reference = cache.TryGet(v.Path, func() string {
+			time.Sleep(5 * time.Second)
 			reference := ffsubsync.FindBestReferenceSub(v)
 			if reference == "" {
 				fmt.Printf("no fit inter sub so extract audio for sync\n")
