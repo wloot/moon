@@ -24,6 +24,7 @@ RUN apt-get update \
     libgbm1 \
     ca-certificates \
     python3 \
+    python3-setuptools \
     ffmpeg \
     xz-utils \
     libtesseract4 \
