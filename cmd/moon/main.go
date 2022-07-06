@@ -90,6 +90,11 @@ start_continue:
 			series := embyAPI.ItemInfo(v.SeriesId)
 			episodes := embyAPI.Episodes(v.SeriesId, v.Id)
 
+			// 暂不支持单V多E
+			if episodes[0].IndexNumberEnd != 0 {
+				continue
+			}
+
 			for i := range episodes {
 				// 获取完整信息
 				episodes[i] = embyAPI.ItemInfo(episodes[i].Id)
