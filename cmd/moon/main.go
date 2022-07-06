@@ -117,32 +117,37 @@ start_continue:
 
 			for i := len(episodes) - 1; i >= 0; i-- {
 				v := episodes[i]
-				var hasSub = false
+				var hasExtSub = false
+				var hasIntSub = false
 				for _, stream := range v.MediaStreams {
 					if stream.Type == "Subtitle" && stream.DisplayLanguage == "Chinese Simplified" {
 						if stream.IsExternal == false {
-							hasSub = true
-							break
+							hasIntSub = true
 						}
 						path := stream.Path[:len(stream.Path)-len(filepath.Ext(stream.Path))]
 						// Emby 自带的字幕下载
 						if strings.HasSuffix(path, ".zh-CN") == false {
-							hasSub = true
-							break
+							hasExtSub = true
 						}
 					}
 				}
-				interval := time.Hour * 24 * 7
-				if hasSub == true {
+				if hasIntSub {
+					continue
+				}
+				var interval time.Duration
+				if hasExtSub == true {
 					interval = time.Hour * 24 * 30
-					if time.Now().Sub(v.GetPremiereDate()) > 180*time.Hour*24 {
-						interval = time.Hour * 24 * 180
+					if time.Now().Sub(v.GetPremiereDate()) > time.Hour*24*180 {
+						interval = time.Hour * 24 * 90
+					}
+				} else {
+					interval = time.Hour * 24 * 14
+					if time.Now().Sub(v.GetPremiereDate()) > time.Hour*24*180 {
+						interval = time.Hour * 24 * 60
 					}
 				}
-				if time.Now().Sub(v.GetDateCreated()) <= time.Hour*24*3 || time.Now().Sub(v.GetPremiereDate()) <= time.Hour*24*30 {
+				if time.Now().Sub(v.GetPremiereDate()) < time.Hour*24*7 && time.Now().Sub(v.GetDateCreated()) < time.Hour*24*7 {
 					interval = time.Hour * 24
-				} else if hasSub == true {
-					continue // speedup
 				}
 				if ok := cache.StatKey(interval, v.Path); !ok {
 					episodes = append(episodes[:i], episodes[i+1:]...)
@@ -178,33 +183,40 @@ start_continue:
 			}
 			continue
 		}
-		var hasSub = false
+
+		var hasExtSub = false
+		var hasIntSub = false
 		for _, stream := range v.MediaStreams {
 			if stream.Type == "Subtitle" && stream.DisplayLanguage == "Chinese Simplified" {
 				if stream.IsExternal == false {
-					hasSub = true
-					break
+					hasIntSub = true
 				}
 				path := stream.Path[:len(stream.Path)-len(filepath.Ext(stream.Path))]
 				// Emby 自带的字幕下载
 				if strings.HasSuffix(path, ".zh-CN") == false {
-					hasSub = true
-					break
+					hasExtSub = true
 				}
 			}
 		}
-		interval := time.Hour * 24 * 7
-		if hasSub == true {
-			interval = time.Hour * 24 * 30
-			if time.Now().Sub(v.GetPremiereDate()) > 180*time.Hour*24 {
-				interval = time.Hour * 24 * 180
+		if hasIntSub {
+			continue
+		}
+		var interval time.Duration
+		if hasExtSub == true {
+			interval = time.Hour * 24 * 14
+			if time.Now().Sub(v.GetPremiereDate()) > time.Hour*24*360 && time.Now().Sub(v.GetDateCreated()) > time.Hour*24*30 {
+				interval = time.Hour * 24 * 90
+			}
+		} else {
+			interval = time.Hour * 24 * 7
+			if time.Now().Sub(v.GetPremiereDate()) > time.Hour*24*360 && time.Now().Sub(v.GetDateCreated()) > time.Hour*24*30 {
+				interval = time.Hour * 24 * 60
 			}
 		}
-		if time.Now().Sub(v.GetDateCreated()) <= time.Hour*24*3 || time.Now().Sub(v.GetPremiereDate()) <= time.Hour*24*30 {
+		if time.Now().Sub(v.GetPremiereDate()) < time.Hour*24*270 && time.Now().Sub(v.GetDateCreated()) < time.Hour*24*14 {
 			interval = time.Hour * 24
-		} else if hasSub == true {
-			continue // speedup
 		}
+
 		if ok := cache.StatKey(interval, v.Path); !ok {
 			continue
 		}
