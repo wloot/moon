@@ -55,7 +55,7 @@ func ExtractSubtitle(path string, index int, codec string) ([]byte, error) {
 
 // TODO: 需要解析vobsub
 func ExtractSubdvd(path string, index int) (string, error) {
-	output := filepath.Join("", filepath.Base(path)[:len(filepath.Base(path))-len(filepath.Ext(path))]+"."+strconv.Itoa(index))
+	output := filepath.Join(os.TempDir(), filepath.Base(path)[:len(filepath.Base(path))-len(filepath.Ext(path))]+"."+strconv.Itoa(index))
 	if strings.ToLower(filepath.Ext(path)) != ".mkv" {
 		path = output + ".mkv"
 		file, err := os.Create(path)
