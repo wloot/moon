@@ -62,6 +62,7 @@ type EmbyVideo struct {
 	PremiereDate        string            `json:"PremiereDate"`
 	Type                string            `json:"Type"`
 	SeriesId            string            `json:"SeriesId"`
+	SeasonId            string            `json:"SeasonId"`
 	IndexNumber         int               `json:"IndexNumber"`
 	IndexNumberEnd      int               `json:"IndexNumberEnd"`
 }

@@ -51,8 +51,8 @@ start:
 
 start_continue:
 	loopCount += 1
-	var videoList []emby.EmbyVideo
-	for _, id := range embyAPI.RecentItems(SETTINGS_emby_importcount/2, SETTINGS_emby_importcount/2*loopCount, "Movie,Season") {
+	var itemList []emby.EmbyVideo
+	for _, id := range embyAPI.RecentItems(SETTINGS_emby_importcount/2, SETTINGS_emby_importcount/2*loopCount, "Movie,Episode") {
 		v := embyAPI.ItemInfo(id)
 		if v.Type == "Movie" {
 			if len(v.ProductionLocations) > 0 && v.ProductionLocations[0] == "China" {
@@ -61,23 +61,33 @@ start_continue:
 			if v.MediaStreams[1].Type == "Audio" && v.MediaStreams[1].DisplayLanguage == "Chinese Simplified" {
 				continue
 			}
-		} else if v.Type == "Season" {
+			if whatlanggo.Detect(v.OriginalTitle).Lang == whatlanggo.Cmn {
+				continue
+			}
+			itemList = append(itemList, v)
+		} else if v.Type == "Episode" {
 			if strings.HasPrefix(v.Path, "/gd/国产剧/") || strings.HasPrefix(v.Path, "/gd/动画/") {
 				continue
 			}
+			series := embyAPI.ItemInfo(v.SeriesId)
+			if whatlanggo.Detect(series.OriginalTitle).Lang == whatlanggo.Cmn {
+				continue
+			}
+			need := true
+			for i := range itemList {
+				if itemList[i].Type == "Season" && itemList[i].Id == v.SeasonId {
+					need = false
+					break
+				}
+			}
+			if need == true {
+				season := embyAPI.ItemInfo(v.SeasonId)
+				itemList = append(itemList, season)
+			}
 		}
-		originalTitle := v.OriginalTitle
-		if v.Type == "Season" {
-			s := embyAPI.ItemInfo(v.SeriesId)
-			originalTitle = s.OriginalTitle
-		}
-		if whatlanggo.Detect(originalTitle).Lang == whatlanggo.Cmn {
-			continue
-		}
-		videoList = append(videoList, v)
 	}
 
-	for _, v := range videoList {
+	for _, v := range itemList {
 		if failedTimes >= 5 {
 			fmt.Printf("it seems to much errors, sleep\n")
 			goto end
