@@ -2,6 +2,7 @@ package charset
 
 import (
 	"bytes"
+	"fmt"
 	"io"
 
 	"github.com/gogs/chardet"
@@ -18,6 +19,7 @@ func AnyToUTF8(data []byte) ([]byte, error) {
 	if err != nil {
 		return []byte{}, err
 	}
+	fmt.Printf("guessed type %v\n", charset)
 	if charset.Charset == "UTF-8" {
 		return removeBOM(data), nil
 	}
