@@ -415,50 +415,31 @@ func writeSub(subFiles []string, v emby.EmbyVideo) bool {
 		if subSorted[i].double != subSorted[j].double {
 			return subSorted[i].double == true
 		}
+		if subSorted[i].format != subSorted[j].format {
+			return subSorted[i].format == "ass"
+		}
 		return false
 	})
 
-	selectedSub := subSorted[0]
-	backupType := "srt"
-	if selectedSub.format == "srt" {
-		backupType = "ass"
-	}
-	var reference string
-savesub:
-	name := v.Path[:len(v.Path)-len(filepath.Ext(v.Path))] + ".chs." + selectedSub.format
-	err := os.WriteFile(name, selectedSub.data, 0644)
+	name := v.Path[:len(v.Path)-len(filepath.Ext(v.Path))] + ".chs." + subSorted[0].format
+	err := os.WriteFile(name, subSorted[0].data, 0644)
 	if err != nil {
 		fmt.Printf("failed to write sub file: %v\n", err)
-		if backupType == "" {
-			return true
-		}
 		return false
 	}
 	fmt.Printf("sub written to %v\n", name)
-	if reference == "" && backupType != "" {
-		reference = cache.TryGet(v.Path, func() string {
-			//time.Sleep(5 * time.Second)
-			reference := ffsubsync.FindBestReferenceSub(v)
-			if reference == "" {
-				fmt.Printf("no fit inter sub so extract audio for sync\n")
-				reference, _ = ffmpeg.KeepAudio(v.Path)
-			}
-			return reference
-		})
-	}
+	reference := cache.TryGet(v.Path, func() string {
+		reference := ffsubsync.FindBestReferenceSub(v)
+		if reference == "" {
+			fmt.Printf("no fit inter sub so extract audio for sync\n")
+			reference, _ = ffmpeg.KeepAudio(v.Path)
+		}
+		return reference
+	})
 	if reference == "" {
 		ffsubsync.DoSync(name, v.Path, false)
 	} else {
 		ffsubsync.DoSync(name, reference, true)
-	}
-	if backupType != "" {
-		for i := range subSorted {
-			if subSorted[i].format == backupType {
-				backupType = ""
-				selectedSub = subSorted[i]
-				goto savesub
-			}
-		}
 	}
 	return true
 }
