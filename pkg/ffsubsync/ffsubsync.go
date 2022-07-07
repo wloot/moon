@@ -65,7 +65,7 @@ func FindBestReferenceSub(v emby.EmbyVideo) string {
 	return extSub
 }
 
-func DoSync(path string, reference string, isSub bool) {
+func Sync(path string, reference string, isSub bool) {
 	_, err := exec.LookPath("ffsubsync")
 	if err != nil {
 		return

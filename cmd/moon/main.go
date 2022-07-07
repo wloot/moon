@@ -437,9 +437,9 @@ func writeSub(subFiles []string, v emby.EmbyVideo) bool {
 		return reference
 	})
 	if reference == "" {
-		ffsubsync.DoSync(name, v.Path, false)
+		ffsubsync.Sync(name, v.Path, false)
 	} else {
-		ffsubsync.DoSync(name, reference, true)
+		ffsubsync.Sync(name, reference, true)
 	}
 	return true
 }
