@@ -195,7 +195,7 @@ func (z *Zimuku) SearchSeason(keywords []string, eps []emby.EmbyVideo) [][]strin
 			continue
 		}
 		sort.Slice(subs, func(i, j int) bool {
-			less := subs[i].downloadCount >= subs[j].downloadCount
+			less := subs[i].downloadCount > subs[j].downloadCount
 			if less == true && subs[i].votingScore <= 5 && subs[i].votingScore > 0 {
 				if subs[j].votingScore > subs[i].votingScore {
 					less = false
@@ -330,7 +330,7 @@ func (z *Zimuku) SearchMovie(movie emby.EmbyVideo) ([]string, bool) {
 				return true
 			}
 		}
-		less := subs[i].downloadCount >= subs[j].downloadCount
+		less := subs[i].downloadCount > subs[j].downloadCount
 		if less == true && subs[i].votingScore <= 5 && subs[i].votingScore > 0 {
 			if subs[j].votingScore > subs[i].votingScore {
 				less = false
