@@ -9,8 +9,6 @@ import (
 	"moon/pkg/emby"
 	"moon/pkg/episode"
 	"moon/pkg/rod"
-	"os"
-	"path/filepath"
 	"sort"
 	"strings"
 	"time"
@@ -232,13 +230,7 @@ func (z *Zimuku) SearchSeason(keywords []string, eps []emby.EmbyVideo) [][]strin
 				})
 				cancel()
 
-				if file != "" {
-					if ext := filepath.Ext(file); ext == "" && v.format != "" {
-						fmt.Printf("zimuku: sub has no ext, use %v\n", v.format)
-						os.Rename(file, file+"."+v.format)
-						file = file + "." + v.format
-					}
-				} else {
+				if file == "" {
 					downloadNumbers += 1
 					if err != nil {
 						fmt.Printf("zimuku: sub download failed, %v\n", err)
@@ -373,13 +365,7 @@ func (z *Zimuku) SearchMovie(movie emby.EmbyVideo) ([]string, bool) {
 			})
 			cancel()
 
-			if file != "" {
-				if ext := filepath.Ext(file); ext == "" && v.format != "" {
-					fmt.Printf("zimuku: sub has no ext, use %v\n", v.format)
-					os.Rename(file, file+"."+v.format)
-					file = file + "." + v.format
-				}
-			} else {
+			if file == "" {
 				downloadNumbers += 1
 				if err != nil {
 					fmt.Printf("zimuku: sub download failed, %v\n", err)

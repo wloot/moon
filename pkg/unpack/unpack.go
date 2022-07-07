@@ -5,8 +5,6 @@ import (
 	"io"
 	"io/fs"
 	"os"
-	"path/filepath"
-	"strings"
 
 	"github.com/bodgit/sevenzip"
 	"github.com/mholt/archiver/v4"
@@ -18,13 +16,10 @@ func WalkUnpacked(packed string, hook func(io.Reader, fs.FileInfo)) error {
 		return err
 	}
 	defer file.Close()
-	format, input, err := archiver.Identify(packed, file)
+	format, input, err := archiver.Identify("", file)
 	if err == archiver.ErrNoMatch {
-		var r *sevenzip.ReadCloser
-		if strings.ToLower(filepath.Ext(packed)) == ".7z" {
-			r, _ = sevenzip.OpenReader(packed)
-		}
-		if r != nil {
+		r, err := sevenzip.OpenReader(packed)
+		if err == nil {
 			for _, f := range r.File {
 				if f.FileInfo().IsDir() {
 					continue
