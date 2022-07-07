@@ -132,6 +132,9 @@ start_continue:
 				for _, stream := range v.MediaStreams {
 					if stream.Type == "Subtitle" && stream.DisplayLanguage == "Chinese Simplified" {
 						if stream.IsExternal == false {
+							if stream.Codec == "PGSSUB" || stream.Codec == "DVDSUB" {
+								continue
+							}
 							hasIntSub = true
 						}
 						path := stream.Path[:len(stream.Path)-len(filepath.Ext(stream.Path))]

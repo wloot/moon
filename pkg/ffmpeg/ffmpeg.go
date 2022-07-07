@@ -7,6 +7,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strconv"
+	"strings"
 )
 
 type StreamInfo struct {
@@ -50,6 +51,33 @@ func ExtractSubtitle(path string, index int, codec string) ([]byte, error) {
 		return []byte{}, err
 	}
 	return buf.Bytes(), nil
+}
+
+// TODO: 需要解析vobsub
+func ExtractSubdvd(path string, index int) (string, error) {
+	output := filepath.Join("", filepath.Base(path)[:len(filepath.Base(path))-len(filepath.Ext(path))]+"."+strconv.Itoa(index))
+	if strings.ToLower(filepath.Ext(path)) != ".mkv" {
+		path = output + ".mkv"
+		file, err := os.Create(path)
+		if err != nil {
+			return "", err
+		}
+		file.Close()
+		defer os.Remove(path)
+		cmd := exec.Command("ffmpeg", "-v", "quiet", "-i", path, "-map", "0:"+strconv.Itoa(index), "-c", "dvdsub", "-f", "matroska", path)
+		err = cmd.Run()
+		if err != nil {
+			return "", err
+		}
+		index = 0
+	}
+	cmd := exec.Command("mkvextract", "tracks", filepath.Base(path), strconv.Itoa(index)+":"+output)
+	cmd.Dir = filepath.Dir(path)
+	err := cmd.Run()
+	if err != nil {
+		return "", err
+	}
+	return output + ".sub", nil
 }
 
 func KeepAudio(path string) (string, error) {
