@@ -103,7 +103,7 @@ start_continue:
 			episodes := embyAPI.Episodes(v.SeriesId, v.Id)
 
 			// 暂不支持单V多E
-			if episodes[0].IndexNumberEnd != 0 {
+			if len(episodes) == 0 || episodes[0].IndexNumberEnd != 0 {
 				continue
 			}
 
