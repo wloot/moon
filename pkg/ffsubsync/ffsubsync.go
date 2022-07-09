@@ -38,6 +38,14 @@ func FindBestReferenceSub(v emby.EmbyVideo) string {
 			bestSub = streams[0]
 		}
 		for i := len(streams) - 1; i >= 0; i-- {
+			if streams[i].IsForced == true {
+				streams = append(streams[:i], streams[i+1:]...)
+			}
+		}
+		if len(streams) > 0 {
+			bestSub = streams[0]
+		}
+		for i := len(streams) - 1; i >= 0; i-- {
 			if streams[i].Codec == "PGSSUB" {
 				streams = append(streams[:i], streams[i+1:]...)
 			}

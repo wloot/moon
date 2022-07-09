@@ -6,6 +6,10 @@ import (
 	"strings"
 )
 
+func NameToSeason(name string) int {
+	return -1
+}
+
 func NameToEpisode(name string) int {
 	if regexp.MustCompile(`(\b|\d)[eE]\d+-[eE]\d+\b`).MatchString(name) {
 		return -1

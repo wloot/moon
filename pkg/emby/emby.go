@@ -32,6 +32,7 @@ type EmbyVideoStream struct {
 	Type            string `json:"Type"`
 	Title           string `json:"Title"`
 	IsExternal      bool   `json:"IsExternal"`
+	IsForced        bool   `json:"IsForced"`
 	Index           int    `json:"Index"`
 	Path            string `json:"Path"`
 }
