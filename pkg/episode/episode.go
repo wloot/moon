@@ -7,6 +7,11 @@ import (
 )
 
 func NameToSeason(name string) int {
+	match := regexp.MustCompile(`\b[Ss](\d+)(\b|[Ee])`).FindStringSubmatch(name)
+	if len(match) == 3 {
+		i, _ := strconv.ParseInt(match[1], 10, 64)
+		return int(i)
+	}
 	return -1
 }
 

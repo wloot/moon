@@ -288,6 +288,10 @@ func writeSub(subFiles []string, v emby.EmbyVideo) bool {
 					if ep <= 0 || ep != v.IndexNumber {
 						return
 					}
+					se := episode.NameToSeason(name)
+					if se >= 0 && v.ParentIndexNumber != se {
+						return
+					}
 				}
 			}
 			t := strings.ToLower(filepath.Ext(name))

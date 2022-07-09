@@ -66,6 +66,7 @@ type EmbyVideo struct {
 	SeasonId            string            `json:"SeasonId"`
 	IndexNumber         int               `json:"IndexNumber"`
 	IndexNumberEnd      int               `json:"IndexNumberEnd"`
+	ParentIndexNumber   int               `json:"ParentIndexNumber"`
 }
 
 func (e EmbyVideo) parseTime(s string) time.Time {
