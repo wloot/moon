@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"io"
 	"io/fs"
@@ -165,6 +166,10 @@ start_continue:
 				}
 				if ok := cache.StatKey(interval, v.Path); !ok {
 					episodes = append(episodes[:i], episodes[i+1:]...)
+					continue
+				}
+				if _, err := os.Stat(v.Path); errors.Is(err, os.ErrNotExist) {
+					continue
 				}
 			}
 			if len(episodes) == 0 {
@@ -235,6 +240,10 @@ start_continue:
 		}
 
 		if ok := cache.StatKey(interval, v.Path); !ok {
+			continue
+		}
+
+		if _, err := os.Stat(v.Path); errors.Is(err, os.ErrNotExist) {
 			continue
 		}
 
