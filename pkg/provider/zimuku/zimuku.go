@@ -480,26 +480,32 @@ func (z *Zimuku) searchMainPage(ctx context.Context, gc []*rawRod.Page, keyword 
 	page := z.browser.Context(ctx).MustPage("https://zimuku.org/")
 	gc = append(gc, page)
 
-	page.MustWaitLoad()
-	has, element, _ := page.Has("body > div > div:nth-child(4) > table > tbody > tr:nth-child(1) > td:nth-child(3) > img")
-	if has == true {
-		fmt.Printf("zimuku: trying to resolve verify code\n")
-		img := *element.MustAttribute("src")
-		img = img[len("data:image/bmp;base64,"):]
-		b, err := base64.StdEncoding.DecodeString(img)
-		var text string
-		if err == nil {
-			client := gosseract.NewClient()
-			client.SetImageFromBytes(b)
-			text, err = client.Text()
-			client.Close()
-		}
-		if err != nil {
-			fmt.Printf("zimuku: verify code: %v\n", err)
+	resolveTimes := 0
+	for resolveTimes < 3 {
+		page.MustWaitLoad()
+		has, element, _ := page.Has("body > div > div:nth-child(4) > table > tbody > tr:nth-child(1) > td:nth-child(3) > img")
+		if has == true {
+			fmt.Printf("zimuku: trying to resolve verify code\n")
+			img := *element.MustAttribute("src")
+			img = img[len("data:image/bmp;base64,"):]
+			b, err := base64.StdEncoding.DecodeString(img)
+			var text string
+			if err == nil {
+				client := gosseract.NewClient()
+				client.SetImageFromBytes(b)
+				text, err = client.Text()
+				client.Close()
+			}
+			if err != nil {
+				fmt.Printf("zimuku: verify error: %v\n", err)
+			} else {
+				fmt.Printf("zimuku: verify code: resolved '%v'\n", text)
+				page.MustElement("#intext").MustInput(text)
+				page.MustElement("body > div > div:nth-child(4) > table > tbody > tr:nth-child(2) > td > input[type=submit]").MustClick()
+			}
+			resolveTimes += 1
 		} else {
-			fmt.Printf("zimuku: verify code: resolved '%v'\n", text)
-			page.MustElement("#intext").MustInput(text)
-			page.MustElement("body > div > div:nth-child(4) > table > tbody > tr:nth-child(2) > td > input[type=submit]").MustClick()
+			break
 		}
 	}
 	// 搜索框输入
@@ -509,7 +515,7 @@ func (z *Zimuku) searchMainPage(ctx context.Context, gc []*rawRod.Page, keyword 
 
 	page.WaitElementsMoreThan("button", 1) // if first access
 	// 搜索结果页第一个结果
-	has, element, _ = page.Has("body > div.container > div > div > div.box.clearfix > div:nth-child(2) > div.litpic.hidden-xs > a")
+	has, element, _ := page.Has("body > div.container > div > div > div.box.clearfix > div:nth-child(2) > div.litpic.hidden-xs > a")
 	if has == false {
 		page.Close()
 		return nil
