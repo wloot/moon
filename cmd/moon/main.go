@@ -169,6 +169,7 @@ start_continue:
 					continue
 				}
 				if _, err := os.Stat(v.Path); errors.Is(err, os.ErrNotExist) {
+					episodes = append(episodes[:i], episodes[i+1:]...)
 					continue
 				}
 			}
