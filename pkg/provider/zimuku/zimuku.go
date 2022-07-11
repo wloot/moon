@@ -115,6 +115,9 @@ func (z *Zimuku) SearchSeason(keywords []string, eps []emby.EmbyVideo) [][]strin
 	var page *rawRod.Page
 	err := rawRod.Try(func() {
 		for _, k := range keywords {
+			if k == "" {
+				continue
+			}
 			fmt.Printf("zimuku: searching keyword %v\n", k)
 			page = z.searchMainPage(ctx, pageGC, k)
 			if page == nil {
@@ -267,6 +270,9 @@ func (z *Zimuku) SearchMovie(movie emby.EmbyVideo) ([]string, bool) {
 	keywords := z.movieKeywords(movie)
 	err := rawRod.Try(func() {
 		for _, k := range keywords {
+			if k == "" {
+				continue
+			}
 			fmt.Printf("zimuku: searching keyword %v\n", k)
 			page = z.searchMainPage(ctx, pageGC, k)
 			if page == nil {
