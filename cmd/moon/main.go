@@ -37,9 +37,9 @@ type Subinfo struct {
 
 var SETTNGS_videopath_map map[string]string = map[string]string{}
 
-var SETTINGS_emby_url string = "http://play.charontv.com"
+var SETTINGS_emby_url string = "http://172.16.238.10:8096"
 var SETTINGS_emby_key string = "fe1a0f6c143043e98a1f3099bfe0a3a8"
-var SETTINGS_emby_importcount int = 200
+var SETTINGS_emby_importcount int = 150
 
 func main() {
 start:

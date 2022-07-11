@@ -4,7 +4,7 @@ WORKDIR /moon
 COPY . /moon
 RUN apt-get update -qq \
     && apt-get install -y -qq libtesseract-dev libleptonica-dev
-RUN go build ./cmd/moon
+RUN go build --ldflags "-s" ./cmd/moon
 
 FROM python:3.8 AS py
 
