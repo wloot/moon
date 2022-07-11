@@ -53,9 +53,12 @@ start:
 start_continue:
 	loopCount += 1
 	var itemList []emby.EmbyVideo
-	for _, id := range embyAPI.RecentItems(SETTINGS_emby_importcount/2, SETTINGS_emby_importcount/2*loopCount, "Movie,Episode") {
+	for _, id := range embyAPI.RecentItems(SETTINGS_emby_importcount, SETTINGS_emby_importcount*loopCount, "Movie,Episode") {
 		v := embyAPI.ItemInfo(id)
 		if v.Type == "Movie" {
+			if v.Path == "" {
+				continue
+			}
 			if len(v.ProductionLocations) > 0 && v.ProductionLocations[0] == "China" {
 				continue
 			}
@@ -67,7 +70,7 @@ start_continue:
 			}
 			itemList = append(itemList, v)
 		} else if v.Type == "Episode" {
-			if strings.HasPrefix(v.Path, "/gd/国产剧/") || strings.HasPrefix(v.Path, "/gd/动画/") {
+			if v.Path == "" || strings.HasPrefix(v.Path, "/gd/国产剧/") || strings.HasPrefix(v.Path, "/gd/动画/") {
 				continue
 			}
 			need := true
@@ -85,15 +88,10 @@ start_continue:
 				continue
 			}
 			season := embyAPI.ItemInfo(v.SeasonId)
-			itemList = append(itemList, season)
-
-			if strings.HasPrefix(season.Path, "/gd/动画/") {
-				fmt.Printf("somethig got wrong: id=%v, %v", v.Id, v)
-			}
 			if season.Path == "" {
-				fmt.Printf("null season???? %v", season)
+				continue
 			}
-
+			itemList = append(itemList, season)
 		}
 	}
 
