@@ -70,10 +70,6 @@ start_continue:
 			if strings.HasPrefix(v.Path, "/gd/国产剧/") || strings.HasPrefix(v.Path, "/gd/动画/") {
 				continue
 			}
-			series := embyAPI.ItemInfo(v.SeriesId)
-			if whatlanggo.Detect(series.OriginalTitle).Lang == whatlanggo.Cmn {
-				continue
-			}
 			need := true
 			for i := range itemList {
 				if itemList[i].Type == "Season" && itemList[i].Id == v.SeasonId {
@@ -81,10 +77,15 @@ start_continue:
 					break
 				}
 			}
-			if need == true {
-				season := embyAPI.ItemInfo(v.SeasonId)
-				itemList = append(itemList, season)
+			if need == false {
+				continue
 			}
+			series := embyAPI.ItemInfo(v.SeriesId)
+			if whatlanggo.Detect(series.OriginalTitle).Lang == whatlanggo.Cmn {
+				continue
+			}
+			season := embyAPI.ItemInfo(v.SeasonId)
+			itemList = append(itemList, season)
 		}
 	}
 
@@ -97,6 +98,7 @@ start_continue:
 			fmt.Printf("processed %v items this time, sleep\n", processedItems)
 			goto end
 		}
+		fmt.Printf("now proessing on %v\n", v.Path)
 
 		if v.Type == "Season" {
 			season := v
@@ -296,10 +298,12 @@ func writeSub(subFiles []string, v emby.EmbyVideo) bool {
 				if filepath.Base(name) != filepath.Base(subName) {
 					ep := episode.NameToEpisode(name)
 					if ep <= 0 || ep != v.IndexNumber {
+						fmt.Printf("skip file %v as ep number not match", name)
 						return
 					}
 					se := episode.NameToSeason(name)
 					if se >= 0 && v.ParentIndexNumber != se {
+						fmt.Printf("skip file %v as se number not match", name)
 						return
 					}
 				}
