@@ -86,6 +86,14 @@ start_continue:
 			}
 			season := embyAPI.ItemInfo(v.SeasonId)
 			itemList = append(itemList, season)
+
+			if strings.HasPrefix(season.Path, "/gd/动画/") {
+				fmt.Printf("somethig got wrong: id=%v, %v", v.Id, v)
+			}
+			if season.Path == "" {
+				fmt.Printf("null season???? %v", season)
+			}
+
 		}
 	}
 
