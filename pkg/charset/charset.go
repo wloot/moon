@@ -23,7 +23,7 @@ func AnyToUTF8(data []byte) ([]byte, error) {
 		return []byte{}, errors.New("No confidence")
 	}
 	if charset.Charset == "UTF-8" {
-		return removeBOM(data), nil
+		return data, nil
 	}
 
 	encoding, err := ianaindex.MIB.Encoding(charset.Charset)
@@ -35,12 +35,31 @@ func AnyToUTF8(data []byte) ([]byte, error) {
 		return []byte{}, err
 	}
 
-	return removeBOM(transformed), nil
+	return transformed, nil
 }
 
-func removeBOM(utf8 []byte) []byte {
-	if utf8[0] == 0xef && utf8[1] == 0xbb && utf8[2] == 0xbf {
-		utf8 = utf8[3:]
+func RemoveBom(b []byte) []byte {
+	var (
+		utf8Bom    = []byte{0xEF, 0xBB, 0xBF}
+		utf16beBom = []byte{0xFE, 0xFF}
+		utf16leBom = []byte{0xFF, 0xFE}
+		utf32beBom = []byte{0x00, 0x00, 0xFE, 0xFF}
+		utf32leBom = []byte{0xFF, 0xFE, 0x00, 0x00}
+	)
+	if bytes.HasPrefix(b, utf8Bom) {
+		return bytes.TrimPrefix(b, utf8Bom)
 	}
-	return utf8
+	if bytes.HasPrefix(b, utf16beBom) {
+		return bytes.TrimPrefix(b, utf16beBom)
+	}
+	if bytes.HasPrefix(b, utf16leBom) {
+		return bytes.TrimPrefix(b, utf16leBom)
+	}
+	if bytes.HasPrefix(b, utf32beBom) {
+		return bytes.TrimPrefix(b, utf32beBom)
+	}
+	if bytes.HasPrefix(b, utf32leBom) {
+		return bytes.TrimPrefix(b, utf32leBom)
+	}
+	return b
 }

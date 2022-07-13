@@ -88,9 +88,6 @@ start_continue:
 				continue
 			}
 			season := embyAPI.ItemInfo(v.SeasonId)
-			if season.Path == "" {
-				continue
-			}
 			itemList = append(itemList, season)
 		}
 	}
@@ -104,7 +101,6 @@ start_continue:
 			fmt.Printf("processed %v items this time, sleep\n", processedItems)
 			goto end
 		}
-		fmt.Printf("now proessing on %v\n", v.Path)
 
 		if v.Type == "Season" {
 			season := v
@@ -326,6 +322,7 @@ func writeSub(subFiles []string, v emby.EmbyVideo) bool {
 			if transformed, err := charset.AnyToUTF8(data); err == nil {
 				data = transformed
 			}
+			data = charset.RemoveBom(data)
 			if len(data) == 0 {
 				fmt.Printf("ignoring empty sub %v\n", name)
 				return
