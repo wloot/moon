@@ -15,10 +15,17 @@ type Emby struct {
 	client *http.Client
 }
 
-type videoList struct {
-	Items []struct {
-		Id string `json:"Id"`
-	} `json:"Items"`
+type itemList struct {
+	Items []EmbyItem `json:"Items"`
+}
+
+type EmbyItem struct {
+	Id          string `json:"Id"`
+	DateCreated string `json:"DateCreated"`
+}
+
+func (e EmbyItem) GetDateCreated() time.Time {
+	return parseTime(e.DateCreated)
 }
 
 type episodeList struct {
@@ -69,17 +76,17 @@ type EmbyVideo struct {
 	ParentIndexNumber   int               `json:"ParentIndexNumber"`
 }
 
-func (e EmbyVideo) parseTime(s string) time.Time {
+func parseTime(s string) time.Time {
 	t, _ := time.Parse("2006-01-02T15:04:05.0000000Z", s)
 	return t
 }
 
 func (e EmbyVideo) GetDateCreated() time.Time {
-	return e.parseTime(e.DateCreated)
+	return parseTime(e.DateCreated)
 }
 
 func (e EmbyVideo) GetPremiereDate() time.Time {
-	return e.parseTime(e.PremiereDate)
+	return parseTime(e.PremiereDate)
 }
 
 func New(url string, key string) *Emby {
@@ -134,17 +141,13 @@ func (e *Emby) Episodes(seriesId string, seasonId string) []EmbyVideo {
 	return list.Items
 }
 
-func (e *Emby) RecentItems(num int, start int, types string) []string {
-	var list videoList
+func (e *Emby) RecentItems(num int, start int, types string) []EmbyItem {
+	var list itemList
 	e.getJson(e.buildURL(
-		"/Items?Limit="+strconv.Itoa(num)+"&IncludeItemTypes="+types+"&SortBy=DateCreated&SortOrder=Descending&Recursive=true&StartIndex="+strconv.Itoa(start),
+		"/Items?Fields=DateCreated&Limit="+strconv.Itoa(num)+"&IncludeItemTypes="+types+"&SortBy=DateCreated&SortOrder=Descending&Recursive=true&StartIndex="+strconv.Itoa(start),
 	), &list)
 
-	var result []string
-	for _, v := range list.Items {
-		result = append(result, v.Id)
-	}
-	return result
+	return list.Items
 }
 
 func (e *Emby) Refresh(id string, replace bool) {

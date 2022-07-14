@@ -46,6 +46,7 @@ start:
 	embyAPI := emby.New(SETTINGS_emby_url, SETTINGS_emby_key)
 	zimukuAPI := zimuku.New()
 
+	var firstTime time.Time
 	failedTimes := 0
 	processedItems := 0
 	loopCount := -1
@@ -53,43 +54,20 @@ start:
 start_continue:
 	loopCount += 1
 	var itemList []emby.EmbyVideo
-	for _, id := range embyAPI.RecentItems(SETTINGS_emby_importcount, SETTINGS_emby_importcount*loopCount, "Movie,Episode") {
-		v := embyAPI.ItemInfo(id)
-		if v.Type == "Movie" {
-			if v.Path == "" {
-				continue
-			}
-			if len(v.ProductionLocations) > 0 && v.ProductionLocations[0] == "China" {
-				continue
-			}
-			if v.MediaStreams[1].Type == "Audio" && v.MediaStreams[1].DisplayLanguage == "Chinese Simplified" {
-				continue
-			}
-			if whatlanggo.Detect(v.OriginalTitle).Lang == whatlanggo.Cmn {
-				continue
-			}
-			itemList = append(itemList, v)
-		} else if v.Type == "Episode" {
-			if v.Path == "" || strings.HasPrefix(v.Path, "/gd/国产剧/") || strings.HasPrefix(v.Path, "/gd/动画/") {
-				continue
-			}
-			need := true
-			for i := range itemList {
-				if itemList[i].Type == "Season" && itemList[i].Id == v.SeasonId {
-					need = false
-					break
-				}
-			}
-			if need == false {
-				continue
-			}
-			series := embyAPI.ItemInfo(v.SeriesId)
-			if whatlanggo.Detect(series.OriginalTitle).Lang == whatlanggo.Cmn {
-				continue
-			}
-			season := embyAPI.ItemInfo(v.SeasonId)
-			itemList = append(itemList, season)
+	items := embyAPI.RecentItems(SETTINGS_emby_importcount, SETTINGS_emby_importcount*loopCount, "Movie,Episode")
+	if loopCount == 0 {
+		firstTime = items[0].GetDateCreated()
+	}
+	itemList = filterItems(embyAPI, items)
+	newItems := embyAPI.RecentItems(SETTINGS_emby_importcount/2, 0, "Movie,Episode")
+	for i := len(newItems) - 1; i >= 0; i-- {
+		if newItems[i].GetDateCreated().Sub(firstTime) <= 0 {
+			newItems = append(newItems[:i], newItems[i+1:]...)
+			continue
 		}
+		firstTime = newItems[0].GetDateCreated()
+		itemList = append(filterItems(embyAPI, newItems), itemList...)
+		break
 	}
 	if len(itemList) == 0 {
 		fmt.Printf("no jobs to run after proessing %v items, sleep\n", processedItems)
@@ -100,7 +78,7 @@ start_continue:
 
 	for _, v := range itemList {
 		if failedTimes >= 5 {
-			fmt.Printf("much errors after proessing %v items, sleep\n", processedItems)
+			fmt.Printf("too much errors after proessing %v items, sleep\n", processedItems)
 			zimukuAPI.Close()
 			time.Sleep(3 * time.Hour)
 			goto start
@@ -464,4 +442,47 @@ func writeSub(subFiles []string, v emby.EmbyVideo) bool {
 		ffsubsync.Sync(name, reference, true)
 	}
 	return true
+}
+
+func filterItems(embyAPI *emby.Emby, items []emby.EmbyItem) []emby.EmbyVideo {
+	var itemList []emby.EmbyVideo
+	for _, item := range items {
+		v := embyAPI.ItemInfo(item.Id)
+		if v.Type == "Movie" {
+			if v.Path == "" {
+				continue
+			}
+			if len(v.ProductionLocations) > 0 && v.ProductionLocations[0] == "China" {
+				continue
+			}
+			if v.MediaStreams[1].Type == "Audio" && v.MediaStreams[1].DisplayLanguage == "Chinese Simplified" {
+				continue
+			}
+			if whatlanggo.Detect(v.OriginalTitle).Lang == whatlanggo.Cmn {
+				continue
+			}
+			itemList = append(itemList, v)
+		} else if v.Type == "Episode" {
+			if v.Path == "" || strings.HasPrefix(v.Path, "/gd/国产剧/") || strings.HasPrefix(v.Path, "/gd/动画/") {
+				continue
+			}
+			need := true
+			for i := range itemList {
+				if itemList[i].Type == "Season" && itemList[i].Id == v.SeasonId {
+					need = false
+					break
+				}
+			}
+			if need == false {
+				continue
+			}
+			series := embyAPI.ItemInfo(v.SeriesId)
+			if whatlanggo.Detect(series.OriginalTitle).Lang == whatlanggo.Cmn {
+				continue
+			}
+			season := embyAPI.ItemInfo(v.SeasonId)
+			itemList = append(itemList, season)
+		}
+	}
+	return itemList
 }
