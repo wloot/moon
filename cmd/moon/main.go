@@ -91,15 +91,19 @@ start_continue:
 			itemList = append(itemList, season)
 		}
 	}
+	if len(itemList) == 0 {
+		fmt.Printf("no jobs to run after proessing %v items, sleep\n", processedItems)
+		zimukuAPI.Close()
+		time.Sleep(24 * time.Hour)
+		goto start
+	}
 
 	for _, v := range itemList {
 		if failedTimes >= 5 {
-			fmt.Printf("it seems to much errors, sleep\n")
-			goto end
-		}
-		if processedItems > SETTINGS_emby_importcount {
-			fmt.Printf("processed %v items this time, sleep\n", processedItems)
-			goto end
+			fmt.Printf("much errors after proessing %v items, sleep\n", processedItems)
+			zimukuAPI.Close()
+			time.Sleep(3 * time.Hour)
+			goto start
 		}
 
 		if v.Type == "Season" {
@@ -285,14 +289,7 @@ start_continue:
 			embyAPI.Refresh(v.Id, false)
 		}
 	}
-	if processedItems < SETTINGS_emby_importcount {
-		goto start_continue
-	}
-	fmt.Printf("all work done, sleep 6 hours")
-end:
-	zimukuAPI.Close()
-	time.Sleep(6 * time.Hour)
-	goto start
+	goto start_continue
 }
 
 func writeSub(subFiles []string, v emby.EmbyVideo) bool {
