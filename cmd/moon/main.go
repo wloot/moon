@@ -59,15 +59,17 @@ start_continue:
 		firstTime = items[0].GetDateCreated()
 	}
 	itemList = filterItems(embyAPI, items)
-	newItems := embyAPI.RecentItems(SETTINGS_emby_importcount/2, 0, "Movie,Episode")
-	for i := len(newItems) - 1; i >= 0; i-- {
-		if newItems[i].GetDateCreated().Sub(firstTime) <= 0 {
-			newItems = append(newItems[:i], newItems[i+1:]...)
-			continue
+	if loopCount > 0 {
+		newItems := embyAPI.RecentItems(SETTINGS_emby_importcount/2, 0, "Movie,Episode")
+		for i := len(newItems) - 1; i >= 0; i-- {
+			if newItems[i].GetDateCreated().Sub(firstTime) <= 0 {
+				newItems = append(newItems[:i], newItems[i+1:]...)
+				continue
+			}
+			firstTime = newItems[0].GetDateCreated()
+			itemList = append(filterItems(embyAPI, newItems), itemList...)
+			break
 		}
-		firstTime = newItems[0].GetDateCreated()
-		itemList = append(filterItems(embyAPI, newItems), itemList...)
-		break
 	}
 	if len(itemList) == 0 {
 		fmt.Printf("no jobs to run after proessing %v items, sleep\n", processedItems)
