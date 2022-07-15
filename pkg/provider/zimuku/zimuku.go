@@ -20,7 +20,7 @@ import (
 	"strconv"
 )
 
-var downloadNumbers = 3
+var downloadNumbers = 2
 
 type Zimuku struct {
 	browser *rod.Rod
