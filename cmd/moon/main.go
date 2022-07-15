@@ -71,7 +71,7 @@ start_continue:
 			break
 		}
 	}
-	if len(itemList) == 0 {
+	if len(items) == 0 && len(itemList) == 0 {
 		fmt.Printf("no jobs to run after proessing %v items, sleep\n", processedItems)
 		zimukuAPI.Close()
 		time.Sleep(24 * time.Hour)
