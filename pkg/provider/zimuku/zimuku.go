@@ -20,7 +20,7 @@ import (
 	"strconv"
 )
 
-var downloadNumbers = 2
+var downloadNumbers = 3
 
 type Zimuku struct {
 	browser *rod.Rod
@@ -409,6 +409,13 @@ func (z *Zimuku) downloadSub(ctx context.Context, gc []*rawRod.Page, prePage *ra
 		page.MustElement("body > main > div > div > div > table > tbody > tr > td:nth-child(1) > div > ul > li:nth-child(5) > a").MustClick()
 	})
 	page.Close()
+	defer func() {
+		deadline, ok := ctx.Deadline()
+		if ok == false {
+			return
+		}
+		time.Sleep(time.Now().Sub(deadline) - time.Second)
+	}()
 	return file
 }
 
