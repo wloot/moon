@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/base64"
 	"fmt"
+	"math/rand"
 	"moon/pkg/cache"
 	"moon/pkg/config"
 	"moon/pkg/emby"
@@ -414,7 +415,12 @@ func (z *Zimuku) downloadSub(ctx context.Context, gc []*rawRod.Page, prePage *ra
 		if ok == false {
 			return
 		}
-		time.Sleep(time.Now().Sub(deadline) - time.Second)
+		diff := time.Now().Sub(deadline)
+		if diff <= time.Second {
+			return
+		}
+		rand.Seed(time.Now().UnixNano())
+		time.Sleep(time.Duration(rand.Intn(int(diff)-1)+1) * time.Second)
 	}()
 	return file
 }
