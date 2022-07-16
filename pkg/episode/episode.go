@@ -24,7 +24,7 @@ func NameToEpisode(name string) int {
 	if regexp.MustCompile(`(?i)(\b|\d)E\d+-E\d+\b`).MatchString(name) {
 		return -1
 	}
-	if regexp.MustCompile(`全([一二三四五六七八九十]+|[\d]+)集`).MatchString(name) {
+	if regexp.MustCompile(`全([一二三四五六七八九十]+|\d+)集`).MatchString(name) {
 		return -1
 	}
 	match := regexp.MustCompile(`(?i)(\b|\d)(E|Ep)(\d+)\b`).FindStringSubmatch(name)
