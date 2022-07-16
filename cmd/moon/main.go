@@ -33,6 +33,7 @@ type Subinfo struct {
 	chinese bool
 	double  bool
 	tc      bool
+	ench    bool
 }
 
 var SETTNGS_videopath_map map[string]string = map[string]string{}
@@ -354,10 +355,11 @@ func writeSub(subFiles []string, v emby.EmbyVideo) bool {
 		countTC := 0
 		countChars := 0
 		countCh := 0
+		countEnCh := 0
 		countLines := 0
 		countAllLines := 0
 		durationLast := make(map[string]struct{})
-		for _, v := range subSorted[i].info.Items {
+		for i, v := range subSorted[i].info.Items {
 			if len(v.Lines) == 0 {
 				continue
 			}
@@ -365,14 +367,40 @@ func writeSub(subFiles []string, v emby.EmbyVideo) bool {
 
 			key := v.StartAt.String() + "-" + v.EndAt.String()
 			if _, ok := durationLast[key]; ok == true {
+				if i != 1 {
+					continue
+				}
+				// for case english line first
+				line := v.Lines[0].String()
+				line = regexp.MustCompile(`(?m)({[^}]*})`).ReplaceAllString(line, "")
+				line = regexp.MustCompile(`(?m)(\<[^>]*\>)`).ReplaceAllString(line, "")
+				line = strings.ReplaceAll(line, `\n`, `\N`)
+				line = strings.Split(line, `\N`)[0]
+				lang := whatlanggo.Detect(line)
+				if lang.Lang == whatlanggo.Cmn {
+					continue
+				}
+				line = v.Lines[1].String()
+				line = regexp.MustCompile(`(?m)({[^}]*})`).ReplaceAllString(line, "")
+				line = regexp.MustCompile(`(?m)(\<[^>]*\>)`).ReplaceAllString(line, "")
+				line = strings.ReplaceAll(line, `\n`, `\N`)
+				line = strings.Split(line, `\N`)[0]
+				lang = whatlanggo.Detect(line)
+				if lang.Lang != whatlanggo.Cmn {
+					continue
+				}
+				countCh += 1
+				countChars += len([]rune(line))
+				countTC += jianfan.CountCht(line)
+				countEnCh += 1
 				continue
 			}
 			durationLast[key] = struct{}{}
 
 			line := v.Lines[0].String()
 			//`<(.+)( .*)?>([\s\S]*?)<\/(\1)>`
-			line = regexp.MustCompile(`(?m)((?i){[^}]*})`).ReplaceAllString(line, "")
-			line = regexp.MustCompile(`(?m)((?i)\<[^>]*\>)`).ReplaceAllString(line, "")
+			line = regexp.MustCompile(`(?m)({[^}]*})`).ReplaceAllString(line, "")
+			line = regexp.MustCompile(`(?m)(\<[^>]*\>)`).ReplaceAllString(line, "")
 			line = strings.ReplaceAll(line, `\n`, `\N`)
 			line = strings.Split(line, `\N`)[0]
 
@@ -388,6 +416,9 @@ func writeSub(subFiles []string, v emby.EmbyVideo) bool {
 
 		if countLines/2 < countCh {
 			subSorted[i].chinese = true
+		}
+		if countLines/2 < countEnCh {
+			subSorted[i].ench = true
 		}
 		if countLines*3 < countAllLines*2 {
 			subSorted[i].double = true
@@ -414,6 +445,9 @@ func writeSub(subFiles []string, v emby.EmbyVideo) bool {
 		return false
 	}
 	sort.Slice(subSorted, func(i, j int) bool {
+		if subSorted[i].ench != subSorted[j].ench {
+			return subSorted[i].ench == false
+		}
 		if subSorted[i].double != subSorted[j].double {
 			return subSorted[i].double == true
 		}
