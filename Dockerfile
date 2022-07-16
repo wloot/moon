@@ -47,12 +47,12 @@ RUN apt-get update \
     tesseract-ocr-eng \
     && rm -rf /var/lib/apt/lists/*
 
-COPY --from=go /moon/moon /usr/bin/
-
 COPY --from=py /ffsubsync/ /ffsubsync/
 RUN ln -s /usr/bin/python3 /usr/local/bin/python
 ENV PYTHONPATH='/ffsubsync'
 ENV PATH="/ffsubsync/bin:${PATH}"
+
+COPY --from=go /moon/moon /usr/bin/
 
 ENV TZ=Asia/Shanghai \
     PUID=1000 \
