@@ -34,21 +34,29 @@ func NameToEpisode(name string) int {
 			return int(i)
 		}
 	}
-	match = regexp.MustCompile(`第(\d+)集`).FindStringSubmatch(name)
+	match = regexp.MustCompile(`第(\d+)[集話话]`).FindStringSubmatch(name)
 	if len(match) == 2 {
 		i, err := strconv.ParseInt(match[1], 10, 64)
 		if err == nil {
 			return int(i)
 		}
 	}
-	match = regexp.MustCompile(`第(.+)集`).FindStringSubmatch(name)
+	match = regexp.MustCompile(`第(.+)[集話话]`).FindStringSubmatch(name)
 	if len(match) == 2 {
 		i, err := strconv.ParseInt(fromChineseDigital(match[1]), 10, 64)
 		if err == nil {
 			return int(i)
 		}
 	}
+
 	match = regexp.MustCompile(`\b\d+x(\d+)\b`).FindStringSubmatch(name)
+	if len(match) == 2 {
+		i, err := strconv.ParseInt(match[1], 10, 64)
+		if err == nil {
+			return int(i)
+		}
+	}
+	match = regexp.MustCompile(`^(\d+)\b`).FindStringSubmatch(name)
 	if len(match) == 2 {
 		i, err := strconv.ParseInt(match[1], 10, 64)
 		if err == nil {
