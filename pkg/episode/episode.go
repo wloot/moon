@@ -7,12 +7,12 @@ import (
 )
 
 func NameToSeason(name string) int {
-	match := regexp.MustCompile(`\b[Ss](\d+)(\b|[Ee])`).FindStringSubmatch(name)
+	match := regexp.MustCompile(`(?i)\bS(\d+)(\b|E)`).FindStringSubmatch(name)
 	if len(match) == 3 {
 		i, _ := strconv.ParseInt(match[1], 10, 64)
 		return int(i)
 	}
-	match = regexp.MustCompile(`\b(\d{1,2})x\d+\b`).FindStringSubmatch(name)
+	match = regexp.MustCompile(`(?i)\b(\d{1,2})x\d+\b`).FindStringSubmatch(name)
 	if len(match) == 2 {
 		i, _ := strconv.ParseInt(match[1], 10, 64)
 		return int(i)
@@ -21,15 +21,15 @@ func NameToSeason(name string) int {
 }
 
 func NameToEpisode(name string) int {
-	if regexp.MustCompile(`(\b|\d)[eE]\d+-[eE]\d+\b`).MatchString(name) {
+	if regexp.MustCompile(`(?i)(\b|\d)E\d+-E\d+\b`).MatchString(name) {
 		return -1
 	}
 	if regexp.MustCompile(`全([一二三四五六七八九十]+|[\d]+)集`).MatchString(name) {
 		return -1
 	}
-	match := regexp.MustCompile(`(\b|\d)[eE](\d+)\b`).FindStringSubmatch(name)
-	if len(match) == 3 {
-		i, err := strconv.ParseInt(match[2], 10, 64)
+	match := regexp.MustCompile(`(?i)(\b|\d)(E|Ep)(\d+)\b`).FindStringSubmatch(name)
+	if len(match) == 4 {
+		i, err := strconv.ParseInt(match[3], 10, 64)
 		if err == nil {
 			return int(i)
 		}
@@ -49,7 +49,7 @@ func NameToEpisode(name string) int {
 		}
 	}
 
-	match = regexp.MustCompile(`\b\d{1,2}x(\d+)\b`).FindStringSubmatch(name)
+	match = regexp.MustCompile(`(?i)\b\d{1,2}x(\d+)\b`).FindStringSubmatch(name)
 	if len(match) == 2 {
 		i, err := strconv.ParseInt(match[1], 10, 64)
 		if err == nil {
