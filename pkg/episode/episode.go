@@ -12,7 +12,7 @@ func NameToSeason(name string) int {
 		i, _ := strconv.ParseInt(match[1], 10, 64)
 		return int(i)
 	}
-	match = regexp.MustCompile(`\b(\d+)x\d+\b`).FindStringSubmatch(name)
+	match = regexp.MustCompile(`\b(\d{1,2})x\d+\b`).FindStringSubmatch(name)
 	if len(match) == 2 {
 		i, _ := strconv.ParseInt(match[1], 10, 64)
 		return int(i)
@@ -49,7 +49,7 @@ func NameToEpisode(name string) int {
 		}
 	}
 
-	match = regexp.MustCompile(`\b\d+x(\d+)\b`).FindStringSubmatch(name)
+	match = regexp.MustCompile(`\b\d{1,2}x(\d+)\b`).FindStringSubmatch(name)
 	if len(match) == 2 {
 		i, err := strconv.ParseInt(match[1], 10, 64)
 		if err == nil {
