@@ -12,6 +12,11 @@ func NameToSeason(name string) int {
 		i, _ := strconv.ParseInt(match[1], 10, 64)
 		return int(i)
 	}
+	match = regexp.MustCompile(`\b(\d+)x\d+\b`).FindStringSubmatch(name)
+	if len(match) == 2 {
+		i, _ := strconv.ParseInt(match[1], 10, 64)
+		return int(i)
+	}
 	return -1
 }
 
