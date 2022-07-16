@@ -363,8 +363,8 @@ func (z *Zimuku) SearchMovie(movie emby.EmbyVideo) ([]string, bool) {
 				return subFiles, false
 			}
 		}
-		fmt.Printf("zimuku: downlaoding sub, %v\n", v)
 		file := cache.TryGet(cache.MergeKeys("zimuku", v.downloadURL), func() string {
+			fmt.Printf("zimuku: downlaoding sub, %v\n", v)
 			var file string
 			ctx, cancel := context.WithTimeout(z.browser.GetContext(), 30*time.Second)
 			err := rawRod.Try(func() {
