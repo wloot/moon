@@ -88,16 +88,15 @@ func (z *Zimuku) SeasonKeywords(season emby.EmbyVideo, series emby.EmbyVideo, ep
 	seasonNumber := episode.ToChineseDigital(season.IndexNumber)
 
 	if seasonYear != "0" && seasonYear != "" {
-		keywords = append(keywords, originalTitle+" ("+seasonYear+")")
+		keywords = append(keywords, "第"+seasonNumber+"季 "+originalTitle+" ("+seasonYear+")")
 	}
-	keywords = append(keywords, originalTitle+" 第"+seasonNumber+"季")
 	if originalTitle != chineseTitle {
 		if seasonYear != "0" && seasonYear != "" {
-			keywords = append(keywords, chineseTitle+" ("+seasonYear+")")
+			keywords = append(keywords, chineseTitle+" 第"+seasonNumber+"季 ("+seasonYear+")")
 		}
 	}
 	if seasonYear == "一" {
-		keywords = append(keywords, originalTitle)
+		keywords = append(keywords, originalTitle+" ("+seasonYear+")")
 	}
 
 	return keywords
