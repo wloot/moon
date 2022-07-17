@@ -6,9 +6,10 @@ require (
 	github.com/abadojack/whatlanggo v1.0.1
 	github.com/asticode/go-astisub v0.21.0
 	github.com/bodgit/sevenzip v1.2.2
-	github.com/go-rod/rod v0.107.3
+	github.com/go-rod/rod v0.108.1
 	github.com/gogs/chardet v0.0.0-20211120154057-b7413eaefb8f
 	github.com/mholt/archiver/v4 v4.0.0-alpha.7
+	github.com/otiai10/gosseract/v2 v2.4.0
 	golang.org/x/text v0.3.7
 )
 
@@ -23,17 +24,15 @@ require (
 	github.com/golang/snappy v0.0.4 // indirect
 	github.com/hashicorp/errwrap v1.1.0 // indirect
 	github.com/hashicorp/go-multierror v1.1.1 // indirect
-	github.com/klauspost/compress v1.15.7 // indirect
+	github.com/klauspost/compress v1.15.8 // indirect
 	github.com/klauspost/pgzip v1.2.5 // indirect
 	github.com/nwaples/rardecode/v2 v2.0.0-beta.2 // indirect
-	github.com/otiai10/gosseract v2.2.1+incompatible
-	github.com/otiai10/gosseract/v2 v2.3.1
 	github.com/pierrec/lz4/v4 v4.1.15 // indirect
 	github.com/therootcompany/xz v1.0.1 // indirect
 	github.com/ulikunitz/xz v0.5.10 // indirect
 	github.com/ysmood/goob v0.4.0 // indirect
 	github.com/ysmood/gson v0.7.2 // indirect
-	github.com/ysmood/leakless v0.7.0 // indirect
+	github.com/ysmood/leakless v0.8.0 // indirect
 	go4.org v0.0.0-20201209231011-d4a079459e60 // indirect
-	golang.org/x/net v0.0.0-20220630215102-69896b714898 // indirect
+	golang.org/x/net v0.0.0-20220708220712-1185a9018129 // indirect
 )
