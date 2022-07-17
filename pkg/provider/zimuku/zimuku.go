@@ -419,7 +419,7 @@ func (z *Zimuku) downloadSub(ctx context.Context, gc []*rawRod.Page, prePage *ra
 		if ok == false {
 			return
 		}
-		diff := time.Now().Sub(deadline)
+		diff := deadline.Sub(time.Now())
 		if diff <= time.Second {
 			return
 		}
