@@ -112,6 +112,9 @@ start_continue:
 				series = embyAPI.ItemInfo(series.Id)
 			}
 			keywords := zimukuAPI.SeasonKeywords(season, series, episodes)
+			if len(keywords) == 0 {
+				continue
+			}
 
 			for i := len(episodes) - 1; i >= 0; i-- {
 				v := episodes[i]

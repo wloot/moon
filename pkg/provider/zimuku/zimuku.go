@@ -269,6 +269,9 @@ func (z *Zimuku) SearchMovie(movie emby.EmbyVideo) ([]string, bool) {
 
 	var page *rawRod.Page
 	keywords := z.movieKeywords(movie)
+	if len(keywords) == 0 {
+		return []string{}, false
+	}
 	err := rawRod.Try(func() {
 		for _, k := range keywords {
 			if k == "" {
