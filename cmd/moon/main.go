@@ -134,10 +134,6 @@ start_continue:
 					episodes = append(episodes[:i], episodes[i+1:]...)
 					continue
 				}
-				if _, err := os.Stat(v.Path); errors.Is(err, os.ErrNotExist) {
-					episodes = append(episodes[:i], episodes[i+1:]...)
-					continue
-				}
 				var interval time.Duration
 				if hasExtSub == true {
 					interval = time.Hour * 24 * 30
@@ -154,6 +150,10 @@ start_continue:
 					interval = time.Hour * 24
 				}
 				if ok := cache.StatKey(interval, v.Path); !ok {
+					episodes = append(episodes[:i], episodes[i+1:]...)
+					continue
+				}
+				if _, err := os.Stat(v.Path); errors.Is(err, os.ErrNotExist) {
 					episodes = append(episodes[:i], episodes[i+1:]...)
 					continue
 				}
