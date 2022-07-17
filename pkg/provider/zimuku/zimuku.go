@@ -96,7 +96,7 @@ func (z *Zimuku) SeasonKeywords(season emby.EmbyVideo, series emby.EmbyVideo, ep
 			keywords = append(keywords, chineseTitle+" 第"+seasonNumber+"季 ("+seasonYear+")")
 		}
 	}
-	if seasonYear == "一" {
+	if seasonNumber == "一" {
 		keywords = append(keywords, originalTitle+" ("+seasonYear+")")
 	}
 
