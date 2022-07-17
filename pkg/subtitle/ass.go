@@ -19,7 +19,7 @@ func AnalyzeASS(info *astisub.Subtitles) SubContent {
 		countChiChars  int // 中文行的字数
 		countChtChars  int // 中文行中繁体的字数
 	})
-	durationLast := make(map[string]string)
+	durationLast := make(map[string]struct{})
 	for _, item := range info.Items {
 		var lines []string
 		l := item.Lines[0].String()
@@ -46,8 +46,8 @@ func AnalyzeASS(info *astisub.Subtitles) SubContent {
 			}{}
 		}
 
-		key := item.StartAt.String() + "-" + item.EndAt.String()
-		if s, ok := durationLast[key]; ok == true && s == style {
+		key := item.StartAt.String() + "-" + item.EndAt.String() + "_" + style
+		if _, ok := durationLast[key]; ok == true {
 			perStyle[style].countAllLines += len(lines)
 			lang := whatlanggo.Detect(lines[0])
 			if lang.Lang == whatlanggo.Cmn {
@@ -57,7 +57,7 @@ func AnalyzeASS(info *astisub.Subtitles) SubContent {
 			}
 			continue
 		}
-		durationLast[key] = style
+		durationLast[key] = struct{}{}
 
 		perStyle[style].countItems += 1
 		perStyle[style].countAllLines += len(lines)
