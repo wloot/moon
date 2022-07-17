@@ -66,7 +66,7 @@ func AnalyzeSRT(info *astisub.Subtitles) SubContent {
 	if countChiChars/10 < countChtChars {
 		analyze.Cht = true
 	}
-	if countAllLines/2 >= countItems {
+	if countItems*3 < countAllLines*2 {
 		analyze.Double = true
 	}
 	if analyze.Double == false && analyze.OriFirst == true {
@@ -74,7 +74,7 @@ func AnalyzeSRT(info *astisub.Subtitles) SubContent {
 		analyze.OriFirst = false
 	}
 	if analyze.Cht == true && analyze.Chinese == false {
-		analyze.Cht = true
+		analyze.Cht = false
 	}
 	return analyze
 }

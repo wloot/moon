@@ -35,6 +35,16 @@ func AnalyzeASS(info *astisub.Subtitles) SubContent {
 			continue
 		}
 		style := item.Style.ID
+		if perStyle[style] == nil {
+			perStyle[style] = &struct {
+				countItems     int
+				countAllLines  int
+				countChiFirst  int
+				countChiSecond int
+				countChiChars  int
+				countChtChars  int
+			}{}
+		}
 
 		key := item.StartAt.String() + "-" + item.EndAt.String()
 		if s, ok := durationLast[key]; ok == true && s == style {
@@ -92,7 +102,7 @@ func AnalyzeASS(info *astisub.Subtitles) SubContent {
 		if p.countChiChars/10 < p.countChtChars {
 			analyze.Cht = true
 		}
-		if p.countAllLines/2 >= p.countItems {
+		if p.countItems*3 < p.countAllLines*2 {
 			analyze.Double = true
 		}
 	}
@@ -112,7 +122,7 @@ func AnalyzeASS(info *astisub.Subtitles) SubContent {
 		analyze.OriFirst = false
 	}
 	if analyze.Cht == true && analyze.Chinese == false {
-		analyze.Cht = true
+		analyze.Cht = false
 	}
 	return analyze
 }
