@@ -109,6 +109,9 @@ start_continue:
 					episodes = append(episodes[:i], episodes[i+1:]...)
 					continue
 				}
+				if len(v.MediaStreams) <= 1 || (v.MediaStreams[1].Type == "Audio" && v.MediaStreams[1].DisplayLanguage == "Chinese Simplified") {
+					continue
+				}
 				var hasExtSub = false
 				var hasIntSub = false
 				for _, stream := range v.MediaStreams {
