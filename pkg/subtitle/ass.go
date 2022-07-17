@@ -79,16 +79,24 @@ func AnalyzeASS(info *astisub.Subtitles) SubContent {
 		}
 		if p.countItems/2 < p.countChiFirst {
 			analyze.Chinese = true
+			if p.countChiChars/10 < p.countChtChars {
+				analyze.Cht = true
+			}
+			if p.countItems*3 < p.countAllLines*2 {
+				analyze.Double = true
+			}
+			break
 		}
 		if p.countItems/2 < p.countChiSecond {
 			analyze.Chinese = true
 			analyze.OriFirst = true
-		}
-		if p.countChiChars/10 < p.countChtChars {
-			analyze.Cht = true
-		}
-		if p.countItems*3 < p.countAllLines*2 {
-			analyze.Double = true
+			if p.countChiChars/10 < p.countChtChars {
+				analyze.Cht = true
+			}
+			if p.countItems*3 < p.countAllLines*2 {
+				analyze.Double = true
+			}
+			break
 		}
 	}
 	if analyze.Double == false {
