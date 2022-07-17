@@ -19,7 +19,6 @@ func AnalyzeASS(info *astisub.Subtitles) SubContent {
 		countChiChars  int // 中文行的字数
 		countChtChars  int // 中文行中繁体的字数
 	})
-	durationLast := make(map[string]struct{})
 	for _, item := range info.Items {
 		var lines []string
 		l := item.Lines[0].String()
@@ -34,6 +33,7 @@ func AnalyzeASS(info *astisub.Subtitles) SubContent {
 		if len(lines) == 0 {
 			continue
 		}
+
 		style := item.Style.ID
 		if perStyle[style] == nil {
 			perStyle[style] = &struct {
@@ -45,20 +45,6 @@ func AnalyzeASS(info *astisub.Subtitles) SubContent {
 				countChtChars  int
 			}{}
 		}
-
-		key := item.StartAt.String() + "-" + item.EndAt.String() + "_" + style
-		if _, ok := durationLast[key]; ok == true {
-			perStyle[style].countAllLines += len(lines)
-			lang := whatlanggo.Detect(lines[0])
-			if lang.Lang == whatlanggo.Cmn {
-				perStyle[style].countChiSecond += 1
-				perStyle[style].countChiChars += len([]rune(lines[0]))
-				perStyle[style].countChtChars += jianfan.CountCht(lines[0])
-			}
-			continue
-		}
-		durationLast[key] = struct{}{}
-
 		perStyle[style].countItems += 1
 		perStyle[style].countAllLines += len(lines)
 		for i, line := range lines {
@@ -81,14 +67,12 @@ func AnalyzeASS(info *astisub.Subtitles) SubContent {
 	}
 
 	var analyze SubContent
-
 	mostItems := 0
 	for _, p := range perStyle {
 		if mostItems < p.countItems {
 			mostItems = p.countItems
 		}
 	}
-
 	for _, p := range perStyle {
 		if p.countItems*3 < mostItems*2 {
 			continue
@@ -117,7 +101,6 @@ func AnalyzeASS(info *astisub.Subtitles) SubContent {
 			}
 		}
 	}
-
 	if analyze.Double == false && analyze.OriFirst == true {
 		analyze.Chinese = false
 		analyze.OriFirst = false
