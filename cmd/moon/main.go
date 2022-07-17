@@ -105,6 +105,10 @@ start_continue:
 
 			for i := len(episodes) - 1; i >= 0; i-- {
 				v := episodes[i]
+				if v.IndexNumber <= 0 {
+					episodes = append(episodes[:i], episodes[i+1:]...)
+					continue
+				}
 				var hasExtSub = false
 				var hasIntSub = false
 				for _, stream := range v.MediaStreams {
@@ -126,6 +130,14 @@ start_continue:
 					episodes = append(episodes[:i], episodes[i+1:]...)
 					continue
 				}
+				if v.Path == "" {
+					episodes = append(episodes[:i], episodes[i+1:]...)
+					continue
+				}
+				if _, err := os.Stat(v.Path); errors.Is(err, os.ErrNotExist) {
+					episodes = append(episodes[:i], episodes[i+1:]...)
+					continue
+				}
 				var interval time.Duration
 				if hasExtSub == true {
 					interval = time.Hour * 24 * 30
@@ -142,14 +154,6 @@ start_continue:
 					interval = time.Hour * 24
 				}
 				if ok := cache.StatKey(interval, v.Path); !ok {
-					episodes = append(episodes[:i], episodes[i+1:]...)
-					continue
-				}
-				if v.Path == "" {
-					episodes = append(episodes[:i], episodes[i+1:]...)
-					continue
-				}
-				if _, err := os.Stat(v.Path); errors.Is(err, os.ErrNotExist) {
 					episodes = append(episodes[:i], episodes[i+1:]...)
 					continue
 				}
@@ -440,6 +444,9 @@ func filterItems(embyAPI *emby.Emby, items []emby.EmbyItem) []emby.EmbyVideo {
 			}
 			itemList = append(itemList, v)
 		} else if v.Type == "Episode" {
+			if v.ParentIndexNumber <= 0 {
+				continue
+			}
 			if v.Path == "" || strings.HasPrefix(v.Path, "/gd/国产剧/") || strings.HasPrefix(v.Path, "/gd/动画/") {
 				continue
 			}
