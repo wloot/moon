@@ -76,6 +76,7 @@ func (z *Zimuku) SeasonKeywords(season emby.EmbyVideo, series emby.EmbyVideo, ep
 				if v.ProviderIds.Imdb != "" {
 					keywords = append(keywords, v.ProviderIds.Imdb)
 				}
+				break
 			}
 		}
 	} else {
