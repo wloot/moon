@@ -436,7 +436,7 @@ func filterItems(embyAPI *emby.Emby, items []emby.EmbyItem) []emby.EmbyVideo {
 			if len(v.ProductionLocations) > 0 && v.ProductionLocations[0] == "China" {
 				continue
 			}
-			if v.MediaStreams[1].Type == "Audio" && v.MediaStreams[1].DisplayLanguage == "Chinese Simplified" {
+			if len(v.MediaStreams) <= 1 || (v.MediaStreams[1].Type == "Audio" && v.MediaStreams[1].DisplayLanguage == "Chinese Simplified") {
 				continue
 			}
 			if whatlanggo.Detect(v.OriginalTitle).Lang == whatlanggo.Cmn {
