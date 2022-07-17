@@ -535,7 +535,7 @@ func (z *Zimuku) resolveCaptcha(page *rawRod.Page) {
 			if err == nil {
 				client := gosseract.NewClient()
 				client.SetImageFromBytes(b)
-				client.SetWhitelist("0123456789")
+				//client.SetWhitelist("0123456789")
 				text, err = client.Text()
 				client.Close()
 			}
