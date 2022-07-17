@@ -13,11 +13,11 @@ import (
 	"moon/pkg/ffmpeg"
 	"moon/pkg/ffsubsync"
 	"moon/pkg/provider/zimuku"
+	"moon/pkg/subtitle"
 	"moon/pkg/subtype"
 	"moon/pkg/unpack"
 	"os"
 	"path/filepath"
-	"regexp"
 	"sort"
 	"strings"
 	"time"
@@ -30,17 +30,14 @@ type Subinfo struct {
 	format  string
 	data    []byte
 	info    *astisub.Subtitles
-	chinese bool
-	double  bool
-	tc      bool
-	ench    bool
+	analyze subtitle.SubContent
 }
 
 var SETTNGS_videopath_map map[string]string = map[string]string{}
 
 var SETTINGS_emby_url string = "http://172.16.238.10:8096"
 var SETTINGS_emby_key string = "fe1a0f6c143043e98a1f3099bfe0a3a8"
-var SETTINGS_emby_importcount int = 150
+var SETTINGS_emby_importcount int = 200
 
 func main() {
 start:
@@ -350,106 +347,37 @@ func writeSub(subFiles []string, v emby.EmbyVideo) bool {
 		}
 	}
 
-	jianfan := charset.NewJianfan()
 	for i := range subSorted {
-		countTC := 0
-		countChars := 0
-		countCh := 0
-		countEnCh := 0
-		countLines := 0
-		countAllLines := 0
-		durationLast := make(map[string]struct{})
-		for i, v := range subSorted[i].info.Items {
-			if len(v.Lines) == 0 {
-				continue
-			}
-			countAllLines += len(v.Lines)
-
-			key := v.StartAt.String() + "-" + v.EndAt.String()
-			if _, ok := durationLast[key]; ok == true {
-				if i != 1 {
-					continue
-				}
-				// for case english line first
-				line := v.Lines[0].String()
-				line = regexp.MustCompile(`(?m)({[^}]*})`).ReplaceAllString(line, "")
-				line = regexp.MustCompile(`(?m)(\<[^>]*\>)`).ReplaceAllString(line, "")
-				line = strings.ReplaceAll(line, `\n`, `\N`)
-				line = strings.Split(line, `\N`)[0]
-				lang := whatlanggo.Detect(line)
-				if lang.Lang == whatlanggo.Cmn {
-					continue
-				}
-				line = v.Lines[1].String()
-				line = regexp.MustCompile(`(?m)({[^}]*})`).ReplaceAllString(line, "")
-				line = regexp.MustCompile(`(?m)(\<[^>]*\>)`).ReplaceAllString(line, "")
-				line = strings.ReplaceAll(line, `\n`, `\N`)
-				line = strings.Split(line, `\N`)[0]
-				lang = whatlanggo.Detect(line)
-				if lang.Lang != whatlanggo.Cmn {
-					continue
-				}
-				countCh += 1
-				countChars += len([]rune(line))
-				countTC += jianfan.CountCht(line)
-				countEnCh += 1
-				continue
-			}
-			durationLast[key] = struct{}{}
-
-			line := v.Lines[0].String()
-			//`<(.+)( .*)?>([\s\S]*?)<\/(\1)>`
-			line = regexp.MustCompile(`(?m)({[^}]*})`).ReplaceAllString(line, "")
-			line = regexp.MustCompile(`(?m)(\<[^>]*\>)`).ReplaceAllString(line, "")
-			line = strings.ReplaceAll(line, `\n`, `\N`)
-			line = strings.Split(line, `\N`)[0]
-
-			countLines += 1
-			lang := whatlanggo.Detect(line)
-			if lang.Lang == whatlanggo.Cmn {
-				countCh += 1
-
-				countChars += len([]rune(line))
-				countTC += jianfan.CountCht(line)
-			}
+		if subSorted[i].format == "srt" {
+			subSorted[i].analyze = subtitle.AnalyzeSRT(subSorted[i].info)
 		}
-
-		if countLines/2 < countCh {
-			subSorted[i].chinese = true
-		}
-		if countLines/2 < countEnCh {
-			subSorted[i].ench = true
-		}
-		if countLines*3 < countAllLines*2 {
-			subSorted[i].double = true
-		}
-		if countChars/10 <= countTC {
-			subSorted[i].tc = true
+		if subSorted[i].format == "ass" || subSorted[i].format == "ssa" {
+			subSorted[i].analyze = subtitle.AnalyzeASS(subSorted[i].info)
 		}
 	}
 	for i := len(subSorted) - 1; i >= 0; i-- {
 		need := true
-		if subSorted[i].chinese == false {
+		if subSorted[i].analyze.Chinese == false {
 			need = false
 		}
-		if subSorted[i].tc == true {
+		if subSorted[i].analyze.Cht == true {
 			need = false
 		}
 		if need == false {
 			subSorted = append(subSorted[:i], subSorted[i+1:]...)
 		}
 	}
-
 	if len(subSorted) == 0 {
 		fmt.Printf("total sub downloaded is 0\n")
 		return false
 	}
+
 	sort.Slice(subSorted, func(i, j int) bool {
-		if subSorted[i].ench != subSorted[j].ench {
-			return subSorted[i].ench == false
+		if subSorted[i].analyze.OriFirst != subSorted[j].analyze.OriFirst {
+			return subSorted[i].analyze.OriFirst == false
 		}
-		if subSorted[i].double != subSorted[j].double {
-			return subSorted[i].double == true
+		if subSorted[i].analyze.Double != subSorted[j].analyze.Double {
+			return subSorted[i].analyze.Double == true
 		}
 		if subSorted[i].format != subSorted[j].format {
 			return subSorted[i].format == "ass"
