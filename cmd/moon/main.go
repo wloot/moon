@@ -28,6 +28,7 @@ import (
 
 type Subinfo struct {
 	format  string
+	name    string
 	data    []byte
 	info    *astisub.Subtitles
 	analyze subtitle.SubContent
@@ -340,6 +341,7 @@ func writeSub(subFiles []string, v emby.EmbyVideo) bool {
 				data:   data,
 				info:   s,
 				format: t,
+				name:   name,
 			})
 		})
 		if err != nil {
@@ -358,9 +360,11 @@ func writeSub(subFiles []string, v emby.EmbyVideo) bool {
 	for i := len(subSorted) - 1; i >= 0; i-- {
 		need := true
 		if subSorted[i].analyze.Chinese == false {
+			fmt.Printf("skip sub %v as not chinese\n", subSorted[i].name)
 			need = false
 		}
-		if subSorted[i].analyze.Cht == true {
+		if need == true && subSorted[i].analyze.Cht == true {
+			fmt.Printf("skip sub %v as its cht\n", subSorted[i].name)
 			need = false
 		}
 		if need == false {
