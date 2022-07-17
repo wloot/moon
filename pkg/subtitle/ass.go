@@ -101,7 +101,7 @@ func AnalyzeASS(info *astisub.Subtitles) SubContent {
 			if p.countItems*3 < mostItems*2 {
 				continue
 			}
-			if !(p.countItems/2 < p.countChiFirst) {
+			if !(p.countItems/2 < p.countChiFirst+p.countChiSecond) {
 				analyze.Double = true
 			}
 		}
