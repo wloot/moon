@@ -48,6 +48,7 @@ func AnalyzeASS(info *astisub.Subtitles) SubContent {
 
 		key := item.StartAt.String() + "-" + item.EndAt.String()
 		if s, ok := durationLast[key]; ok == true && s == style {
+			perStyle[style].countAllLines += len(lines)
 			lang := whatlanggo.Detect(lines[0])
 			if lang.Lang == whatlanggo.Cmn {
 				perStyle[style].countChiSecond += 1
