@@ -181,9 +181,11 @@ start_continue:
 					}
 				}
 				if len(subFiles) > 0 {
-					succ := writeSub(subFiles, v)
-					if succ == true {
+					succ, err := writeSub(subFiles, v)
+					if err == nil {
 						cache.UpdateKey(v.Path)
+					}
+					if succ == true {
 						embyAPI.Refresh(v.Id, false)
 					}
 				} else {
@@ -265,16 +267,18 @@ start_continue:
 			continue
 		}
 		failedTimes = 0
-		succ := writeSub(subFiles, v)
-		if succ == true {
+		succ, err := writeSub(subFiles, v)
+		if err == nil {
 			cache.UpdateKey(v.Path)
+		}
+		if succ == true {
 			embyAPI.Refresh(v.Id, false)
 		}
 	}
 	goto start_continue
 }
 
-func writeSub(subFiles []string, v emby.EmbyVideo) bool {
+func writeSub(subFiles []string, v emby.EmbyVideo) (bool, error) {
 	var subSorted []Subinfo
 	for _, subName := range subFiles {
 		err := unpack.WalkUnpacked(subName, func(reader io.Reader, info fs.FileInfo) {
@@ -376,7 +380,7 @@ func writeSub(subFiles []string, v emby.EmbyVideo) bool {
 	}
 	if len(subSorted) == 0 {
 		fmt.Printf("total sub downloaded is 0\n")
-		return false
+		return false, nil
 	}
 
 	sort.Slice(subSorted, func(i, j int) bool {
@@ -396,7 +400,7 @@ func writeSub(subFiles []string, v emby.EmbyVideo) bool {
 	err := os.WriteFile(name, subSorted[0].data, 0644)
 	if err != nil {
 		fmt.Printf("failed to write sub file: %v\n", err)
-		return false
+		return false, err
 	}
 	fmt.Printf("sub written to %v\n", name)
 	reference := cache.TryGet(v.Path, func() string {
@@ -412,7 +416,7 @@ func writeSub(subFiles []string, v emby.EmbyVideo) bool {
 	} else {
 		ffsubsync.Sync(name, reference, true)
 	}
-	return true
+	return true, nil
 }
 
 func filterItems(embyAPI *emby.Emby, items []emby.EmbyItem) []emby.EmbyVideo {
