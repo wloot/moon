@@ -94,26 +94,13 @@ start_continue:
 			if len(episodes) == 0 || episodes[0].IndexNumberEnd != 0 {
 				continue
 			}
-
+			var epOne emby.EmbyVideo
 			for i := range episodes {
 				// 获取完整信息
 				episodes[i] = embyAPI.ItemInfo(episodes[i].Id)
 				if episodes[i].IndexNumber == 1 {
-					if episodes[i].ProviderIds.Imdb == "" && season.IndexNumber != 1 {
-						embyAPI.Refresh(episodes[i].Id, true)
-						time.Sleep(20 * time.Second)
-						episodes[i] = embyAPI.ItemInfo(episodes[i].Id)
-					}
+					epOne = episodes[i]
 				}
-			}
-			if series.OriginalTitle == series.Name || (series.ProviderIds.Imdb == "" && season.IndexNumber == 1) {
-				embyAPI.Refresh(series.Id, true)
-				time.Sleep(20 * time.Second)
-				series = embyAPI.ItemInfo(series.Id)
-			}
-			keywords := zimukuAPI.SeasonKeywords(season, series, episodes)
-			if len(keywords) == 0 {
-				continue
 			}
 
 			for i := len(episodes) - 1; i >= 0; i-- {
@@ -168,6 +155,21 @@ start_continue:
 				}
 			}
 			if len(episodes) == 0 {
+				continue
+			}
+
+			if epOne.ProviderIds.Imdb == "" && season.IndexNumber != 1 {
+				embyAPI.Refresh(epOne.Id, true)
+				time.Sleep(20 * time.Second)
+				epOne = embyAPI.ItemInfo(epOne.Id)
+			}
+			if series.OriginalTitle == series.Name || (series.ProviderIds.Imdb == "" && season.IndexNumber == 1) {
+				embyAPI.Refresh(series.Id, true)
+				time.Sleep(20 * time.Second)
+				series = embyAPI.ItemInfo(series.Id)
+			}
+			keywords := zimukuAPI.SeasonKeywords(season, series, []emby.EmbyVideo{epOne})
+			if len(keywords) == 0 {
 				continue
 			}
 
