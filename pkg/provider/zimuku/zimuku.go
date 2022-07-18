@@ -424,7 +424,7 @@ func (z *Zimuku) downloadSub(ctx context.Context, gc []*rawRod.Page, prePage *ra
 			return
 		}
 		rand.Seed(time.Now().UnixNano())
-		time.Sleep(time.Duration(rand.Intn(int(diff.Seconds()) - 1)))
+		time.Sleep(time.Duration(rand.Intn(int(diff.Seconds())-1)) * time.Second)
 	}()
 	return file
 }
