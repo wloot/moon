@@ -270,8 +270,7 @@ start_continue:
 		if failed == true || len(subFiles) == 0 {
 			if failed == true {
 				failedTimes += 1
-			}
-			if len(subFiles) == 0 {
+			} else {
 				cache.UpdateKey(v.Path)
 			}
 			continue
