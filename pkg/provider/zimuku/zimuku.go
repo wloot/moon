@@ -21,7 +21,7 @@ import (
 	"strconv"
 )
 
-var downloadNumbers = 3
+const downloadNumbers = 3
 
 type Zimuku struct {
 	browser *rod.Rod
@@ -354,6 +354,7 @@ func (z *Zimuku) SearchMovie(movie emby.EmbyVideo) ([]string, bool) {
 	}
 
 	var subFiles []string
+	downloadNumbers := downloadNumbers
 	for i, v := range subs {
 		if i >= downloadNumbers || i > 5 {
 			break

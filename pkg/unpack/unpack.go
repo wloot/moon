@@ -41,7 +41,7 @@ func WalkUnpacked(packed string, hook func(io.Reader, fs.FileInfo)) error {
 			hook(file, fl)
 		}
 	} else if ex, ok := format.(archiver.Extractor); ok {
-		ex.Extract(context.Background(), input, nil, func(ctx context.Context, f archiver.File) error {
+		ex.Extract(context.Background(), input, nil, func(_ context.Context, f archiver.File) error {
 			if f.IsDir() {
 				return nil
 			}
