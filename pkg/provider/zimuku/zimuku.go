@@ -207,14 +207,14 @@ func (z *Zimuku) SearchSeason(keywords []string, eps []emby.EmbyVideo) [][]strin
 			}
 			return less
 		})
+		downloadNumbers := downloadNumbers - 1
+		if _, ok := perEp[0]; ok {
+			downloadNumbers += 1
+		} else if downloadNumbers < 1 {
+			downloadNumbers = 1
+		}
 		var subFiles []string
 		for i, v := range subs {
-			downloadNumbers := downloadNumbers - 1
-			if _, ok := perEp[0]; ok {
-				downloadNumbers += 1
-			} else if downloadNumbers < 1 {
-				downloadNumbers = 1
-			}
 			if i >= downloadNumbers || i > 5 {
 				break
 			}
