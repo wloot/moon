@@ -412,7 +412,7 @@ func (z *Zimuku) downloadSub(ctx context.Context, gc []*rawRod.Page, prePage *ra
 	element.MustClick()
 	file := z.browser.HookDownload(func() {
 		page.MustElement("body > main > div > div > div > table > tbody > tr > td:nth-child(1) > div > ul > li:nth-child(5) > a").MustClick()
-		z.resolveCaptcha(page)
+		resolveCaptcha(page)
 	})
 	page.Close()
 	defer func() {
@@ -504,13 +504,14 @@ func (z *Zimuku) searchMainPage(ctx context.Context, gc []*rawRod.Page, keyword 
 	page := z.browser.Context(ctx).MustPage("https://zimuku.org/")
 	gc = append(gc, page)
 
-	z.resolveCaptcha(page)
+	page.WaitElementsMoreThan("div", 1)
+	resolveCaptcha(page)
 	// 搜索框输入
 	page.MustElement("body > div.navbar.navbar-inverse.navbar-static-top > div > div.navbar-header > div > form > div > input").MustInput(keyword)
 	// 搜索按钮
 	page.MustElement("body > div.navbar.navbar-inverse.navbar-static-top > div > div.navbar-header > div > form > div > span > button").MustClick()
 
-	page.WaitElementsMoreThan("button", 1) // if first access
+	resolveCaptcha(page)
 	// 搜索结果页第一个结果
 	has, element, _ := page.Has("body > div.container > div > div > div.box.clearfix > div:nth-child(2) > div.litpic.hidden-xs > a")
 	if has == false {
@@ -523,7 +524,7 @@ func (z *Zimuku) searchMainPage(ctx context.Context, gc []*rawRod.Page, keyword 
 	return page
 }
 
-func (z *Zimuku) resolveCaptcha(page *rawRod.Page) {
+func resolveCaptcha(page *rawRod.Page) {
 	resolveTimes := 0
 	for resolveTimes < 5 {
 		page.MustWaitLoad()
