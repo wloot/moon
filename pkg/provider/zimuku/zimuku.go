@@ -21,7 +21,7 @@ import (
 	"strconv"
 )
 
-const downloadNumbers = 3
+const downloadNumbers = 2
 
 type Zimuku struct {
 	browser *rod.Rod
