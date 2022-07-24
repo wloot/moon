@@ -421,7 +421,7 @@ func (z *Zimuku) downloadSub(ctx context.Context, gc []*rawRod.Page, prePage *ra
 			return
 		}
 		diff := deadline.Sub(time.Now())
-		if diff <= time.Second {
+		if diff < 2*time.Second {
 			return
 		}
 		rand.Seed(time.Now().UnixNano())
