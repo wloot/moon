@@ -225,7 +225,7 @@ func (z *Zimuku) SearchSeason(keywords []string, eps []emby.EmbyVideo) [][]strin
 				}
 				return out
 			}
-			file := cache.TryGet(cache.MergeKeys("zimuku", v.downloadURL), "subtitles", func() string {
+			file := cache.TryGet(cache.MergeKeys("zimuku", v.downloadURL), "downloads", func() string {
 				fmt.Printf("zimuku: downlaoding sub, %v\n", v)
 				var file string
 				ctx, cancel := context.WithTimeout(z.browser.GetContext(), 30*time.Second)
@@ -367,7 +367,7 @@ func (z *Zimuku) SearchMovie(movie emby.EmbyVideo) ([]string, bool) {
 				return subFiles, false
 			}
 		}
-		file := cache.TryGet(cache.MergeKeys("zimuku", v.downloadURL), "subtitles", func() string {
+		file := cache.TryGet(cache.MergeKeys("zimuku", v.downloadURL), "downloads", func() string {
 			fmt.Printf("zimuku: downlaoding sub, %v\n", v)
 			var file string
 			ctx, cancel := context.WithTimeout(z.browser.GetContext(), 30*time.Second)
