@@ -16,7 +16,7 @@ import (
 cache/<md5 key>/<content>
 
 */
-var cacheDir = "cache"
+const cacheDir = "cache"
 
 func checkDir(d string) error {
 	if d != cacheDir {
@@ -46,7 +46,9 @@ func MergeKeys(k ...string) string {
 	return fmt.Sprintf("%v", k)
 }
 
-func UpdateKey(k string) {
+func UpdateKey(k string, sub string) {
+	cacheDir := filepath.Join(cacheDir, sub)
+
 	err := checkDir(cacheDir)
 	if err != nil {
 		return
@@ -60,7 +62,9 @@ func UpdateKey(k string) {
 	os.Chtimes(fn, time.Now(), time.Now())
 }
 
-func StatKey(interval time.Duration, k string) bool {
+func StatKey(interval time.Duration, k string, sub string) bool {
+	cacheDir := filepath.Join(cacheDir, sub)
+
 	err := checkDir(cacheDir)
 	if err != nil {
 		return false
@@ -77,7 +81,9 @@ func StatKey(interval time.Duration, k string) bool {
 	return true
 }
 
-func TryGet(k string, or func() string) string {
+func TryGet(k string, sub string, or func() string) string {
+	cacheDir := filepath.Join(cacheDir, sub)
+
 	fn := filepath.Join(cacheDir, md5Key(k))
 	err := checkDir(fn)
 
