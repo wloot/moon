@@ -20,7 +20,7 @@ const cacheDir = "cache"
 
 func checkDir(d string) error {
 	if d != cacheDir {
-		if err := checkDir(cacheDir); err != nil {
+		if err := checkDir(filepath.Dir(d)); err != nil {
 			return err
 		}
 	}
