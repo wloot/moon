@@ -86,15 +86,23 @@ func TryGet(k string, sub string, or func() string) string {
 
 	fn := filepath.Join(cacheDir, md5Key(k))
 	err := checkDir(fn)
-
+	if err != nil {
+		fmt.Printf("haha0: %v", err)
+	}
 	var f *os.File
 	if err == nil {
 		f, err = os.Open(fn)
+		if err != nil {
+			fmt.Printf("haha1: %v", err)
+		}
 		defer f.Close()
 	}
 	if err == nil {
 		var v []fs.DirEntry
 		v, err = f.ReadDir(-1)
+		if err != nil {
+			fmt.Printf("haha2: %v", err)
+		}
 		if err == nil && len(v) > 0 {
 			return filepath.Join(fn, v[0].Name())
 		}
@@ -104,6 +112,9 @@ func TryGet(k string, sub string, or func() string) string {
 	if s != "" {
 		new := filepath.Join(fn, filepath.Base(s))
 		err = moveFile(s, new)
+		if err != nil {
+			fmt.Printf("haha3: %v", err)
+		}
 		if err == nil {
 			return new
 		}
