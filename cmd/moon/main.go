@@ -153,7 +153,7 @@ start_continue:
 				if time.Now().Sub(v.GetPremiereDate()) < time.Hour*24*7 && time.Now().Sub(v.GetDateCreated()) < time.Hour*24*7 {
 					interval = time.Hour * 24
 				}
-				if ok := cache.StatKey(interval, v.Path, "videos"); !ok {
+				if ok := cache.StatKey(interval, v.MediaSources[0].ID, "videos"); !ok {
 					episodes = append(episodes[:i], episodes[i+1:]...)
 					continue
 				}
@@ -246,7 +246,7 @@ start_continue:
 			interval = time.Hour * 24
 		}
 
-		if ok := cache.StatKey(interval, v.Path, "videos"); !ok {
+		if ok := cache.StatKey(interval, v.MediaSources[0].ID, "videos"); !ok {
 			continue
 		}
 
@@ -271,14 +271,14 @@ start_continue:
 			if failed == true {
 				failedTimes += 1
 			} else {
-				cache.UpdateKey(v.Path, "videos")
+				cache.UpdateKey(v.MediaSources[0].ID, "videos")
 			}
 			continue
 		}
 		failedTimes = 0
 		succ, err := writeSub(subFiles, v)
 		if err == nil {
-			cache.UpdateKey(v.Path, "videos")
+			cache.UpdateKey(v.MediaSources[0].ID, "videos")
 		}
 		if succ == true {
 			embyAPI.Refresh(v.Id, false)
@@ -412,7 +412,7 @@ func writeSub(subFiles []string, v emby.EmbyVideo) (bool, error) {
 		return false, err
 	}
 	fmt.Printf("sub written to %v\n", name)
-	reference := cache.TryGet(v.Path, "videos", func() string {
+	reference := cache.TryGet(v.MediaSources[0].ID, "references", func() string {
 		reference := ffsubsync.FindBestReferenceSub(v)
 		if reference == "" {
 			fmt.Printf("no fit inter sub so extract audio for sync\n")

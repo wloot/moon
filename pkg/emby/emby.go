@@ -63,17 +63,20 @@ type EmbyVideo struct {
 		Tmdb string `json:"Tmdb"`
 		Imdb string `json:"Imdb"`
 	} `json:"ProviderIds"`
-	ProductionYear      int               `json:"ProductionYear"`
-	MediaStreams        []EmbyVideoStream `json:"MediaStreams"`
-	ProductionLocations []string          `json:"ProductionLocations"`
-	DateCreated         string            `json:"DateCreated"`
-	PremiereDate        string            `json:"PremiereDate"`
-	Type                string            `json:"Type"`
-	SeriesId            string            `json:"SeriesId"`
-	SeasonId            string            `json:"SeasonId"`
-	IndexNumber         int               `json:"IndexNumber"`
-	IndexNumberEnd      int               `json:"IndexNumberEnd"`
-	ParentIndexNumber   int               `json:"ParentIndexNumber"`
+	ProductionYear int               `json:"ProductionYear"`
+	MediaStreams   []EmbyVideoStream `json:"MediaStreams"`
+	MediaSources   []struct {
+		ID string `json:"Id"`
+	} `json:"MediaSources"`
+	ProductionLocations []string `json:"ProductionLocations"`
+	DateCreated         string   `json:"DateCreated"`
+	PremiereDate        string   `json:"PremiereDate"`
+	Type                string   `json:"Type"`
+	SeriesId            string   `json:"SeriesId"`
+	SeasonId            string   `json:"SeasonId"`
+	IndexNumber         int      `json:"IndexNumber"`
+	IndexNumberEnd      int      `json:"IndexNumberEnd"`
+	ParentIndexNumber   int      `json:"ParentIndexNumber"`
 }
 
 func parseTime(s string) time.Time {
