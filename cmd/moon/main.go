@@ -326,7 +326,6 @@ func writeSub(subFiles []string, v emby.EmbyVideo) (bool, error) {
 				if ext == "ssa" || ext == "ass" {
 					// 一个常见的字幕typo
 					data = bytes.Replace(data, []byte(",&H00H202020,"), []byte(",&H00202020,"), 1)
-					data = bytes.Replace(data, []byte("[Aegisub Project Garbage]"), []byte(""), 1)
 					s, err = astisub.ReadFromSSAWithOptions(bytes.NewReader(data), astisub.SSAOptions{})
 				}
 				if ext == "srt" {
