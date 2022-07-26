@@ -122,7 +122,6 @@ func (z *Zimuku) SearchSeason(keywords []string, eps []emby.EmbyVideo) [][]strin
 			fmt.Printf("zimuku: searching keyword %v\n", k)
 			page = z.searchMainPage(ctx, pageGC, k)
 			if page == nil {
-				fmt.Printf("zimuku: searching faild, not found\n")
 				continue
 			}
 			break
@@ -280,7 +279,6 @@ func (z *Zimuku) SearchMovie(movie emby.EmbyVideo) ([]string, bool) {
 			fmt.Printf("zimuku: searching keyword %v\n", k)
 			page = z.searchMainPage(ctx, pageGC, k)
 			if page == nil {
-				fmt.Printf("zimuku: searching faild, not found\n")
 				continue
 			}
 			break
