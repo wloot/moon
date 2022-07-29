@@ -193,13 +193,13 @@ start_continue:
 				if len(subFiles) > 0 {
 					succ, err := writeSub(subFiles, v)
 					if err == nil {
-						cache.UpdateKey(v.Path, "videos")
+						cache.UpdateKey(v.MediaSources[0].ID, "videos")
 					}
 					if succ == true {
 						embyAPI.Refresh(v.Id, false)
 					}
 				} else {
-					cache.UpdateKey(v.Path, "videos")
+					cache.UpdateKey(v.MediaSources[0].ID, "videos")
 				}
 			}
 			if len(subFilesEP) != len(episodes) {
