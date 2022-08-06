@@ -2,6 +2,7 @@ package unpack
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"io/fs"
 	"os"
@@ -41,6 +42,11 @@ func WalkUnpacked(packed string, hook func(io.Reader, fs.FileInfo)) error {
 			hook(file, fl)
 		}
 	} else if ex, ok := format.(archiver.Extractor); ok {
+		defer func() {
+			if r := recover(); r != nil {
+				fmt.Printf("WalkUnpacked: Got panic likely from ex.Extract(): %v\n", r)
+			}
+		}()
 		ex.Extract(context.Background(), input, nil, func(_ context.Context, f archiver.File) error {
 			if f.IsDir() {
 				return nil
