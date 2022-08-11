@@ -26,7 +26,7 @@ import (
 	"github.com/asticode/go-astisub"
 )
 
-type Subinfo struct {
+type subinfo struct {
 	format  string
 	name    string
 	data    []byte
@@ -288,7 +288,7 @@ start_continue:
 }
 
 func writeSub(subFiles []string, v emby.EmbyVideo) (bool, error) {
-	var subSorted []Subinfo
+	var subSorted []subinfo
 	for _, subName := range subFiles {
 		err := unpack.WalkUnpacked(subName, func(reader io.Reader, info fs.FileInfo) {
 			name := info.Name()
@@ -352,7 +352,7 @@ func writeSub(subFiles []string, v emby.EmbyVideo) (bool, error) {
 				data = buf.Bytes()
 				t = "srt"
 			}
-			subSorted = append(subSorted, Subinfo{
+			subSorted = append(subSorted, subinfo{
 				data:   data,
 				info:   s,
 				format: t,
@@ -410,7 +410,7 @@ func writeSub(subFiles []string, v emby.EmbyVideo) (bool, error) {
 		fmt.Printf("failed to write sub file: %v\n", err)
 		return false, err
 	}
-	fmt.Printf("sub written to %v\n", name)
+	fmt.Printf("sub %v written to %v\n", subSorted[0].name, name)
 	reference := cache.TryGet(v.MediaSources[0].ID, "references", func() string {
 		reference := ffsubsync.FindBestReferenceSub(v)
 		if reference == "" {
