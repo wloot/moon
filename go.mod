@@ -34,5 +34,5 @@ require (
 	github.com/ysmood/gson v0.7.2 // indirect
 	github.com/ysmood/leakless v0.8.0 // indirect
 	go4.org v0.0.0-20201209231011-d4a079459e60 // indirect
-	golang.org/x/net v0.0.0-20220805013720-a33c5aa5df48 // indirect
+	golang.org/x/net v0.0.0-20220809184613-07c6da5e1ced // indirect
 )
