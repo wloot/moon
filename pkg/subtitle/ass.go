@@ -34,7 +34,10 @@ func AnalyzeASS(info *astisub.Subtitles) SubContent {
 			continue
 		}
 
-		style := item.Style.ID
+		var style string = ""
+		if item.Style != nil {
+			style = item.Style.ID
+		}
 		if perStyle[style] == nil {
 			perStyle[style] = &struct {
 				countItems     int
@@ -99,7 +102,7 @@ func AnalyzeASS(info *astisub.Subtitles) SubContent {
 			break
 		}
 	}
-	if analyze.Double == false {
+	if !analyze.Double {
 		for _, p := range perStyle {
 			if p.countItems*3 < mostItems*2 {
 				continue
@@ -110,11 +113,11 @@ func AnalyzeASS(info *astisub.Subtitles) SubContent {
 			}
 		}
 	}
-	if analyze.Double == false && analyze.OriFirst == true {
+	if !analyze.Double && analyze.OriFirst {
 		analyze.Chinese = false
 		analyze.OriFirst = false
 	}
-	if analyze.Cht == true && analyze.Chinese == false {
+	if analyze.Cht && !analyze.Chinese {
 		analyze.Cht = false
 	}
 	return analyze
