@@ -449,7 +449,7 @@ func filterItems(embyAPI *emby.Emby, items []emby.EmbyItem) []emby.EmbyVideo {
 			if v.ParentIndexNumber <= 0 {
 				continue
 			}
-			if v.Path == "" || strings.HasPrefix(v.Path, "/gd/国产剧/") || strings.HasPrefix(v.Path, "/gd/动画/") {
+			if v.Path == "" || strings.HasPrefix(v.Path, "/gd/国产剧/") {
 				continue
 			}
 			need := true
