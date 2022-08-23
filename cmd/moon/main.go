@@ -85,131 +85,53 @@ start_continue:
 			goto start
 		}
 
+		var processed, failed bool
 		if v.Type == "Season" {
-			season := v
-			series := embyAPI.ItemInfo(v.SeriesId)
-			episodes := embyAPI.Episodes(v.SeriesId, v.Id)
-
-			// 暂不支持单V多E
-			if len(episodes) == 0 || episodes[0].IndexNumberEnd != 0 {
-				continue
-			}
-			var epOne emby.EmbyVideo
-			for i := range episodes {
-				// 获取完整信息
-				episodes[i] = embyAPI.ItemInfo(episodes[i].Id)
-				if episodes[i].IndexNumber == 1 {
-					epOne = episodes[i]
-				}
-			}
-
-			for i := len(episodes) - 1; i >= 0; i-- {
-				v := episodes[i]
-				if v.IndexNumber <= 0 {
-					episodes = append(episodes[:i], episodes[i+1:]...)
-					continue
-				}
-				if len(v.MediaStreams) <= 1 || (v.MediaStreams[1].Type == "Audio" && v.MediaStreams[1].DisplayLanguage == "Chinese Simplified") {
-					episodes = append(episodes[:i], episodes[i+1:]...)
-					continue
-				}
-				var hasExtSub = false
-				var hasIntSub = false
-				for _, stream := range v.MediaStreams {
-					if stream.Type == "Subtitle" && stream.DisplayLanguage == "Chinese Simplified" {
-						if stream.IsExternal == false {
-							if stream.Codec == "PGSSUB" || stream.Codec == "DVDSUB" {
-								continue
-							}
-							hasIntSub = true
-						}
-						path := stream.Path[:len(stream.Path)-len(filepath.Ext(stream.Path))]
-						// Emby 自带的字幕下载
-						if strings.HasSuffix(path, ".zh-CN") == false {
-							hasExtSub = true
-						}
-					}
-				}
-				if hasIntSub {
-					episodes = append(episodes[:i], episodes[i+1:]...)
-					continue
-				}
-				if v.Path == "" {
-					episodes = append(episodes[:i], episodes[i+1:]...)
-					continue
-				}
-				var interval time.Duration
-				if hasExtSub == true {
-					interval = time.Hour * 24 * 30
-					if time.Now().Sub(v.GetPremiereDate()) > time.Hour*24*180 {
-						interval = time.Hour * 24 * 90
-					}
-				} else {
-					interval = time.Hour * 24 * 14
-					if time.Now().Sub(v.GetPremiereDate()) > time.Hour*24*180 {
-						interval = time.Hour * 24 * 60
-					}
-				}
-				if time.Now().Sub(v.GetPremiereDate()) < time.Hour*24*7 && time.Now().Sub(v.GetDateCreated()) < time.Hour*24*7 {
-					interval = time.Hour * 24
-				}
-				if ok := cache.StatKey(interval, v.MediaSources[0].ID, "videos"); !ok {
-					episodes = append(episodes[:i], episodes[i+1:]...)
-					continue
-				}
-				if _, err := os.Stat(v.Path); errors.Is(err, os.ErrNotExist) {
-					episodes = append(episodes[:i], episodes[i+1:]...)
-					continue
-				}
-			}
-			if len(episodes) == 0 {
-				continue
-			}
-
-			if epOne.ProviderIds.Imdb == "" && season.IndexNumber != 1 {
-				embyAPI.Refresh(epOne.Id, true)
-				time.Sleep(20 * time.Second)
-				epOne = embyAPI.ItemInfo(epOne.Id)
-			}
-			if series.OriginalTitle == series.Name || (series.ProviderIds.Imdb == "" && season.IndexNumber == 1) {
-				embyAPI.Refresh(series.Id, true)
-				time.Sleep(20 * time.Second)
-				series = embyAPI.ItemInfo(series.Id)
-			}
-			keywords := zimukuAPI.SeasonKeywords(season, series, []emby.EmbyVideo{epOne})
-			if len(keywords) == 0 {
-				continue
-			}
-
+			processed, failed = season(v, embyAPI, zimukuAPI)
+		}
+		if v.Type == "Movie" {
+			processed, failed = movie(v, embyAPI, zimukuAPI)
+		}
+		if processed {
 			processedItems += 1
-			subFilesEP := zimukuAPI.SearchSeason(keywords, episodes)
-			for i, subFiles := range subFilesEP {
-				v := episodes[i]
-				for old, new := range SETTNGS_videopath_map {
-					if strings.HasPrefix(v.Path, old) {
-						v.Path = new + v.Path[len(old):]
-					}
-				}
-				if len(subFiles) > 0 {
-					succ, err := writeSub(subFiles, v)
-					if err == nil {
-						cache.UpdateKey(v.MediaSources[0].ID, "videos")
-					}
-					if succ == true {
-						embyAPI.Refresh(v.Id, false)
-					}
-				} else {
-					cache.UpdateKey(v.MediaSources[0].ID, "videos")
-				}
-			}
-			if len(subFilesEP) != len(episodes) {
+			if failed {
 				failedTimes += 1
 			} else {
 				failedTimes = 0
 			}
+		}
+	}
+	goto start_continue
+}
+
+func season(v emby.EmbyVideo, embyAPI *emby.Emby, zimukuAPI *zimuku.Zimuku) (processed bool, failed bool) {
+	season := v
+	series := embyAPI.ItemInfo(v.SeriesId)
+	episodes := embyAPI.Episodes(v.SeriesId, v.Id)
+
+	// 暂不支持单V多E
+	if len(episodes) == 0 || episodes[0].IndexNumberEnd != 0 {
+		return
+	}
+	var epOne emby.EmbyVideo
+	for i := range episodes {
+		// 获取完整信息
+		episodes[i] = embyAPI.ItemInfo(episodes[i].Id)
+		if episodes[i].IndexNumber == 1 {
+			epOne = episodes[i]
+		}
+	}
+
+	for i := len(episodes) - 1; i >= 0; i-- {
+		v := episodes[i]
+		if v.IndexNumber <= 0 {
+			episodes = append(episodes[:i], episodes[i+1:]...)
 			continue
 		}
-
+		if len(v.MediaStreams) <= 1 || (v.MediaStreams[1].Type == "Audio" && v.MediaStreams[1].DisplayLanguage == "Chinese Simplified") {
+			episodes = append(episodes[:i], episodes[i+1:]...)
+			continue
+		}
 		var hasExtSub = false
 		var hasIntSub = false
 		for _, stream := range v.MediaStreams {
@@ -228,63 +150,156 @@ start_continue:
 			}
 		}
 		if hasIntSub {
+			episodes = append(episodes[:i], episodes[i+1:]...)
+			continue
+		}
+		if v.Path == "" {
+			episodes = append(episodes[:i], episodes[i+1:]...)
 			continue
 		}
 		var interval time.Duration
 		if hasExtSub == true {
-			interval = time.Hour * 24 * 14
-			if time.Now().Sub(v.GetPremiereDate()) > time.Hour*24*360 && time.Now().Sub(v.GetDateCreated()) > time.Hour*24*30 {
+			interval = time.Hour * 24 * 30
+			if time.Now().Sub(v.GetPremiereDate()) > time.Hour*24*180 {
 				interval = time.Hour * 24 * 90
 			}
 		} else {
-			interval = time.Hour * 24 * 7
-			if time.Now().Sub(v.GetPremiereDate()) > time.Hour*24*360 && time.Now().Sub(v.GetDateCreated()) > time.Hour*24*30 {
+			interval = time.Hour * 24 * 14
+			if time.Now().Sub(v.GetPremiereDate()) > time.Hour*24*180 {
 				interval = time.Hour * 24 * 60
 			}
 		}
-		if time.Now().Sub(v.GetPremiereDate()) < time.Hour*24*270 && time.Now().Sub(v.GetDateCreated()) < time.Hour*24*14 {
+		if time.Now().Sub(v.GetPremiereDate()) < time.Hour*24*7 && time.Now().Sub(v.GetDateCreated()) < time.Hour*24*7 {
 			interval = time.Hour * 24
 		}
-
 		if ok := cache.StatKey(interval, v.MediaSources[0].ID, "videos"); !ok {
+			episodes = append(episodes[:i], episodes[i+1:]...)
 			continue
 		}
-
 		if _, err := os.Stat(v.Path); errors.Is(err, os.ErrNotExist) {
+			episodes = append(episodes[:i], episodes[i+1:]...)
 			continue
 		}
+	}
+	if len(episodes) == 0 {
+		return
+	}
 
-		if v.OriginalTitle == v.Name {
-			embyAPI.Refresh(v.Id, true)
-			time.Sleep(20 * time.Second)
-			v = embyAPI.ItemInfo(v.Id)
-		}
+	if epOne.ProviderIds.Imdb == "" && season.IndexNumber != 1 {
+		embyAPI.Refresh(epOne.Id, true)
+		time.Sleep(20 * time.Second)
+		epOne = embyAPI.ItemInfo(epOne.Id)
+	}
+	if series.OriginalTitle == series.Name || (series.ProviderIds.Imdb == "" && season.IndexNumber == 1) {
+		embyAPI.Refresh(series.Id, true)
+		time.Sleep(20 * time.Second)
+		series = embyAPI.ItemInfo(series.Id)
+	}
+	keywords := zimukuAPI.SeasonKeywords(season, series, []emby.EmbyVideo{epOne})
+	if len(keywords) == 0 {
+		return
+	}
+
+	processed = true
+	subFilesEP := zimukuAPI.SearchSeason(keywords, episodes)
+	for i, subFiles := range subFilesEP {
+		v := episodes[i]
 		for old, new := range SETTNGS_videopath_map {
 			if strings.HasPrefix(v.Path, old) {
 				v.Path = new + v.Path[len(old):]
 			}
 		}
-
-		processedItems += 1
-		subFiles, failed := zimukuAPI.SearchMovie(v)
-		if failed == true || len(subFiles) == 0 {
-			if failed == true {
-				failedTimes += 1
-			} else {
+		if len(subFiles) > 0 {
+			succ, err := writeSub(subFiles, v)
+			if err == nil {
 				cache.UpdateKey(v.MediaSources[0].ID, "videos")
 			}
-			continue
-		}
-		failedTimes = 0
-		succ, err := writeSub(subFiles, v)
-		if err == nil {
+			if succ == true {
+				embyAPI.Refresh(v.Id, false)
+			}
+		} else {
 			cache.UpdateKey(v.MediaSources[0].ID, "videos")
 		}
-		if succ == true {
-			embyAPI.Refresh(v.Id, false)
+	}
+	if len(subFilesEP) != len(episodes) {
+		failed = true
+	}
+	return
+}
+
+func movie(v emby.EmbyVideo, embyAPI *emby.Emby, zimukuAPI *zimuku.Zimuku) (processed bool, failed bool) {
+	var hasExtSub = false
+	var hasIntSub = false
+	for _, stream := range v.MediaStreams {
+		if stream.Type == "Subtitle" && stream.DisplayLanguage == "Chinese Simplified" {
+			if stream.IsExternal == false {
+				if stream.Codec == "PGSSUB" || stream.Codec == "DVDSUB" {
+					continue
+				}
+				hasIntSub = true
+			}
+			path := stream.Path[:len(stream.Path)-len(filepath.Ext(stream.Path))]
+			// Emby 自带的字幕下载
+			if strings.HasSuffix(path, ".zh-CN") == false {
+				hasExtSub = true
+			}
 		}
 	}
-	goto start_continue
+	if hasIntSub {
+		return
+	}
+	var interval time.Duration
+	if hasExtSub == true {
+		interval = time.Hour * 24 * 14
+		if time.Now().Sub(v.GetPremiereDate()) > time.Hour*24*360 && time.Now().Sub(v.GetDateCreated()) > time.Hour*24*30 {
+			interval = time.Hour * 24 * 90
+		}
+	} else {
+		interval = time.Hour * 24 * 7
+		if time.Now().Sub(v.GetPremiereDate()) > time.Hour*24*360 && time.Now().Sub(v.GetDateCreated()) > time.Hour*24*30 {
+			interval = time.Hour * 24 * 60
+		}
+	}
+	if time.Now().Sub(v.GetPremiereDate()) < time.Hour*24*270 && time.Now().Sub(v.GetDateCreated()) < time.Hour*24*14 {
+		interval = time.Hour * 24
+	}
+
+	if ok := cache.StatKey(interval, v.MediaSources[0].ID, "videos"); !ok {
+		return
+	}
+
+	if _, err := os.Stat(v.Path); errors.Is(err, os.ErrNotExist) {
+		return
+	}
+
+	if v.OriginalTitle == v.Name {
+		embyAPI.Refresh(v.Id, true)
+		time.Sleep(20 * time.Second)
+		v = embyAPI.ItemInfo(v.Id)
+	}
+	for old, new := range SETTNGS_videopath_map {
+		if strings.HasPrefix(v.Path, old) {
+			v.Path = new + v.Path[len(old):]
+		}
+	}
+
+	processed = true
+	var subFiles []string
+	subFiles, failed = zimukuAPI.SearchMovie(v)
+	if failed == true || len(subFiles) == 0 {
+		if failed == false {
+			cache.UpdateKey(v.MediaSources[0].ID, "videos")
+		}
+		return
+	}
+	succ, err := writeSub(subFiles, v)
+	if err == nil {
+		cache.UpdateKey(v.MediaSources[0].ID, "videos")
+	}
+	if succ == true {
+		embyAPI.Refresh(v.Id, false)
+	}
+	return
 }
 
 func writeSub(subFiles []string, v emby.EmbyVideo) (bool, error) {

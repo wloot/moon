@@ -38,8 +38,8 @@ type subInfo struct {
 	name            string
 }
 
-func New() Zimuku {
-	return Zimuku{
+func New() *Zimuku {
+	return &Zimuku{
 		browser: rod.New(),
 	}
 }
