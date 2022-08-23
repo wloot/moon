@@ -289,23 +289,15 @@ func movie(v emby.EmbyVideo, embyAPI *emby.Emby, zimukuAPI *zimuku.Zimuku) (proc
 	if failed == true || len(subFiles) == 0 {
 		if failed == false {
 			cache.UpdateKey(v.MediaSources[0].ID, "videos")
-			fmt.Printf("6\n")
 		}
-		fmt.Printf("7\n")
 		return
 	}
-	fmt.Printf("8\n")
 	succ, err := writeSub(subFiles, v)
-	fmt.Printf("9\n")
 	if err == nil {
-		fmt.Printf("10\n")
 		cache.UpdateKey(v.MediaSources[0].ID, "videos")
-		fmt.Printf("11\n")
 	}
 	if succ == true {
-		fmt.Printf("12\n")
 		embyAPI.Refresh(v.Id, false)
-		fmt.Printf("13\n")
 	}
 	return
 }
@@ -313,9 +305,7 @@ func movie(v emby.EmbyVideo, embyAPI *emby.Emby, zimukuAPI *zimuku.Zimuku) (proc
 func writeSub(subFiles []string, v emby.EmbyVideo) (bool, error) {
 	var subSorted []subinfo
 	for _, subName := range subFiles {
-		fmt.Printf("a1, %v\n", subName)
 		err := unpack.WalkUnpacked(subName, func(reader io.Reader, info fs.FileInfo) {
-			fmt.Printf("b1\n")
 			name := info.Name()
 			if v.Type == "Episode" {
 				if filepath.Base(name) != filepath.Base(subName) {
@@ -335,19 +325,15 @@ func writeSub(subFiles []string, v emby.EmbyVideo) (bool, error) {
 			if len(t) > 0 {
 				t = t[1:]
 			}
-			fmt.Printf("b2\n")
 			data, _ := io.ReadAll(reader)
-			fmt.Printf("b3\n")
 			if transformed, err := charset.AnyToUTF8(data); err == nil {
 				data = transformed
 			}
-			fmt.Printf("b4\n")
 			data = charset.RemoveBom(data)
 			if len(data) == 0 {
 				fmt.Printf("ignoring empty sub %v\n", name)
 				return
 			}
-			fmt.Printf("b5\n")
 
 			readSub := func(data []byte, ext string) (*astisub.Subtitles, error) {
 				var s *astisub.Subtitles
@@ -366,13 +352,9 @@ func writeSub(subFiles []string, v emby.EmbyVideo) (bool, error) {
 				return s, err
 			}
 			s, err := readSub(data, t)
-			fmt.Printf("b6\n")
 			if s == nil || err != nil || len(s.Items) == 0 {
-				fmt.Printf("b7\n")
 				t = subtype.GuessingType(string(data))
-				fmt.Printf("b8\n")
 				s, err = readSub(data, t)
-				fmt.Printf("b9\n")
 				if err != nil || s == nil || len(s.Items) == 0 {
 					fmt.Printf("ignoring sub %v as err %v or guessed type '%v'\n", name, err, t)
 					return
@@ -380,12 +362,9 @@ func writeSub(subFiles []string, v emby.EmbyVideo) (bool, error) {
 			}
 
 			if t == "vtt" {
-				fmt.Printf("b10\n")
 				var buf bytes.Buffer
 				s.WriteToSRT(&buf)
-				fmt.Printf("b11\n")
 				data = buf.Bytes()
-				fmt.Printf("b12\n")
 				t = "srt"
 			}
 			subSorted = append(subSorted, subinfo{
@@ -394,13 +373,11 @@ func writeSub(subFiles []string, v emby.EmbyVideo) (bool, error) {
 				format: t,
 				name:   name,
 			})
-			fmt.Printf("b13\n")
 		})
 		if err != nil {
 			fmt.Printf("open sub file %v faild: %v\n", subName, err)
 		}
 	}
-	fmt.Printf("a2\n")
 
 	for i := range subSorted {
 		if subSorted[i].format == "srt" {
