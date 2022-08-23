@@ -285,6 +285,7 @@ func (z *Zimuku) SearchMovie(movie emby.EmbyVideo) ([]string, bool) {
 		}
 		if page != nil {
 			page.MustWaitLoad()
+			fmt.Printf("1\n")
 		}
 	})
 	if err != nil {
@@ -306,6 +307,7 @@ func (z *Zimuku) SearchMovie(movie emby.EmbyVideo) ([]string, bool) {
 			subs = append(subs, z.parseInfo(element))
 		}
 	})
+	fmt.Printf("2\n")
 	if err != nil {
 		fmt.Printf("zimuku: parse detail page failed, %v\n", err)
 		return []string{}, true
@@ -326,6 +328,7 @@ func (z *Zimuku) SearchMovie(movie emby.EmbyVideo) ([]string, bool) {
 			subs = append(subs[:i], subs[i+1:]...)
 		}
 	}
+	fmt.Printf("3\n")
 	if len(subs) == 0 {
 		fmt.Printf("zimuku: no sub for now\n")
 		return []string{}, false
@@ -346,6 +349,7 @@ func (z *Zimuku) SearchMovie(movie emby.EmbyVideo) ([]string, bool) {
 		}
 		return less
 	})
+	fmt.Printf("4\n")
 
 	if config.DEBUG == true {
 		fmt.Printf("zimuku: all sub grabed are %v\n", subs)
@@ -388,6 +392,7 @@ func (z *Zimuku) SearchMovie(movie emby.EmbyVideo) ([]string, bool) {
 			subFiles = append(subFiles, file)
 		}
 	}
+	fmt.Printf("5\n")
 	if len(subFiles) == 0 {
 		return subFiles, true
 	} else {
