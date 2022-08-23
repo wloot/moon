@@ -6,8 +6,6 @@ import (
 	"io"
 	"io/fs"
 	"os"
-	"path/filepath"
-	"strings"
 	"time"
 
 	"github.com/bodgit/sevenzip"
@@ -44,25 +42,23 @@ func WalkUnpacked(packed string, hook func(io.Reader, fs.FileInfo)) error {
 		return err
 	}
 	defer file.Close()
-	// https://github.com/mholt/archiver/issues/345
-	if strings.ToLower(filepath.Ext(packed)) == ".rar" {
-		a, err := unarr.NewArchiveFromReader(file)
-		if err == nil {
-			for {
-				err = a.Entry()
-				if err != nil {
-					if err == io.EOF {
-						err = nil
-					}
-					break
+	a, err := unarr.NewArchiveFromReader(file)
+	if err == nil {
+		for {
+			err = a.Entry()
+			if err != nil {
+				if err == io.EOF {
+					err = nil
 				}
-				hook(a, unarrFileInfo{a: a})
+				break
 			}
-			a.Close()
-			return err
+			hook(a, unarrFileInfo{a: a})
 		}
-		file.Seek(0, 0)
+		a.Close()
+		return err
 	}
+	file.Seek(0, 0)
+	// Golang native that could have many panics and errors
 	defer func() {
 		if r := recover(); r != nil {
 			fmt.Printf("walkUnpacked: catch panic: %v\n", r)
