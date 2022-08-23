@@ -500,24 +500,34 @@ func (z *Zimuku) parseInfo(element *rawRod.Element) subInfo {
 
 func (z *Zimuku) searchMainPage(ctx context.Context, gc []*rawRod.Page, keyword string) *rawRod.Page {
 	page := z.browser.Context(ctx).MustPage("https://zimuku.org/")
+	fmt.Printf("MustPage()\n")
 	gc = append(gc, page)
 
 	page.WaitElementsMoreThan("div", 1)
+	fmt.Printf("WaitElementsMoreThan()\n")
 	resolveCaptcha(page)
+	fmt.Printf("resolveCaptcha()\n")
 	// 搜索框输入
 	page.MustElement("body > div.navbar.navbar-inverse.navbar-static-top > div > div.navbar-header > div > form > div > input").MustInput(keyword)
+	fmt.Printf("MustElement().MustInput()\n")
 	// 搜索按钮
 	page.MustElement("body > div.navbar.navbar-inverse.navbar-static-top > div > div.navbar-header > div > form > div > span > button").MustClick()
+	fmt.Printf("MustElement().MustClick()\n")
 
 	resolveCaptcha(page)
+	fmt.Printf("resolveCaptcha()\n")
 	// 搜索结果页第一个结果
 	has, element, _ := page.Has("body > div.container > div > div > div.box.clearfix > div:nth-child(2) > div.litpic.hidden-xs > a")
+	fmt.Printf("Has()\n")
 	if has == false {
 		page.Close()
+		fmt.Printf("Close()\n")
 		return nil
 	}
 	element.MustEval(`() => { this.target = "" }`)
+	fmt.Printf("MustEval()\n")
 	element.MustClick()
+	fmt.Printf("MustClick()\n")
 
 	return page
 }
