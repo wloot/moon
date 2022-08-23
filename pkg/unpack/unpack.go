@@ -45,17 +45,14 @@ func WalkUnpacked(packed string, hook func(io.Reader, fs.FileInfo)) error {
 	a, err := unarr.NewArchiveFromReader(file)
 	if err == nil {
 		for {
-			err = a.Entry()
-			if err != nil {
-				if err == io.EOF {
-					err = nil
-				}
+			err := a.Entry()
+			if err == io.EOF {
 				break
 			}
 			hook(a, unarrFileInfo{a: a})
 		}
 		a.Close()
-		return err
+		return nil
 	}
 	file.Seek(0, 0)
 	// Golang native that could have many panics and errors
