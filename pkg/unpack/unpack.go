@@ -7,21 +7,62 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
+	"strings"
+	"time"
 
 	"github.com/bodgit/sevenzip"
+	"github.com/gen2brain/go-unarr"
 	"github.com/mholt/archiver/v4"
 )
 
+type unarrFileInfo struct {
+	a *unarr.Archive
+}
+
+func (u unarrFileInfo) Name() string {
+	return u.a.Name()
+}
+func (u unarrFileInfo) Size() int64 {
+	return int64(u.a.Size())
+}
+func (u unarrFileInfo) Mode() fs.FileMode {
+	return fs.FileMode(0)
+}
+func (u unarrFileInfo) ModTime() time.Time {
+	return u.a.ModTime()
+}
+func (u unarrFileInfo) IsDir() bool {
+	return false
+}
+func (u unarrFileInfo) Sys() any {
+	return nil
+}
+
 func WalkUnpacked(packed string, hook func(io.Reader, fs.FileInfo)) error {
-	// https://github.com/mholt/archiver/issues/345
-	if filepath.Base(packed) == "[zmk.pw]Batman.Forever.1995.BluRay.720p.DTS.2Audio.x264-CHD.rar" {
-		return nil
-	}
 	file, err := os.Open(packed)
 	if err != nil {
 		return err
 	}
 	defer file.Close()
+	// https://github.com/mholt/archiver/issues/345
+	if strings.ToLower(filepath.Ext(packed)) == ".rar" {
+		a, err := unarr.NewArchiveFromReader(file)
+		if err == nil {
+			for {
+				err = a.Entry()
+				if err != nil {
+					if err == io.EOF {
+						err = nil
+					}
+					break
+				}
+				hook(a, unarrFileInfo{a: a})
+			}
+			a.Close()
+			return err
+		}
+		file.Seek(0, 0)
+	}
 	defer func() {
 		if r := recover(); r != nil {
 			fmt.Printf("walkUnpacked: catch panic: %v\n", r)

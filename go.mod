@@ -6,6 +6,7 @@ require (
 	github.com/abadojack/whatlanggo v1.0.1
 	github.com/asticode/go-astisub v0.21.0
 	github.com/bodgit/sevenzip v1.3.0
+	github.com/gen2brain/go-unarr v0.1.4
 	github.com/go-rod/rod v0.109.1
 	github.com/gogs/chardet v0.0.0-20211120154057-b7413eaefb8f
 	github.com/mholt/archiver/v4 v4.0.0-alpha.7
