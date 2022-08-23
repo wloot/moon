@@ -533,11 +533,13 @@ func resolveCaptcha(page *rawRod.Page) {
 			b, err := base64.StdEncoding.DecodeString(img)
 			var text string
 			if err == nil {
+				// CGO: start
 				client := gosseract.NewClient()
 				client.SetImageFromBytes(b)
 				//client.SetWhitelist("0123456789")
 				text, err = client.Text()
 				client.Close()
+				// CGO: end
 			}
 			if err != nil {
 				fmt.Printf("zimuku: verify error: %v\n", err)

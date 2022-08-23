@@ -42,6 +42,7 @@ func WalkUnpacked(packed string, hook func(io.Reader, fs.FileInfo)) error {
 		return err
 	}
 	defer file.Close()
+	// CGO: start
 	a, err := unarr.NewArchiveFromReader(file)
 	if err == nil {
 		for {
@@ -58,6 +59,7 @@ func WalkUnpacked(packed string, hook func(io.Reader, fs.FileInfo)) error {
 		return nil
 	}
 	file.Seek(0, 0)
+	// CGO: end
 	// Golang native that could have many panics and errors
 	defer func() {
 		if r := recover(); r != nil {
