@@ -325,13 +325,16 @@ func writeSub(subFiles []string, v emby.EmbyVideo) (bool, error) {
 			if len(t) > 0 {
 				t = t[1:]
 			}
-			data, _ := io.ReadAll(reader)
-			if transformed, err := charset.AnyToUTF8(data); err == nil {
-				data = transformed
+			var data = make([]byte, 0, info.Size())
+			_, err := reader.Read(data)
+			if err == nil {
+				if transformed, err := charset.AnyToUTF8(data); err == nil {
+					data = transformed
+				}
+				data = charset.RemoveBom(data)
 			}
-			data = charset.RemoveBom(data)
-			if len(data) == 0 {
-				fmt.Printf("ignoring empty sub %v\n", name)
+			if len(data) == 0 || len(data) != cap(data) {
+				fmt.Printf("ignoring empty/size-mismatched sub %v\n", name)
 				return
 			}
 
