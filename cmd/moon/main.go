@@ -289,15 +289,23 @@ func movie(v emby.EmbyVideo, embyAPI *emby.Emby, zimukuAPI *zimuku.Zimuku) (proc
 	if failed == true || len(subFiles) == 0 {
 		if failed == false {
 			cache.UpdateKey(v.MediaSources[0].ID, "videos")
+			fmt.Printf("6\n")
 		}
+		fmt.Printf("7\n")
 		return
 	}
+	fmt.Printf("8\n")
 	succ, err := writeSub(subFiles, v)
+	fmt.Printf("9\n")
 	if err == nil {
+		fmt.Printf("10\n")
 		cache.UpdateKey(v.MediaSources[0].ID, "videos")
+		fmt.Printf("11\n")
 	}
 	if succ == true {
+		fmt.Printf("12\n")
 		embyAPI.Refresh(v.Id, false)
+		fmt.Printf("13\n")
 	}
 	return
 }
@@ -305,6 +313,7 @@ func movie(v emby.EmbyVideo, embyAPI *emby.Emby, zimukuAPI *zimuku.Zimuku) (proc
 func writeSub(subFiles []string, v emby.EmbyVideo) (bool, error) {
 	var subSorted []subinfo
 	for _, subName := range subFiles {
+		fmt.Printf("a1\n")
 		err := unpack.WalkUnpacked(subName, func(reader io.Reader, info fs.FileInfo) {
 			name := info.Name()
 			if v.Type == "Episode" {
@@ -378,6 +387,7 @@ func writeSub(subFiles []string, v emby.EmbyVideo) (bool, error) {
 			fmt.Printf("open sub file %v faild: %v\n", subName, err)
 		}
 	}
+	fmt.Printf("a2\n")
 
 	for i := range subSorted {
 		if subSorted[i].format == "srt" {
