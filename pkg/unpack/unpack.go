@@ -39,37 +39,36 @@ func (u unarrFileInfo) Sys() any {
 }
 
 func WalkUnpacked(packed string, hook func(io.Reader, fs.FileInfo)) error {
-	file, err := os.Open(packed)
-	if err != nil {
-		return err
-	}
-	defer file.Close()
+	defer func() {
+		if r := recover(); r != nil {
+			fmt.Printf("walkUnpacked: catch panic: %v\n", r)
+		}
+	}()
 	// CGO: start
 	if strings.ToLower(filepath.Ext(packed)) != ".zip" && strings.ToLower(filepath.Ext(packed)) != ".tar" {
-		a, err := unarr.NewArchiveFromReader(file)
+		a, err := unarr.NewArchive(packed)
 		if err == nil {
 			for {
 				err := a.Entry()
 				if err != nil {
-					if err != io.EOF {
-						fmt.Printf("Entry() error %v\n", err)
+					if err == io.EOF {
+						break
 					}
-					break
+					fmt.Printf("entry err %v", err)
+					continue
 				}
 				hook(a, unarrFileInfo{a: a})
 			}
 			a.Close()
 			return nil
 		}
-		file.Seek(0, 0)
 	}
 	// CGO: end
-	// Golang native that could have many panics and errors
-	defer func() {
-		if r := recover(); r != nil {
-			fmt.Printf("walkUnpacked: catch panic: %v\n", r)
-		}
-	}()
+	file, err := os.Open(packed)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
 	format, input, err := archiver.Identify("", file)
 	if err == archiver.ErrNoMatch {
 		r, err := sevenzip.OpenReader(packed)
