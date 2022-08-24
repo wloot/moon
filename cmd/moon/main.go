@@ -331,15 +331,14 @@ func writeSub(subFiles []string, v emby.EmbyVideo) (bool, error) {
 			data := make([]byte, size)
 			for size > 0 {
 				n, err := reader.Read(data)
+				size -= n
 				if err != nil {
 					if err != io.EOF {
 						fmt.Printf("got error %v while reading %v\n", err, name)
 						return
 					}
-					fmt.Printf("file size mismatch %v\n", name)
-					return
+					break
 				}
-				size -= n
 			}
 			if transformed, err := charset.AnyToUTF8(data); err == nil {
 				data = transformed
