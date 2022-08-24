@@ -305,8 +305,10 @@ func movie(v emby.EmbyVideo, embyAPI *emby.Emby, zimukuAPI *zimuku.Zimuku) (proc
 func writeSub(subFiles []string, v emby.EmbyVideo) (bool, error) {
 	var subSorted []subinfo
 	for _, subName := range subFiles {
+		fmt.Printf("file name%v\n", subName)
 		err := unpack.WalkUnpacked(subName, func(reader io.Reader, info fs.FileInfo) {
 			name := info.Name()
+			fmt.Printf(" - inside file %v\n", name)
 			if v.Type == "Episode" {
 				if filepath.Base(name) != filepath.Base(subName) {
 					ep := episode.NameToEpisode(name)
@@ -340,7 +342,7 @@ func writeSub(subFiles []string, v emby.EmbyVideo) (bool, error) {
 			}
 			data = charset.RemoveBom(data)
 			if len(data) == 0 {
-				fmt.Printf("ignoring empty/size-mismatched sub %v\n", name)
+				fmt.Printf("ignoring empty sub %v\n", name)
 				return
 			}
 
