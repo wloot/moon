@@ -78,7 +78,7 @@ start_continue:
 	}
 
 	for _, v := range itemList {
-		if failedTimes >= 5 {
+		if failedTimes > 3 {
 			fmt.Printf("too much errors after proessing %v items, sleep\n", processedItems)
 			zimukuAPI.Close()
 			time.Sleep(3 * time.Hour)
@@ -307,6 +307,9 @@ func writeSub(subFiles []string, v emby.EmbyVideo) (bool, error) {
 	for _, subName := range subFiles {
 		err := unpack.WalkUnpacked(subName, func(reader io.Reader, info fs.FileInfo) {
 			name := info.Name()
+			if utf8, err := charset.AnyToUTF8([]byte(name)); err == nil {
+				name = string(utf8)
+			}
 			if v.Type == "Episode" {
 				if filepath.Base(name) != filepath.Base(subName) {
 					ep := episode.NameToEpisode(name)
