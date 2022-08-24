@@ -305,7 +305,7 @@ func movie(v emby.EmbyVideo, embyAPI *emby.Emby, zimukuAPI *zimuku.Zimuku) (proc
 func writeSub(subFiles []string, v emby.EmbyVideo) (bool, error) {
 	var subSorted []subinfo
 	for _, subName := range subFiles {
-		fmt.Printf("file name%v\n", subName)
+		fmt.Printf("filename %v\n", subName)
 		err := unpack.WalkUnpacked(subName, func(reader io.Reader, info fs.FileInfo) {
 			name := info.Name()
 			fmt.Printf(" - inside file %v\n", name)
@@ -331,9 +331,11 @@ func writeSub(subFiles []string, v emby.EmbyVideo) (bool, error) {
 			data := make([]byte, size)
 			for size > 0 {
 				n, err := reader.Read(data)
-				if err != nil && err != io.EOF {
-					fmt.Printf("got error %v while reading %v\n", err, name)
-					return
+				if err != nil {
+					if err != io.EOF || data == nil {
+						fmt.Printf("got error %v while reading %v\n", err, name)
+						return
+					}
 				}
 				size -= n
 			}

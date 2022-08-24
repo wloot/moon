@@ -6,6 +6,8 @@ import (
 	"io"
 	"io/fs"
 	"os"
+	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/bodgit/sevenzip"
@@ -43,22 +45,24 @@ func WalkUnpacked(packed string, hook func(io.Reader, fs.FileInfo)) error {
 	}
 	defer file.Close()
 	// CGO: start
-	a, err := unarr.NewArchiveFromReader(file)
-	if err == nil {
-		for {
-			err := a.Entry()
-			if err != nil {
-				if err != io.EOF {
-					fmt.Printf("Entry() error %v\n", err)
+	if strings.ToLower(filepath.Ext(packed)) != ".zip" && strings.ToLower(filepath.Ext(packed)) != ".tar" {
+		a, err := unarr.NewArchiveFromReader(file)
+		if err == nil {
+			for {
+				err := a.Entry()
+				if err != nil {
+					if err != io.EOF {
+						fmt.Printf("Entry() error %v\n", err)
+					}
+					break
 				}
-				break
+				hook(a, unarrFileInfo{a: a})
 			}
-			hook(a, unarrFileInfo{a: a})
+			a.Close()
+			return nil
 		}
-		a.Close()
-		return nil
+		file.Seek(0, 0)
 	}
-	file.Seek(0, 0)
 	// CGO: end
 	// Golang native that could have many panics and errors
 	defer func() {
