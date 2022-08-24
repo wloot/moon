@@ -337,7 +337,9 @@ func writeSub(subFiles []string, v emby.EmbyVideo) (bool, error) {
 						fmt.Printf("got error %v while reading %v\n", err, name)
 						return
 					}
-					break
+					if size > 0 {
+						return
+					}
 				}
 			}
 			if transformed, err := charset.AnyToUTF8(data); err == nil {
