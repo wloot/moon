@@ -31,7 +31,7 @@ func AnyToUTF8(data []byte) ([]byte, error) {
 		return []byte{}, err
 	}
 	if encoding == nil {
-		return []byte{}, errors.New("Charset detection error")
+		return []byte{}, errors.New("No such charset encoding")
 	}
 	transformed, err := io.ReadAll(transform.NewReader(bytes.NewReader(data), encoding.NewDecoder()))
 	if err != nil {
