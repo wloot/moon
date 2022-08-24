@@ -20,7 +20,7 @@ type unarrFileInfo struct {
 }
 
 func (u unarrFileInfo) Name() string {
-	return u.a.Name()
+	return filepath.Base(u.a.Name())
 }
 func (u unarrFileInfo) Size() int64 {
 	return int64(u.a.Size())

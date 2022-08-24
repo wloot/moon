@@ -307,9 +307,9 @@ func writeSub(subFiles []string, v emby.EmbyVideo) (bool, error) {
 	for _, subName := range subFiles {
 		err := unpack.WalkUnpacked(subName, func(reader io.Reader, info fs.FileInfo) {
 			name := info.Name()
-			//if utf8, err := charset.AnyToUTF8([]byte(name)); err == nil {
-			//	name = string(utf8)
-			//}
+			if utf8, err := charset.AnyToUTF8([]byte(name)); err == nil {
+				name = string(utf8)
+			}
 			if v.Type == "Episode" {
 				if filepath.Base(name) != filepath.Base(subName) {
 					ep := episode.NameToEpisode(name)
