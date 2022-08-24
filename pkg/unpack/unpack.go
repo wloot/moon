@@ -54,7 +54,6 @@ func WalkUnpacked(packed string, hook func(io.Reader, fs.FileInfo)) error {
 					if err == io.EOF {
 						break
 					}
-					fmt.Printf("entry err %v", err)
 					continue
 				}
 				hook(a, unarrFileInfo{a: a})
