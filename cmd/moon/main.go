@@ -337,7 +337,9 @@ func writeSub(subFiles []string, v emby.EmbyVideo) (bool, error) {
 						fmt.Printf("got error %v while reading %v\n", err, name)
 						return
 					}
+					// not work for unarr
 					if size > 0 {
+						fmt.Printf("file size mismatch %v\n", name)
 						return
 					}
 				}
