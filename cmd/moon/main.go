@@ -54,7 +54,6 @@ start_continue:
 	searchFront := true
 	var itemList []emby.EmbyVideo
 	for len(itemList) <= SETTINGS_emby_importcount {
-		fmt.Printf("itemList: %v\n", itemList)
 		importIndex += 1
 		items := embyAPI.RecentItems(SETTINGS_emby_importcount*2, SETTINGS_emby_importcount*2*importIndex, "Movie,Episode")
 		if len(items) == 0 {
@@ -89,7 +88,6 @@ start_continue:
 		time.Sleep(24 * time.Hour)
 		goto start
 	}
-	fmt.Printf("start loop now index %v\n", importIndex)
 
 	for _, v := range itemList {
 		if failedTimes > 3 {
