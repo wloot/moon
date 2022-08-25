@@ -41,9 +41,12 @@ var SETTINGS_emby_key string = "fe1a0f6c143043e98a1f3099bfe0a3a8"
 var SETTINGS_emby_importcount int = 200
 
 func main() {
+	print(1, "\n")
 start:
 	embyAPI := emby.New(SETTINGS_emby_url, SETTINGS_emby_key)
+	print(2, "\n")
 	zimukuAPI := zimuku.New()
+	print(3, "\n")
 
 	var firstTime time.Time
 	failedTimes := 0
@@ -54,7 +57,7 @@ start_continue:
 	searchFront := true
 	var itemList []emby.EmbyVideo
 	for len(itemList) <= SETTINGS_emby_importcount {
-		fmt.Print(itemList, "\n")
+		fmt.Printf("itemList: %v\n", itemList)
 		importIndex += 1
 		items := embyAPI.RecentItems(SETTINGS_emby_importcount*2, SETTINGS_emby_importcount*2*importIndex, "Movie,Episode")
 		if len(items) == 0 {
