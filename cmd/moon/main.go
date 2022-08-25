@@ -348,6 +348,7 @@ func writeSub(subFiles []string, v emby.EmbyVideo) (bool, error) {
 			}
 			if data[len(data)-1] == byte(0) {
 				fmt.Printf("file seems to broke %v\n", name)
+				return
 			}
 
 			if transformed, err := charset.AnyToUTF8(data); err == nil {
