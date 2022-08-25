@@ -355,7 +355,6 @@ func writeSub(subFiles []string, v emby.EmbyVideo) (bool, error) {
 						fmt.Printf("file size too small %v\n", name)
 						return
 					}
-					break
 				}
 			}
 			if transformed, err := charset.AnyToUTF8(data); err == nil {
