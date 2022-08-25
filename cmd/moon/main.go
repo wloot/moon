@@ -48,17 +48,24 @@ start:
 	var firstTime time.Time
 	failedTimes := 0
 	processedItems := 0
-	loopCount := -1
+	importIndex := -1
 
 start_continue:
-	loopCount += 1
+	searchFront := true
 	var itemList []emby.EmbyVideo
-	items := embyAPI.RecentItems(SETTINGS_emby_importcount, SETTINGS_emby_importcount*loopCount, "Movie,Episode")
-	if loopCount == 0 {
-		firstTime = items[0].GetDateCreated()
+	for len(itemList) <= SETTINGS_emby_importcount {
+		importIndex += 1
+		items := embyAPI.RecentItems(SETTINGS_emby_importcount, SETTINGS_emby_importcount*importIndex, "Movie,Episode")
+		if len(items) == 0 {
+			break
+		}
+		if importIndex == 0 {
+			firstTime = items[0].GetDateCreated()
+			searchFront = false
+		}
+		itemList = append(itemList, filterItems(embyAPI, items)...)
 	}
-	itemList = filterItems(embyAPI, items)
-	if loopCount > 0 {
+	if searchFront {
 		newItems := embyAPI.RecentItems(SETTINGS_emby_importcount/2, 0, "Movie,Episode")
 		for i := len(newItems) - 1; i >= 0; i-- {
 			if newItems[i].GetDateCreated().Sub(firstTime) <= 0 {
@@ -70,7 +77,7 @@ start_continue:
 			break
 		}
 	}
-	if len(items) == 0 && len(itemList) == 0 {
+	if len(itemList) == 0 {
 		fmt.Printf("no jobs to run after proessing %v items, sleep\n", processedItems)
 		zimukuAPI.Close()
 		time.Sleep(24 * time.Hour)
