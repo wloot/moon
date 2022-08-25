@@ -41,12 +41,9 @@ var SETTINGS_emby_key string = "fe1a0f6c143043e98a1f3099bfe0a3a8"
 var SETTINGS_emby_importcount int = 200
 
 func main() {
-	print(1, "\n")
 start:
 	embyAPI := emby.New(SETTINGS_emby_url, SETTINGS_emby_key)
-	print(2, "\n")
 	zimukuAPI := zimuku.New()
-	print(3, "\n")
 
 	var firstTime time.Time
 	failedTimes := 0
@@ -70,7 +67,7 @@ start_continue:
 			firstTime = items[0].GetDateCreated()
 			searchFront = false
 		}
-		filterItems(itemList, embyAPI, items)
+		filterItems(&itemList, embyAPI, items)
 	}
 	if searchFront {
 		newItems := embyAPI.RecentItems(SETTINGS_emby_importcount, 0, "Movie,Episode")
@@ -81,7 +78,7 @@ start_continue:
 			}
 			firstTime = newItems[0].GetDateCreated()
 			var newItemList []emby.EmbyVideo
-			filterItems(newItemList, embyAPI, newItems)
+			filterItems(&newItemList, embyAPI, newItems)
 			itemList = append(newItemList, itemList...)
 			break
 		}
@@ -483,7 +480,7 @@ func writeSub(subFiles []string, v emby.EmbyVideo) (bool, error) {
 	return true, nil
 }
 
-func filterItems(itemList []emby.EmbyVideo, embyAPI *emby.Emby, items []emby.EmbyItem) {
+func filterItems(itemList *[]emby.EmbyVideo, embyAPI *emby.Emby, items []emby.EmbyItem) {
 	for _, item := range items {
 		v := embyAPI.ItemInfo(item.Id)
 		if v.Type == "Movie" {
@@ -499,7 +496,7 @@ func filterItems(itemList []emby.EmbyVideo, embyAPI *emby.Emby, items []emby.Emb
 			if whatlanggo.Detect(v.OriginalTitle).Lang == whatlanggo.Cmn {
 				continue
 			}
-			itemList = append(itemList, v)
+			*itemList = append(*itemList, v)
 		} else if v.Type == "Episode" {
 			if v.ParentIndexNumber <= 0 {
 				continue
@@ -508,7 +505,7 @@ func filterItems(itemList []emby.EmbyVideo, embyAPI *emby.Emby, items []emby.Emb
 				continue
 			}
 			need := true
-			for _, e := range itemList {
+			for _, e := range *itemList {
 				if e.Type == "Season" && e.Id == v.SeasonId {
 					need = false
 					break
@@ -522,7 +519,7 @@ func filterItems(itemList []emby.EmbyVideo, embyAPI *emby.Emby, items []emby.Emb
 				continue
 			}
 			season := embyAPI.ItemInfo(v.SeasonId)
-			itemList = append(itemList, season)
+			*itemList = append(*itemList, season)
 		}
 	}
 }
