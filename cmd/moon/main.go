@@ -57,6 +57,9 @@ start_continue:
 		importIndex += 1
 		items := embyAPI.RecentItems(SETTINGS_emby_importcount, SETTINGS_emby_importcount*importIndex, "Movie,Episode")
 		if len(items) == 0 {
+			if firstTime.IsZero() {
+				searchFront = false
+			}
 			break
 		}
 		if importIndex == 0 {
