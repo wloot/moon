@@ -346,15 +346,14 @@ func writeSub(subFiles []string, v emby.EmbyVideo) (bool, error) {
 					}
 				}
 			}
-			if data[len(data)-1] == byte(0) {
-				fmt.Printf("file seems to broke %v\n", name)
-				return
-			}
-
 			if transformed, err := charset.AnyToUTF8(data); err == nil {
 				data = transformed
 			}
 			data = charset.RemoveBom(data)
+			if len(data) < 2 || data[len(data)-2] == byte(0) {
+				fmt.Printf("file seems to broke %v\n", name)
+				return
+			}
 			if len(data) == 0 {
 				fmt.Printf("ignoring empty sub %v\n", name)
 				return
