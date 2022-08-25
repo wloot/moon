@@ -42,7 +42,7 @@ RUN mkdir -p /etc/services.d/moon \
     && printf '#!/command/with-contenv sh \n\
     mkdir -p /config/browser /root/.cache/rod \n\
     ln -sf /config/browser /root/.cache/rod/ \n\
-    chown "${PUID}:${PGID}" /root/ /config/ \n\
+    chown "${PUID}:${PGID}" /config /root /root/.cache /root/.cache/rod /config/browser \n\
     cd /config \n\
     exec s6-setuidgid "${PUID}:${PGID}" moon' > /etc/services.d/moon/run \
     && chmod +x /etc/services.d/moon/run
