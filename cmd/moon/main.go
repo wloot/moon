@@ -305,6 +305,7 @@ func movie(v emby.EmbyVideo, embyAPI *emby.Emby, zimukuAPI *zimuku.Zimuku) (proc
 func writeSub(subFiles []string, v emby.EmbyVideo) (bool, error) {
 	var subSorted []subinfo
 	for _, subName := range subFiles {
+		fmt.Printf("processing raw file %v\n", subName)
 		err := unpack.WalkUnpacked(subName, func(reader io.Reader, info fs.FileInfo) {
 			name := info.Name()
 			//if utf8, err := charset.AnyToUTF8([]byte(name)); err == nil {
@@ -345,6 +346,10 @@ func writeSub(subFiles []string, v emby.EmbyVideo) (bool, error) {
 					}
 				}
 			}
+			if data[len(data)-1] == byte(0) {
+				fmt.Printf("file seems to broke %v\n", name)
+			}
+
 			if transformed, err := charset.AnyToUTF8(data); err == nil {
 				data = transformed
 			}

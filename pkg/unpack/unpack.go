@@ -7,7 +7,6 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
-	"strings"
 	"time"
 
 	"github.com/bodgit/sevenzip"
@@ -38,31 +37,33 @@ func (u unarrFileInfo) Sys() any {
 	return nil
 }
 
+func unarrWalkUnpacked(packed string, hook func(io.Reader, fs.FileInfo)) error {
+	// CGO: start
+	a, err := unarr.NewArchive(packed)
+	if err != nil {
+		return err
+	}
+	for {
+		err := a.Entry()
+		if err != nil {
+			if err == io.EOF {
+				break
+			}
+			continue
+		}
+		hook(a, unarrFileInfo{a: a})
+	}
+	a.Close()
+	return nil
+	// CGO: end
+}
+
 func WalkUnpacked(packed string, hook func(io.Reader, fs.FileInfo)) error {
 	defer func() {
 		if r := recover(); r != nil {
 			fmt.Printf("walkUnpacked: catch panic: %v\n", r)
 		}
 	}()
-	// CGO: start
-	if strings.ToLower(filepath.Ext(packed)) != ".zip" && strings.ToLower(filepath.Ext(packed)) != ".tar" {
-		a, err := unarr.NewArchive(packed)
-		if err == nil {
-			for {
-				err := a.Entry()
-				if err != nil {
-					if err == io.EOF {
-						break
-					}
-					continue
-				}
-				hook(a, unarrFileInfo{a: a})
-			}
-			a.Close()
-			return nil
-		}
-	}
-	// CGO: end
 	file, err := os.Open(packed)
 	if err != nil {
 		return err
@@ -70,6 +71,11 @@ func WalkUnpacked(packed string, hook func(io.Reader, fs.FileInfo)) error {
 	defer file.Close()
 	format, input, err := archiver.Identify("", file)
 	if err == archiver.ErrNoMatch {
+		// 7z
+		err := unarrWalkUnpacked(packed, hook)
+		if err == nil {
+			return nil
+		}
 		r, err := sevenzip.OpenReader(packed)
 		if err == nil {
 			for _, f := range r.File {
@@ -93,6 +99,12 @@ func WalkUnpacked(packed string, hook func(io.Reader, fs.FileInfo)) error {
 			hook(file, fl)
 		}
 	} else if ex, ok := format.(archiver.Extractor); ok {
+		if format.Name() == ".rar" {
+			err := unarrWalkUnpacked(packed, hook)
+			if err == nil {
+				return nil
+			}
+		}
 		ex.Extract(context.Background(), input, nil, func(_ context.Context, f archiver.File) error {
 			if f.IsDir() {
 				return nil
