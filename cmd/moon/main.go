@@ -55,7 +55,7 @@ start_continue:
 	var itemList []emby.EmbyVideo
 	for len(itemList) <= SETTINGS_emby_importcount {
 		importIndex += 1
-		items := embyAPI.RecentItems(SETTINGS_emby_importcount, SETTINGS_emby_importcount*importIndex, "Movie,Episode")
+		items := embyAPI.RecentItems(SETTINGS_emby_importcount*2, SETTINGS_emby_importcount*2*importIndex, "Movie,Episode")
 		if len(items) == 0 {
 			if firstTime.IsZero() {
 				searchFront = false
@@ -69,7 +69,7 @@ start_continue:
 		itemList = append(itemList, filterItems(embyAPI, items)...)
 	}
 	if searchFront {
-		newItems := embyAPI.RecentItems(SETTINGS_emby_importcount/2, 0, "Movie,Episode")
+		newItems := embyAPI.RecentItems(SETTINGS_emby_importcount, 0, "Movie,Episode")
 		for i := len(newItems) - 1; i >= 0; i-- {
 			if newItems[i].GetDateCreated().Sub(firstTime) <= 0 {
 				newItems = append(newItems[:i], newItems[i+1:]...)
