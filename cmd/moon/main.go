@@ -342,7 +342,7 @@ func writeSub(subFiles []string, v emby.EmbyVideo) (bool, error) {
 				t = t[1:]
 			}
 			data := make([]byte, 0, int(info.Size()))
-			for {
+			for len(data) != cap(data) {
 				n, err := reader.Read(data[len(data):cap(data)])
 				data = data[:len(data)+n]
 				if err != nil {
@@ -356,9 +356,6 @@ func writeSub(subFiles []string, v emby.EmbyVideo) (bool, error) {
 						return
 					}
 					break
-				} else if len(data) == cap(data) {
-					fmt.Printf("file size too large %v\n", name)
-					return
 				}
 			}
 			if transformed, err := charset.AnyToUTF8(data); err == nil {
