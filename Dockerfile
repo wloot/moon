@@ -41,8 +41,8 @@ RUN tar -C / -Jxpf /tmp/s6-overlay-x86_64.tar.xz && rm /tmp/s6-overlay-x86_64.ta
 RUN mkdir -p /etc/services.d/moon \
     && printf '#!/command/with-contenv sh \n\
     mkdir -p /config/browser /root/.cache/rod \n\
-    chown "${PUID}:${PGID}" /root /config \n\
     ln -sf /config/browser /root/.cache/rod/ \n\
+    chown "${PUID}:${PGID}" /root/ /config/ \n\
     cd /config \n\
     exec s6-setuidgid "${PUID}:${PGID}" moon' > /etc/services.d/moon/run \
     && chmod +x /etc/services.d/moon/run
