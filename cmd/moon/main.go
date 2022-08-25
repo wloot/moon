@@ -357,7 +357,7 @@ func writeSub(subFiles []string, v emby.EmbyVideo) (bool, error) {
 					}
 					break
 				} else if len(data) == cap(data) {
-					fmt.Printf("file size to large %v\n", name)
+					fmt.Printf("file size too large %v\n", name)
 					return
 				}
 			}
