@@ -66,7 +66,7 @@ start_continue:
 			firstTime = items[0].GetDateCreated()
 			searchFront = false
 		}
-		itemList = append(itemList, filterItems(embyAPI, items)...)
+		filterItems(&itemList, embyAPI, items)
 	}
 	if searchFront {
 		newItems := embyAPI.RecentItems(SETTINGS_emby_importcount, 0, "Movie,Episode")
@@ -76,7 +76,9 @@ start_continue:
 				continue
 			}
 			firstTime = newItems[0].GetDateCreated()
-			itemList = append(filterItems(embyAPI, newItems), itemList...)
+			var newItemList []emby.EmbyVideo
+			filterItems(&newItemList, embyAPI, newItems)
+			itemList = append(newItemList, itemList...)
 			break
 		}
 	}
@@ -477,8 +479,7 @@ func writeSub(subFiles []string, v emby.EmbyVideo) (bool, error) {
 	return true, nil
 }
 
-func filterItems(embyAPI *emby.Emby, items []emby.EmbyItem) []emby.EmbyVideo {
-	var itemList []emby.EmbyVideo
+func filterItems(itemList *([]emby.EmbyVideo), embyAPI *emby.Emby, items []emby.EmbyItem) {
 	for _, item := range items {
 		v := embyAPI.ItemInfo(item.Id)
 		if v.Type == "Movie" {
@@ -494,7 +495,7 @@ func filterItems(embyAPI *emby.Emby, items []emby.EmbyItem) []emby.EmbyVideo {
 			if whatlanggo.Detect(v.OriginalTitle).Lang == whatlanggo.Cmn {
 				continue
 			}
-			itemList = append(itemList, v)
+			*itemList = append(*itemList, v)
 		} else if v.Type == "Episode" {
 			if v.ParentIndexNumber <= 0 {
 				continue
@@ -503,8 +504,8 @@ func filterItems(embyAPI *emby.Emby, items []emby.EmbyItem) []emby.EmbyVideo {
 				continue
 			}
 			need := true
-			for i := range itemList {
-				if itemList[i].Type == "Season" && itemList[i].Id == v.SeasonId {
+			for _, i := range *itemList {
+				if i.Type == "Season" && i.Id == v.SeasonId {
 					need = false
 					break
 				}
@@ -517,8 +518,7 @@ func filterItems(embyAPI *emby.Emby, items []emby.EmbyItem) []emby.EmbyVideo {
 				continue
 			}
 			season := embyAPI.ItemInfo(v.SeasonId)
-			itemList = append(itemList, season)
+			*itemList = append(*itemList, season)
 		}
 	}
-	return itemList
 }
