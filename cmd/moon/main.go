@@ -341,18 +341,17 @@ func writeSub(subFiles []string, v emby.EmbyVideo) (bool, error) {
 			if len(t) > 0 {
 				t = t[1:]
 			}
-			size := int(info.Size())
-			data := make([]byte, size)
-			for size > 0 {
-				n, err := reader.Read(data)
-				size -= n
+			data := make([]byte, 0, int(info.Size()))
+			for len(data) != cap(data) {
+				n, err := reader.Read(data[len(data):cap(data)])
+				data = data[:len(data)+n]
 				if err != nil {
 					if err != io.EOF {
 						fmt.Printf("got error %v while reading %v\n", err, name)
 						return
 					}
 					// not work for unarr
-					if size > 0 {
+					if len(data) != cap(data) {
 						fmt.Printf("file size mismatch %v\n", name)
 						return
 					}
