@@ -86,6 +86,7 @@ start_continue:
 		time.Sleep(24 * time.Hour)
 		goto start
 	}
+	fmt.Printf("start loop now index %v\n", importIndex)
 
 	for _, v := range itemList {
 		if failedTimes > 3 {
