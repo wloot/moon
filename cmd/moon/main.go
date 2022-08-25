@@ -320,9 +320,6 @@ func writeSub(subFiles []string, v emby.EmbyVideo) (bool, error) {
 		fmt.Printf("processing raw file %v\n", subName)
 		err := unpack.WalkUnpacked(subName, func(reader io.Reader, info fs.FileInfo) {
 			name := info.Name()
-			if utf8, err := charset.AnyToUTF8([]byte(name)); err == nil {
-				name = string(utf8)
-			}
 			if v.Type == "Episode" {
 				if filepath.Base(name) != filepath.Base(subName) {
 					ep := episode.NameToEpisode(name)
@@ -355,7 +352,12 @@ func writeSub(subFiles []string, v emby.EmbyVideo) (bool, error) {
 						fmt.Printf("file size too small %v\n", name)
 						return
 					}
+					break
 				}
+			}
+			if len(data) >= 10 && bytes.Equal(data[len(data)-10:], make([]byte, 10)) {
+				fmt.Printf("file seems to broke %v\n", name)
+				return
 			}
 			if transformed, err := charset.AnyToUTF8(data); err == nil {
 				data = transformed
