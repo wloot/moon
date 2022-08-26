@@ -355,8 +355,15 @@ func writeSub(subFiles []string, v emby.EmbyVideo) (bool, error) {
 					break
 				}
 			}
-			if len(data) >= 10 && bytes.Equal(data[len(data)-10:], make([]byte, 10)) {
-				fmt.Printf("file seems to broke %v\n", name)
+			zeros := len(data) > 0
+			for _, e := range data {
+				if e != byte(0) {
+					zeros = false
+					break
+				}
+			}
+			if zeros {
+				fmt.Printf("file seems to broke as all zeros %v\n", name)
 				return
 			}
 			if transformed, err := charset.AnyToUTF8(data); err == nil {
