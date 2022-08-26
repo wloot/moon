@@ -369,7 +369,6 @@ func writeSub(subFiles []string, v emby.EmbyVideo) (bool, error) {
 			if transformed, err := charset.AnyToUTF8(data); err == nil {
 				data = transformed
 			}
-			data = charset.RemoveBom(data)
 			if len(data) == 0 {
 				fmt.Printf("ignoring empty sub %v\n", name)
 				return
