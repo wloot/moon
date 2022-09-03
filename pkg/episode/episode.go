@@ -30,21 +30,21 @@ func NameToEpisode(name string) int {
 	match := regexp.MustCompile(`(?i)(\b|\d)(E|Ep)(\d+)\b`).FindStringSubmatch(name)
 	if len(match) == 4 {
 		i, err := strconv.ParseInt(match[3], 10, 64)
-		if err == nil {
+		if err == nil && i > 0 {
 			return int(i)
 		}
 	}
 	match = regexp.MustCompile(`第(\d+)[集話话]`).FindStringSubmatch(name)
 	if len(match) == 2 {
 		i, err := strconv.ParseInt(match[1], 10, 64)
-		if err == nil {
+		if err == nil && i > 0 {
 			return int(i)
 		}
 	}
 	match = regexp.MustCompile(`第(.+)[集話话]`).FindStringSubmatch(name)
 	if len(match) == 2 {
 		i, err := strconv.ParseInt(fromChineseDigital(match[1]), 10, 64)
-		if err == nil {
+		if err == nil && i > 0 {
 			return int(i)
 		}
 	}
@@ -52,14 +52,14 @@ func NameToEpisode(name string) int {
 	match = regexp.MustCompile(`(?i)\b\d{1,2}x(\d+)\b`).FindStringSubmatch(name)
 	if len(match) == 2 {
 		i, err := strconv.ParseInt(match[1], 10, 64)
-		if err == nil {
+		if err == nil && i > 0 {
 			return int(i)
 		}
 	}
 	match = regexp.MustCompile(`\b(\d+)\b`).FindStringSubmatch(name)
 	if len(match) == 2 {
 		i, err := strconv.ParseInt(match[1], 10, 64)
-		if err == nil {
+		if err == nil && i > 0 {
 			return int(i)
 		}
 	}
