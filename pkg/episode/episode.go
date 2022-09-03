@@ -48,7 +48,13 @@ func NameToEpisode(name string) int {
 			return int(i)
 		}
 	}
-
+	match = regexp.MustCompile(`(?i)\bEpisode[-_. ]+(\d+)`).FindStringSubmatch(name)
+	if len(match) == 2 {
+		i, err := strconv.ParseInt(match[1], 10, 64)
+		if err == nil && i > 0 {
+			return int(i)
+		}
+	}
 	match = regexp.MustCompile(`(?i)\b\d{1,2}x(\d+)\b`).FindStringSubmatch(name)
 	if len(match) == 2 {
 		i, err := strconv.ParseInt(match[1], 10, 64)
@@ -56,6 +62,7 @@ func NameToEpisode(name string) int {
 			return int(i)
 		}
 	}
+
 	match = regexp.MustCompile(`\b(\d+)\b`).FindStringSubmatch(name)
 	if len(match) == 2 {
 		i, err := strconv.ParseInt(match[1], 10, 64)
