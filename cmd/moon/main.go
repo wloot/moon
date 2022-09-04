@@ -318,19 +318,19 @@ func movie(v emby.EmbyVideo, embyAPI *emby.Emby, zimukuAPI *zimuku.Zimuku) (proc
 func writeSub(subFiles []string, v emby.EmbyVideo) (bool, error) {
 	var subSorted []subinfo
 	for _, subName := range subFiles {
-		fmt.Printf("processing raw file %v\n", subName)
+		//fmt.Printf("processing raw file %v\n", subName)
 		err := unpack.WalkUnpacked(subName, func(reader io.Reader, info fs.FileInfo) {
 			name := info.Name()
 			if v.Type == "Episode" {
 				if filepath.Base(name) != filepath.Base(subName) {
 					ep := episode.NameToEpisode(name)
 					if ep <= 0 || ep != v.IndexNumber {
-						fmt.Printf("skip file %v as ep number not match %v\n", name, v.IndexNumber)
+						//fmt.Printf("skip file %v as ep number not match %v\n", name, v.IndexNumber)
 						return
 					}
 					se := episode.NameToSeason(name)
 					if se >= 0 && v.ParentIndexNumber != se {
-						fmt.Printf("skip file %v as se number not match %v\n", name, v.ParentIndexNumber)
+						//fmt.Printf("skip file %v as se number not match %v\n", name, v.ParentIndexNumber)
 						return
 					}
 				}
@@ -430,11 +430,11 @@ func writeSub(subFiles []string, v emby.EmbyVideo) (bool, error) {
 	for i := len(subSorted) - 1; i >= 0; i-- {
 		need := true
 		if subSorted[i].analyze.Chinese == false {
-			fmt.Printf("skip sub %v as not chinese\n", subSorted[i].name)
+			//fmt.Printf("skip sub %v as not chinese\n", subSorted[i].name)
 			need = false
 		}
 		if need == true && subSorted[i].analyze.Cht == true {
-			fmt.Printf("skip sub %v as its cht\n", subSorted[i].name)
+			//fmt.Printf("skip sub %v as its cht\n", subSorted[i].name)
 			need = false
 		}
 		if need == false {
