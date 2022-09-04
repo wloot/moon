@@ -112,6 +112,7 @@ start_continue:
 				failedTimes = 0
 			}
 		}
+		time.Sleep(time.Second)
 	}
 	goto start_continue
 }
