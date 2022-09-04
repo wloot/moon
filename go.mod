@@ -6,8 +6,8 @@ require (
 	github.com/abadojack/whatlanggo v1.0.1
 	github.com/asticode/go-astisub v0.21.0
 	github.com/bodgit/sevenzip v1.3.0
-	github.com/gen2brain/go-unarr v0.1.4
-	github.com/go-rod/rod v0.109.1
+	github.com/gen2brain/go-unarr v0.1.6
+	github.com/go-rod/rod v0.109.3
 	github.com/gogs/chardet v0.0.0-20211120154057-b7413eaefb8f
 	github.com/mholt/archiver/v4 v4.0.0-alpha.7
 	github.com/otiai10/gosseract/v2 v2.4.0
@@ -35,5 +35,5 @@ require (
 	github.com/ysmood/gson v0.7.2 // indirect
 	github.com/ysmood/leakless v0.8.0 // indirect
 	go4.org v0.0.0-20201209231011-d4a079459e60 // indirect
-	golang.org/x/net v0.0.0-20220822230855-b0a4917ee28c // indirect
+	golang.org/x/net v0.0.0-20220826154423-83b083e8dc8b // indirect
 )
