@@ -321,6 +321,9 @@ func writeSub(subFiles []string, v emby.EmbyVideo) (bool, error) {
 		//fmt.Printf("processing raw file %v\n", subName)
 		err := unpack.WalkUnpacked(subName, func(reader io.Reader, info fs.FileInfo) {
 			name := info.Name()
+			if strings.HasPrefix(name, "._") {
+				return
+			}
 			if v.Type == "Episode" {
 				if filepath.Base(name) != filepath.Base(subName) {
 					ep := episode.NameToEpisode(name)
