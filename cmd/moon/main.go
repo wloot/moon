@@ -111,8 +111,8 @@ start_continue:
 			} else {
 				failedTimes = 0
 			}
+			time.Sleep(time.Second)
 		}
-		time.Sleep(time.Second)
 	}
 	goto start_continue
 }
