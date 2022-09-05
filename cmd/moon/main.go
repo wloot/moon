@@ -184,9 +184,9 @@ func season(v emby.EmbyVideo, embyAPI *emby.Emby, zimukuAPI *zimuku.Zimuku) (pro
 		}
 		if time.Now().Sub(v.GetPremiereDate()) < time.Hour*24*7 && time.Now().Sub(v.GetDateCreated()) < time.Hour*24*7 {
 			interval = time.Hour * 24
-		}
-		if hasExtSub == false && time.Now().Sub(v.GetDateCreated()) < time.Hour*24 {
-			interval = time.Hour * 6
+			if hasExtSub == false && time.Now().Sub(v.GetDateCreated()) < time.Hour*24 {
+				interval = time.Hour * 6
+			}
 		}
 		if ok := cache.StatKey(interval, v.MediaSources[0].ID, "videos"); !ok {
 			episodes = append(episodes[:i], episodes[i+1:]...)
@@ -278,9 +278,9 @@ func movie(v emby.EmbyVideo, embyAPI *emby.Emby, zimukuAPI *zimuku.Zimuku) (proc
 	}
 	if time.Now().Sub(v.GetPremiereDate()) < time.Hour*24*270 && time.Now().Sub(v.GetDateCreated()) < time.Hour*24*14 {
 		interval = time.Hour * 24
-	}
-	if hasExtSub == false && time.Now().Sub(v.GetDateCreated()) < time.Hour*24 {
-		interval = time.Hour * 6
+		if hasExtSub == false && time.Now().Sub(v.GetDateCreated()) < time.Hour*24 {
+			interval = time.Hour * 6
+		}
 	}
 
 	if ok := cache.StatKey(interval, v.MediaSources[0].ID, "videos"); !ok {
