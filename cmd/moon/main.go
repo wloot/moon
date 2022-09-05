@@ -27,11 +27,12 @@ import (
 )
 
 type subinfo struct {
-	format  string
-	name    string
-	data    []byte
-	info    *astisub.Subtitles
-	analyze subtitle.SubContent
+	format     string
+	name       string
+	data       []byte
+	info       *astisub.Subtitles
+	analyze    subtitle.SubContent
+	looseMatch bool
 }
 
 var SETTNGS_videopath_map map[string]string = map[string]string{}
@@ -320,6 +321,7 @@ func writeSub(subFiles []string, v emby.EmbyVideo) (bool, error) {
 	for _, subName := range subFiles {
 		//fmt.Printf("processing raw file %v\n", subName)
 		err := unpack.WalkUnpacked(subName, func(reader io.Reader, info fs.FileInfo) {
+			looseMatch := false
 			name := info.Name()
 			if strings.HasPrefix(name, "._") {
 				return
@@ -335,6 +337,9 @@ func writeSub(subFiles []string, v emby.EmbyVideo) (bool, error) {
 					if ep < 0 || v.IndexNumber != ep {
 						//fmt.Printf("skip file %v as ep number not match %v\n", name, v.IndexNumber)
 						return
+					}
+					if ep == 0 {
+						looseMatch = true
 					}
 				}
 			}
@@ -411,10 +416,11 @@ func writeSub(subFiles []string, v emby.EmbyVideo) (bool, error) {
 				t = "srt"
 			}
 			subSorted = append(subSorted, subinfo{
-				data:   data,
-				info:   s,
-				format: t,
-				name:   name,
+				data:       data,
+				info:       s,
+				format:     t,
+				name:       name,
+				looseMatch: looseMatch,
 			})
 		})
 		if err != nil {
@@ -450,6 +456,9 @@ func writeSub(subFiles []string, v emby.EmbyVideo) (bool, error) {
 	}
 
 	sort.Slice(subSorted, func(i, j int) bool {
+		if subSorted[i].looseMatch != subSorted[j].looseMatch {
+			return subSorted[i].looseMatch == false
+		}
 		if subSorted[i].analyze.OriFirst != subSorted[j].analyze.OriFirst {
 			return subSorted[i].analyze.OriFirst == false
 		}
