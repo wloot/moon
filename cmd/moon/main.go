@@ -27,12 +27,11 @@ import (
 )
 
 type subinfo struct {
-	format     string
-	name       string
-	data       []byte
-	info       *astisub.Subtitles
-	analyze    subtitle.SubContent
-	looseMatch bool
+	format  string
+	name    string
+	data    []byte
+	info    *astisub.Subtitles
+	analyze subtitle.SubContent
 }
 
 var SETTNGS_videopath_map map[string]string = map[string]string{}
@@ -319,9 +318,11 @@ func movie(v emby.EmbyVideo, embyAPI *emby.Emby, zimukuAPI *zimuku.Zimuku) (proc
 func writeSub(subFiles []string, v emby.EmbyVideo) (bool, error) {
 	var subSorted []subinfo
 	for _, subName := range subFiles {
+		oneEpPack := true
+		var subLoose []subinfo
 		//fmt.Printf("processing raw file %v\n", subName)
 		err := unpack.WalkUnpacked(subName, func(reader io.Reader, info fs.FileInfo) {
-			looseMatch := false
+			unknownEp := false
 			name := info.Name()
 			if strings.HasPrefix(name, "._") {
 				return
@@ -339,7 +340,12 @@ func writeSub(subFiles []string, v emby.EmbyVideo) (bool, error) {
 						return
 					}
 					if ep == 0 {
-						looseMatch = true
+						if !oneEpPack {
+							return
+						}
+						unknownEp = true
+					} else {
+						oneEpPack = false
 					}
 				}
 			}
@@ -415,14 +421,25 @@ func writeSub(subFiles []string, v emby.EmbyVideo) (bool, error) {
 				data = buf.Bytes()
 				t = "srt"
 			}
+			if unknownEp {
+				subLoose = append(subLoose, subinfo{
+					data:   data,
+					info:   s,
+					format: t,
+					name:   name,
+				})
+				return
+			}
 			subSorted = append(subSorted, subinfo{
-				data:       data,
-				info:       s,
-				format:     t,
-				name:       name,
-				looseMatch: looseMatch,
+				data:   data,
+				info:   s,
+				format: t,
+				name:   name,
 			})
 		})
+		if oneEpPack && len(subLoose) > 0 {
+			subSorted = append(subSorted, subLoose...)
+		}
 		if err != nil {
 			fmt.Printf("open sub file %v faild: %v\n", subName, err)
 		}
@@ -456,9 +473,6 @@ func writeSub(subFiles []string, v emby.EmbyVideo) (bool, error) {
 	}
 
 	sort.Slice(subSorted, func(i, j int) bool {
-		if subSorted[i].looseMatch != subSorted[j].looseMatch {
-			return subSorted[i].looseMatch == false
-		}
 		if subSorted[i].analyze.OriFirst != subSorted[j].analyze.OriFirst {
 			return subSorted[i].analyze.OriFirst == false
 		}
