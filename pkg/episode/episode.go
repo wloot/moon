@@ -6,20 +6,26 @@ import (
 	"strings"
 )
 
+// result: good >= 0
 func NameToSeason(name string) int {
 	match := regexp.MustCompile(`(?i)\bS(\d+)(\b|E)`).FindStringSubmatch(name)
 	if len(match) == 3 {
 		i, _ := strconv.ParseInt(match[1], 10, 64)
-		return int(i)
+		if i >= 0 {
+			return int(i)
+		}
 	}
 	match = regexp.MustCompile(`(?i)\b(\d{1,2})x\d+\b`).FindStringSubmatch(name)
 	if len(match) == 2 {
 		i, _ := strconv.ParseInt(match[1], 10, 64)
-		return int(i)
+		if i >= 0 {
+			return int(i)
+		}
 	}
 	return -1
 }
 
+// result: good > 0
 func NameToEpisode(name string) int {
 	if regexp.MustCompile(`(?i)(\b|\d)E\d+(-E|E|-)\d+\b`).MatchString(name) {
 		return -1
@@ -70,7 +76,7 @@ func NameToEpisode(name string) int {
 			return int(i)
 		}
 	}
-	return -1
+	return 0
 }
 
 // 一 - 九十九

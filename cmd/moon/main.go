@@ -326,14 +326,14 @@ func writeSub(subFiles []string, v emby.EmbyVideo) (bool, error) {
 			}
 			if v.Type == "Episode" {
 				if filepath.Base(name) != filepath.Base(subName) {
-					ep := episode.NameToEpisode(name)
-					if ep >= 0 && v.IndexNumber != ep {
-						//fmt.Printf("skip file %v as ep number not match %v\n", name, v.IndexNumber)
+					se := episode.NameToSeason(name)
+					if se > 0 && v.ParentIndexNumber != se {
+						//fmt.Printf("skip file %v as se number not match %v\n", name, v.ParentIndexNumber)
 						return
 					}
-					se := episode.NameToSeason(name)
-					if se >= 0 && v.ParentIndexNumber != se {
-						//fmt.Printf("skip file %v as se number not match %v\n", name, v.ParentIndexNumber)
+					ep := episode.NameToEpisode(name)
+					if ep < 0 || v.IndexNumber != ep {
+						//fmt.Printf("skip file %v as ep number not match %v\n", name, v.IndexNumber)
 						return
 					}
 				}
