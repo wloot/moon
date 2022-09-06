@@ -426,6 +426,16 @@ func writeSub(subFiles []string, v emby.EmbyVideo) (bool, error) {
 				strings.ToLower(filepath.Ext(name)) == ".zip" ||
 				strings.ToLower(filepath.Ext(name)) == ".7z" ||
 				strings.ToLower(filepath.Ext(name)) == ".tar" {
+				if v.Type == "Episode" {
+					se := episode.NameToSeason(name)
+					if se >= 0 && v.ParentIndexNumber != se {
+						return
+					}
+					ep := episode.NameToEpisode(name)
+					if ep <= 0 || v.IndexNumber != ep {
+						return
+					}
+				}
 				f, err := os.CreateTemp("", name[:len(name)-len(filepath.Ext(name))]+".*"+filepath.Ext(name))
 				if err == nil {
 					tmpfile := f.Name()
