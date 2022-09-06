@@ -359,32 +359,9 @@ func writeSub(subFiles []string, v emby.EmbyVideo) (bool, error) {
 			if len(t) > 0 {
 				t = t[1:]
 			}
-			data := make([]byte, 0, int(info.Size()))
-			for len(data) != cap(data) {
-				n, err := reader.Read(data[len(data):cap(data)])
-				data = data[:len(data)+n]
-				if err != nil {
-					if err != io.EOF {
-						fmt.Printf("got error %v while reading %v\n", err, name)
-						return
-					}
-					// not work for unarr
-					if len(data) != cap(data) {
-						fmt.Printf("file size too small %v\n", name)
-						return
-					}
-					break
-				}
-			}
-			zeros := len(data) > 0
-			for _, e := range data {
-				if e != byte(0) {
-					zeros = false
-					break
-				}
-			}
-			if zeros {
-				fmt.Printf("file seems to broke as all zeros %v\n", name)
+			data, err := unpack.ZipRead(reader, info)
+			if err != nil {
+				fmt.Printf("got error %v while reading %v\n", err, name)
 				return
 			}
 			if transformed, err := charset.AnyToUTF8(data); err == nil {
@@ -453,6 +430,11 @@ func writeSub(subFiles []string, v emby.EmbyVideo) (bool, error) {
 				if err == nil {
 					tmpfile := f.Name()
 					defer os.Remove(tmpfile)
+					data, err := unpack.ZipRead(reader, info)
+					if err != nil {
+						return
+					}
+					f.Write(data)
 					f.Close()
 					unpack.WalkUnpacked(tmpfile, walkFunc)
 					return

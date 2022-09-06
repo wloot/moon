@@ -2,6 +2,7 @@ package unpack
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"io/fs"
@@ -119,4 +120,33 @@ func WalkUnpacked(packed string, hook func(io.Reader, fs.FileInfo)) error {
 		})
 	}
 	return nil
+}
+
+func ZipRead(reader io.Reader, info fs.FileInfo) ([]byte, error) {
+	data := make([]byte, 0, int(info.Size()))
+	for len(data) != cap(data) {
+		n, err := reader.Read(data[len(data):cap(data)])
+		data = data[:len(data)+n]
+		if err != nil {
+			if err != io.EOF {
+				return data, err
+			}
+			// not work for unarr
+			if len(data) != cap(data) {
+				return data, errors.New("file size too small")
+			}
+			break
+		}
+	}
+	zeros := len(data) > 0
+	for _, e := range data {
+		if e != byte(0) {
+			zeros = false
+			break
+		}
+	}
+	if zeros {
+		return data, errors.New("file seems to broke as all zeros")
+	}
+	return data, nil
 }
