@@ -324,15 +324,15 @@ func movie(v emby.EmbyVideo, embyAPI *emby.Emby, zimukuAPI *zimuku.Zimuku) (proc
 func writeSub(subFiles []string, v emby.EmbyVideo) (bool, error) {
 	var subSorted []subinfo
 	for _, subName := range subFiles {
-		oneEpPack := true
 		var subLoose []subinfo
+		oneEpPack := true
 		//fmt.Printf("processing raw file %v\n", subName)
-		err := unpack.WalkUnpacked(subName, func(reader io.Reader, info fs.FileInfo) {
-			unknownEp := false
+		walkFunc := func(reader io.Reader, info fs.FileInfo) {
 			name := info.Name()
 			if strings.HasPrefix(name, "._") {
 				return
 			}
+			unknownEp := false
 			if v.Type == "Episode" {
 				if filepath.Base(name) != filepath.Base(subName) {
 					se := episode.NameToSeason(name)
@@ -442,12 +442,27 @@ func writeSub(subFiles []string, v emby.EmbyVideo) (bool, error) {
 				format: t,
 				name:   name,
 			})
-		})
-		if oneEpPack && len(subLoose) > 0 {
-			subSorted = append(subSorted, subLoose...)
 		}
+		err := unpack.WalkUnpacked(subName, func(reader io.Reader, info fs.FileInfo) {
+			name := info.Name()
+			if strings.ToLower(filepath.Ext(name)) == ".rar" ||
+				strings.ToLower(filepath.Ext(name)) == ".zip" ||
+				strings.ToLower(filepath.Ext(name)) == ".7z" ||
+				strings.ToLower(filepath.Ext(name)) == ".tar" {
+				file, err := os.CreateTemp("", name[:len(name)-len(filepath.Ext(name))]+".*"+filepath.Ext(name))
+				if err == nil {
+					defer os.Remove(file.Name())
+					unpack.WalkUnpacked(file.Name(), walkFunc)
+					return
+				}
+			}
+			walkFunc(reader, info)
+		})
 		if err != nil {
 			fmt.Printf("open sub file %v faild: %v\n", subName, err)
+		}
+		if oneEpPack && len(subLoose) > 0 {
+			subSorted = append(subSorted, subLoose...)
 		}
 	}
 
