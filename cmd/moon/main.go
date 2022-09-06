@@ -449,10 +449,12 @@ func writeSub(subFiles []string, v emby.EmbyVideo) (bool, error) {
 				strings.ToLower(filepath.Ext(name)) == ".zip" ||
 				strings.ToLower(filepath.Ext(name)) == ".7z" ||
 				strings.ToLower(filepath.Ext(name)) == ".tar" {
-				file, err := os.CreateTemp("", name[:len(name)-len(filepath.Ext(name))]+".*"+filepath.Ext(name))
+				f, err := os.CreateTemp("", name[:len(name)-len(filepath.Ext(name))]+".*"+filepath.Ext(name))
 				if err == nil {
-					defer os.Remove(file.Name())
-					unpack.WalkUnpacked(file.Name(), walkFunc)
+					tmpfile := f.Name()
+					defer os.Remove(tmpfile)
+					f.Close()
+					unpack.WalkUnpacked(tmpfile, walkFunc)
 					return
 				}
 			}
