@@ -471,11 +471,11 @@ func writeSub(subFiles []string, v emby.EmbyVideo) (bool, error) {
 	for i := len(subSorted) - 1; i >= 0; i-- {
 		need := true
 		if subSorted[i].analyze.Chinese == false {
-			//fmt.Printf("skip sub %v as not chinese\n", subSorted[i].name)
+			fmt.Printf("skip sub %v as not chinese\n", subSorted[i].name)
 			need = false
 		}
 		if need == true && subSorted[i].analyze.Cht == true {
-			//fmt.Printf("skip sub %v as its cht\n", subSorted[i].name)
+			fmt.Printf("skip sub %v as its cht\n", subSorted[i].name)
 			need = false
 		}
 		if need == false {
