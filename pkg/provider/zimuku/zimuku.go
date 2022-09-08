@@ -184,7 +184,7 @@ func (z *Zimuku) SearchSeason(keywords []string, eps []emby.EmbyVideo) ([][]stri
 	}
 
 	var out [][]string
-	var info map[string]string
+	info := make(map[string]string)
 	for i := range eps {
 		var subs []subInfo
 		e := eps[i].IndexNumber

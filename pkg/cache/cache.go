@@ -8,15 +8,24 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
+	"strconv"
 	"time"
 )
 
 /*
-
 cache/<md5 key>/<content>
-
 */
-const cacheDir = "cache"
+const (
+	cacheDir   = "cache"
+	nameAccess = "last_access"
+)
+
+func updateAccess(dir string) {
+	f, err := os.OpenFile(filepath.Join(dir, nameAccess), os.O_CREATE|os.O_WRONLY, 0755)
+	if err == nil {
+		f.WriteString(strconv.FormatInt(time.Now().Unix(), 10))
+	}
+}
 
 func checkDir(d string) error {
 	if d != cacheDir {
@@ -28,7 +37,7 @@ func checkDir(d string) error {
 	if err != nil {
 		return os.Mkdir(d, 0755)
 	}
-	if info.IsDir() == false {
+	if !info.IsDir() {
 		os.Remove(d)
 		return os.Mkdir(d, 0755)
 	}
@@ -73,10 +82,7 @@ func StatKey(interval time.Duration, k string, sub string) bool {
 	fn := filepath.Join(cacheDir, md5Key(k))
 	s, err := os.Stat(fn)
 	if err == nil {
-		if time.Now().Sub(s.ModTime()) >= interval {
-			return true
-		}
-		return false
+		return time.Since(s.ModTime()) >= interval
 	}
 	return true
 }
@@ -90,13 +96,20 @@ func TryGet(k string, sub string, or func() string) string {
 	var f *os.File
 	if err == nil {
 		f, err = os.Open(fn)
-		defer f.Close()
 	}
 	if err == nil {
+		defer f.Close()
 		var v []fs.DirEntry
 		v, err = f.ReadDir(-1)
-		if err == nil && len(v) > 0 {
-			return filepath.Join(fn, v[0].Name())
+		if err == nil {
+			for i := range v {
+				if v[i].Name() != nameAccess {
+					if sub == "references" {
+						updateAccess(fn)
+					}
+					return filepath.Join(fn, v[0].Name())
+				}
+			}
 		}
 	}
 
@@ -105,6 +118,9 @@ func TryGet(k string, sub string, or func() string) string {
 		new := filepath.Join(fn, filepath.Base(s))
 		err = moveFile(s, new)
 		if err == nil {
+			if sub == "references" {
+				updateAccess(fn)
+			}
 			return new
 		}
 	}
