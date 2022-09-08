@@ -23,6 +23,7 @@ const (
 func updateAccess(dir string) {
 	f, err := os.OpenFile(filepath.Join(dir, nameAccess), os.O_CREATE|os.O_WRONLY, 0755)
 	if err == nil {
+		defer f.Close()
 		f.WriteString(strconv.FormatInt(time.Now().Unix(), 10))
 	}
 }
