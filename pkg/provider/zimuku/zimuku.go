@@ -103,7 +103,7 @@ func (z *Zimuku) SeasonKeywords(season emby.EmbyVideo, series emby.EmbyVideo, ep
 	return keywords
 }
 
-func (z *Zimuku) SearchSeason(keywords []string, eps []emby.EmbyVideo) [][]string {
+func (z *Zimuku) SearchSeason(keywords []string, eps []emby.EmbyVideo) ([][]string, map[string]string) {
 	var pageGC []*rawRod.Page
 	defer func() {
 		for i := range pageGC {
@@ -132,11 +132,11 @@ func (z *Zimuku) SearchSeason(keywords []string, eps []emby.EmbyVideo) [][]strin
 	})
 	if err != nil {
 		fmt.Printf("zimuku: failed getting detail page, %v\n", err)
-		return [][]string{}
+		return [][]string{}, map[string]string{}
 	}
 	if page == nil {
 		fmt.Printf("zimuku: no detail page found, return\n")
-		return make([][]string, len(eps))
+		return make([][]string, len(eps)), map[string]string{}
 	}
 
 	var subs []subInfo
@@ -151,7 +151,7 @@ func (z *Zimuku) SearchSeason(keywords []string, eps []emby.EmbyVideo) [][]strin
 	})
 	if err != nil {
 		fmt.Printf("zimuku: parse detail page failed, %v\n", err)
-		return [][]string{}
+		return [][]string{}, map[string]string{}
 	}
 
 	for i := len(subs) - 1; i >= 0; i-- {
@@ -171,7 +171,7 @@ func (z *Zimuku) SearchSeason(keywords []string, eps []emby.EmbyVideo) [][]strin
 	}
 	if len(subs) == 0 {
 		fmt.Printf("zimuku: no sub for now\n")
-		return make([][]string, len(eps))
+		return make([][]string, len(eps)), map[string]string{}
 	}
 
 	var perEp = make(map[int][]subInfo)
@@ -184,6 +184,7 @@ func (z *Zimuku) SearchSeason(keywords []string, eps []emby.EmbyVideo) [][]strin
 	}
 
 	var out [][]string
+	var info map[string]string
 	for i := range eps {
 		var subs []subInfo
 		e := eps[i].IndexNumber
@@ -222,7 +223,7 @@ func (z *Zimuku) SearchSeason(keywords []string, eps []emby.EmbyVideo) [][]strin
 				if len(subFiles) > 0 {
 					out = append(out, subFiles)
 				}
-				return out
+				return out, info
 			}
 			file := cache.TryGet(cache.MergeKeys("zimuku", v.downloadURL), "downloads", func() string {
 				fmt.Printf("zimuku: downlaoding sub, %v\n", v)
@@ -245,15 +246,18 @@ func (z *Zimuku) SearchSeason(keywords []string, eps []emby.EmbyVideo) [][]strin
 			})
 			if file != "" {
 				subFiles = append(subFiles, file)
+				if _, ok := info[file]; !ok {
+					info[file] = v.name
+				}
 			}
 		}
 		if len(subFiles) > 0 {
 			out = append(out, subFiles)
 		} else {
-			return out
+			return out, info
 		}
 	}
-	return out
+	return out, info
 }
 
 func (z *Zimuku) SearchMovie(movie emby.EmbyVideo) ([]string, bool) {

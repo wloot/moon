@@ -217,7 +217,7 @@ func season(v emby.EmbyVideo, embyAPI *emby.Emby, zimukuAPI *zimuku.Zimuku) (pro
 	}
 
 	processed = true
-	subFilesEP := zimukuAPI.SearchSeason(keywords, episodes)
+	subFilesEP, infos := zimukuAPI.SearchSeason(keywords, episodes)
 	for i, subFiles := range subFilesEP {
 		v := episodes[i]
 		for old, new := range SETTNGS_videopath_map {
@@ -226,7 +226,7 @@ func season(v emby.EmbyVideo, embyAPI *emby.Emby, zimukuAPI *zimuku.Zimuku) (pro
 			}
 		}
 		if len(subFiles) > 0 {
-			succ, err := writeSub(subFiles, v)
+			succ, err := writeSub(subFiles, v, infos)
 			if err == nil {
 				cache.UpdateKey(v.MediaSources[0].ID, "videos")
 			}
@@ -321,20 +321,17 @@ func movie(v emby.EmbyVideo, embyAPI *emby.Emby, zimukuAPI *zimuku.Zimuku) (proc
 	return
 }
 
-func writeSub(subFiles []string, v emby.EmbyVideo) (bool, error) {
+func writeSub(subFiles []string, v emby.EmbyVideo, subNames ...map[string]string) (bool, error) {
 	var subSorted []subinfo
-	for _, subName := range subFiles {
-		var subLoose []subinfo
-		oneEpPack := true
-		//fmt.Printf("processing raw file %v\n", subName)
+	for _, path := range subFiles {
+		//fmt.Printf("processing raw file %v\n", path)
 		walkFunc := func(reader io.Reader, info fs.FileInfo) {
 			name := info.Name()
 			if strings.HasPrefix(name, "._") {
 				return
 			}
-			unknownEp := false
 			if v.Type == "Episode" {
-				if filepath.Base(name) != filepath.Base(subName) {
+				if filepath.Base(name) != filepath.Base(path) {
 					se := episode.NameToSeason(name)
 					if se >= 0 && v.ParentIndexNumber != se {
 						//fmt.Printf("skip file %v as se number not match %v\n", name, v.ParentIndexNumber)
@@ -346,12 +343,10 @@ func writeSub(subFiles []string, v emby.EmbyVideo) (bool, error) {
 						return
 					}
 					if ep == 0 {
-						if !oneEpPack {
+						ep := episode.NameToEpisode(subNames[0][path])
+						if ep <= 0 {
 							return
 						}
-						unknownEp = true
-					} else {
-						oneEpPack = false
 					}
 				}
 			}
@@ -404,15 +399,6 @@ func writeSub(subFiles []string, v emby.EmbyVideo) (bool, error) {
 				data = buf.Bytes()
 				t = "srt"
 			}
-			if unknownEp {
-				subLoose = append(subLoose, subinfo{
-					data:   data,
-					info:   s,
-					format: t,
-					name:   name,
-				})
-				return
-			}
 			subSorted = append(subSorted, subinfo{
 				data:   data,
 				info:   s,
@@ -420,7 +406,7 @@ func writeSub(subFiles []string, v emby.EmbyVideo) (bool, error) {
 				name:   name,
 			})
 		}
-		err := unpack.WalkUnpacked(subName, func(reader io.Reader, info fs.FileInfo) {
+		err := unpack.WalkUnpacked(path, func(reader io.Reader, info fs.FileInfo) {
 			name := info.Name()
 			if strings.ToLower(filepath.Ext(name)) == ".rar" ||
 				strings.ToLower(filepath.Ext(name)) == ".zip" ||
@@ -453,10 +439,7 @@ func writeSub(subFiles []string, v emby.EmbyVideo) (bool, error) {
 			walkFunc(reader, info)
 		})
 		if err != nil {
-			fmt.Printf("open sub file %v faild: %v\n", subName, err)
-		}
-		if oneEpPack && len(subLoose) > 0 {
-			subSorted = append(subSorted, subLoose...)
+			fmt.Printf("open sub file %v faild: %v\n", path, err)
 		}
 	}
 
