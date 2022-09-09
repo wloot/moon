@@ -12,11 +12,8 @@ import (
 	"time"
 )
 
-/*
-cache/<md5 key>/<content>
-*/
 const (
-	cacheDir   = "cache"
+	cacheDir   = "cache" // cache/<md5 key>/<content>
 	nameAccess = "last_access"
 )
 
