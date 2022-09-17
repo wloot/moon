@@ -330,6 +330,12 @@ func writeSub(subFiles []string, v emby.EmbyVideo, subNames ...map[string]string
 				return
 			}
 			if v.Type == "Episode" {
+				if filepath.Base(name) == filepath.Base(path) {
+					ep := episode.NameToEpisode(name)
+					if ep <= 0 {
+						return
+					}
+				}
 				if filepath.Base(name) != filepath.Base(path) {
 					se := episode.NameToSeason(name)
 					if se >= 0 && v.ParentIndexNumber != se {
