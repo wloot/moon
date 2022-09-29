@@ -2,7 +2,7 @@ package emby
 
 import (
 	"encoding/json"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"strconv"
 	"strings"
@@ -119,7 +119,7 @@ func (e *Emby) getJson(url string, v interface{}) error {
 		return err
 	}
 	defer resp.Body.Close()
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return err
 	}
@@ -155,7 +155,7 @@ func (e *Emby) RecentItems(num int, start int, types string) []EmbyItem {
 
 func (e *Emby) Refresh(id string, replace bool) {
 	url := "/Items/" + id + "/Refresh?Recursive=false&ImageRefreshMode=Default&ReplaceAllImages=false"
-	if replace == true {
+	if replace {
 		url += "&MetadataRefreshMode=FullRefresh&ReplaceAllMetadata=true"
 	} else {
 		url += "&MetadataRefreshMode=Default&ReplaceAllMetadata=false"
