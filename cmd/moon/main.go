@@ -93,7 +93,7 @@ start_continue:
 		if failedTimes > 3 {
 			fmt.Printf("too much errors after proessing %v items, sleep\n", processedItems)
 			zimukuAPI.Close()
-			time.Sleep(1 * time.Hour)
+			time.Sleep(2 * time.Hour)
 			goto start
 		}
 
