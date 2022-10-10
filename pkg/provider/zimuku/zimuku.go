@@ -39,9 +39,19 @@ type subInfo struct {
 }
 
 func New() *Zimuku {
-	return &Zimuku{
+	z := &Zimuku{
 		browser: rod.New(),
 	}
+	ctx, cancel := context.WithTimeout(z.browser.GetContext(), 30*time.Second)
+	defer cancel()
+	var gc []*rawRod.Page
+	rawRod.Try(func() {
+		z.searchMainPage(ctx, gc, "")
+	})
+	for i := range gc {
+		gc[i].Close()
+	}
+	return z
 }
 func (z *Zimuku) Close() {
 	z.browser.Close()
