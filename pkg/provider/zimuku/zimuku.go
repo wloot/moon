@@ -515,7 +515,7 @@ func (z *Zimuku) searchMainPage(ctx context.Context, gc []*rawRod.Page, keyword 
 
 	resolveCaptcha(page)
 	// 搜索结果页第一个结果
-	has, element, _ := page.Has("body > div.container > div > div > div.box.clearfix > div.item.prel.clearfix > div.title > p.tt.clearfix > a")
+	has, element, _ := page.Has("body > div.container > div > div > div.box.clearfix > div:nth-child(2) > div.title > p.tt.clearfix > a")
 	if has == false {
 		page.Close()
 		return nil
