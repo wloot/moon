@@ -85,7 +85,7 @@ start_continue:
 	if len(itemList) == 0 {
 		fmt.Printf("no jobs to run after proessing %v items, sleep\n", processedItems)
 		zimukuAPI.Close()
-		time.Sleep(24 * time.Hour)
+		time.Sleep(6 * time.Hour)
 		goto start
 	}
 
@@ -93,7 +93,7 @@ start_continue:
 		if failedTimes > 3 {
 			fmt.Printf("too much errors after proessing %v items, sleep\n", processedItems)
 			zimukuAPI.Close()
-			time.Sleep(3 * time.Hour)
+			time.Sleep(1 * time.Hour)
 			goto start
 		}
 
