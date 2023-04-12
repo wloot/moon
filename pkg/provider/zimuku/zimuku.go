@@ -4,12 +4,12 @@ import (
 	"context"
 	"encoding/base64"
 	"fmt"
-	"math/rand"
 	"moon/pkg/cache"
 	"moon/pkg/config"
 	"moon/pkg/emby"
 	"moon/pkg/episode"
 	"moon/pkg/rod"
+	"net/url"
 	"sort"
 	"strings"
 	"time"
@@ -41,15 +41,6 @@ type subInfo struct {
 func New() *Zimuku {
 	z := &Zimuku{
 		browser: rod.New(),
-	}
-	ctx, cancel := context.WithTimeout(z.browser.GetContext(), 30*time.Second)
-	defer cancel()
-	var gc []*rawRod.Page
-	rawRod.Try(func() {
-		z.searchMainPage(ctx, gc, "")
-	})
-	for i := range gc {
-		gc[i].Close()
 	}
 	return z
 }
@@ -135,9 +126,6 @@ func (z *Zimuku) SearchSeason(keywords []string, eps []emby.EmbyVideo) ([][]stri
 				continue
 			}
 			break
-		}
-		if page != nil {
-			page.MustWaitLoad()
 		}
 	})
 	if err != nil {
@@ -297,9 +285,6 @@ func (z *Zimuku) SearchMovie(movie emby.EmbyVideo) ([]string, bool) {
 			}
 			break
 		}
-		if page != nil {
-			page.MustWaitLoad()
-		}
 	})
 	if err != nil {
 		fmt.Printf("zimuku: failed getting detail page, %v\n", err)
@@ -411,9 +396,7 @@ func (z *Zimuku) SearchMovie(movie emby.EmbyVideo) ([]string, bool) {
 
 func (z *Zimuku) downloadSub(ctx context.Context, gc []*rawRod.Page, prePage *rawRod.Page, preElement *rawRod.Element) string {
 	wait := prePage.Context(ctx).MustWaitOpen()
-	preElement = preElement.Context(ctx)
-	preElement.MustEval(`() => { this.target = "_blank" }`)
-	preElement.MustClick()
+	preElement.Context(ctx).MustClick()
 	page := wait()
 	gc = append(gc, page)
 
@@ -427,18 +410,6 @@ func (z *Zimuku) downloadSub(ctx context.Context, gc []*rawRod.Page, prePage *ra
 		resolveCaptcha(page)
 	})
 	page.Close()
-	defer func() {
-		deadline, ok := ctx.Deadline()
-		if ok == false {
-			return
-		}
-		diff := deadline.Sub(time.Now())
-		if diff < 2*time.Second {
-			return
-		}
-		rand.Seed(time.Now().UnixNano())
-		time.Sleep(time.Duration(rand.Intn(int(diff.Seconds())-1)) * time.Second)
-	}()
 	return file
 }
 
@@ -513,18 +484,10 @@ func (z *Zimuku) parseInfo(element *rawRod.Element) subInfo {
 }
 
 func (z *Zimuku) searchMainPage(ctx context.Context, gc []*rawRod.Page, keyword string) *rawRod.Page {
-	page := z.browser.Context(ctx).MustPage("https://zimuku.org/")
+	page := z.browser.Context(ctx).MustPage("https://so.zimuku.org/search?q=" + url.QueryEscape(keyword))
 	gc = append(gc, page)
-
-	page.WaitElementsMoreThan("div", 1)
 	resolveCaptcha(page)
-	// 搜索框输入
-	page.MustElement("body > div.navbar.navbar-inverse.navbar-static-top > div > div.navbar-header > div > form > div > input").MustInput(keyword)
-	// 搜索按钮
-	page.MustElement("body > div.navbar.navbar-inverse.navbar-static-top > div > div.navbar-header > div > form > div > span > button").MustClick()
 
-	resolveCaptcha(page)
-	// 搜索结果页第一个结果
 	has, element, _ := page.Has("body > div.container > div > div > div.box.clearfix > div:nth-child(2) > div.title > p.tt.clearfix > a")
 	if has == false {
 		page.Close()
@@ -532,6 +495,8 @@ func (z *Zimuku) searchMainPage(ctx context.Context, gc []*rawRod.Page, keyword 
 	}
 	element.MustEval(`() => { this.target = "" }`)
 	element.MustClick()
+	page.WaitElementsMoreThan("div", 1)
+	resolveCaptcha(page)
 
 	return page
 }
@@ -557,6 +522,7 @@ func resolveCaptcha(page *rawRod.Page) {
 			}
 			if err != nil {
 				fmt.Printf("zimuku: verify error: %v\n", err)
+				page.MustReload()
 			} else {
 				fmt.Printf("zimuku: verify code: resolved '%v'\n", text)
 				page.MustElement("#intext").MustInput(text)
