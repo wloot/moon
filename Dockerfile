@@ -1,4 +1,4 @@
-FROM golang AS go
+FROM golang:bullseye AS go
 
 WORKDIR /moon
 COPY . /moon
