@@ -484,7 +484,7 @@ func (z *Zimuku) parseInfo(element *rawRod.Element) subInfo {
 }
 
 func (z *Zimuku) searchMainPage(ctx context.Context, gc []*rawRod.Page, keyword string) *rawRod.Page {
-	page := z.browser.Context(ctx).MustPage("https://so.zimuku.org/search?q=" + url.QueryEscape(keyword))
+	page := z.browser.Context(ctx).MustPage("https://zimuku.org/search?q=" + url.QueryEscape(keyword))
 	gc = append(gc, page)
 	resolveCaptcha(page)
 
