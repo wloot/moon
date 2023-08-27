@@ -6,13 +6,13 @@ RUN apt-get update -qq \
     && apt-get install -y -qq libtesseract-dev libleptonica-dev
 RUN go build --ldflags "-s" ./cmd/moon
 
-FROM python:3.8 AS py
+FROM python:3.10 AS py
 
 RUN apt-get update \
     && apt-get install --no-install-recommends -y gcc
 RUN mkdir /ffsubsync && pip install --target /ffsubsync ffsubsync
 
-FROM ubuntu:20.04
+FROM ubuntu:22.04
 
 RUN apt-get update \
     && apt-get install --no-install-recommends -y \
@@ -28,7 +28,6 @@ RUN apt-get update \
     ffmpeg \
     xz-utils \
     libtesseract4 \
-    liblept5 \
     tesseract-ocr-eng \
     && rm -rf /var/lib/apt/lists/*
 
