@@ -225,6 +225,8 @@ func (z *Zimuku) SearchSeason(keywords []string, eps []emby.EmbyVideo) ([][]stri
 			}
 			file := cache.TryGet(cache.MergeKeys("zimuku", v.downloadURL), "downloads", func() string {
 				fmt.Printf("zimuku: downlaoding sub, %v\n", v)
+				retry := false
+			seasondown:
 				var file string
 				ctx, cancel := context.WithTimeout(z.browser.GetContext(), 30*time.Second)
 				err := rawRod.Try(func() {
@@ -233,11 +235,16 @@ func (z *Zimuku) SearchSeason(keywords []string, eps []emby.EmbyVideo) ([][]stri
 				cancel()
 
 				if file == "" {
-					downloadNumbers += 1
-					if err != nil {
-						fmt.Printf("zimuku: sub download failed, %v\n", err)
+					if retry == false {
+						retry = true
+						goto seasondown
 					} else {
-						fmt.Printf("zimuku: sub download failed, no file\n")
+						downloadNumbers += 1
+						if err != nil {
+							fmt.Printf("zimuku: sub download failed, %v\n", err)
+						} else {
+							fmt.Printf("zimuku: sub download failed, no file\n")
+						}
 					}
 				}
 				return file
@@ -366,6 +373,8 @@ func (z *Zimuku) SearchMovie(movie emby.EmbyVideo) ([]string, bool) {
 		}
 		file := cache.TryGet(cache.MergeKeys("zimuku", v.downloadURL), "downloads", func() string {
 			fmt.Printf("zimuku: downlaoding sub, %v\n", v)
+			retry := false
+		moviedown:
 			var file string
 			ctx, cancel := context.WithTimeout(z.browser.GetContext(), 30*time.Second)
 			err := rawRod.Try(func() {
@@ -374,11 +383,16 @@ func (z *Zimuku) SearchMovie(movie emby.EmbyVideo) ([]string, bool) {
 			cancel()
 
 			if file == "" {
-				downloadNumbers += 1
-				if err != nil {
-					fmt.Printf("zimuku: sub download failed, %v\n", err)
+				if retry == false {
+					retry = true
+					goto moviedown
 				} else {
-					fmt.Printf("zimuku: sub download failed, no file\n")
+					downloadNumbers += 1
+					if err != nil {
+						fmt.Printf("zimuku: sub download failed, %v\n", err)
+					} else {
+						fmt.Printf("zimuku: sub download failed, no file\n")
+					}
 				}
 			}
 			return file
