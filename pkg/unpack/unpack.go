@@ -78,6 +78,13 @@ func WalkUnpacked(packed string, hook func(io.Reader, fs.FileInfo)) error {
 		}
 		hook(file, fl)
 	} else {
+		// https://github.com/mholt/archiver/issues/345
+		if format.Name() == ".rar" {
+			err := unarrWalkUnpacked(packed, hook)
+			if err == nil {
+				return nil
+			}
+		}
 		ex, _ := format.(archiver.Extractor)
 		err = ex.Extract(context.Background(), input, nil, func(_ context.Context, f archiver.File) error {
 			if f.IsDir() {
@@ -91,7 +98,7 @@ func WalkUnpacked(packed string, hook func(io.Reader, fs.FileInfo)) error {
 			rc.Close()
 			return nil
 		})
-		if err != nil {
+		if err != nil && format.Name() != ".rar" {
 			err = unarrWalkUnpacked(packed, hook)
 		}
 	}
