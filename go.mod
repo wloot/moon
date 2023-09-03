@@ -10,8 +10,7 @@ require (
 	github.com/go-rod/rod v0.114.3
 	github.com/gogs/chardet v0.0.0-20211120154057-b7413eaefb8f
 	github.com/mholt/archiver/v4 v4.0.0-alpha.8
-	github.com/otiai10/gosseract/v2 v2.4.0
-	golang.org/x/text v0.12.0
+	golang.org/x/text v0.13.0
 )
 
 require (
@@ -32,7 +31,7 @@ require (
 	github.com/ulikunitz/xz v0.5.11 // indirect
 	github.com/ysmood/fetchup v0.2.3 // indirect
 	github.com/ysmood/goob v0.4.0 // indirect
-	github.com/ysmood/got v0.34.2 // indirect
+	github.com/ysmood/got v0.35.0 // indirect
 	github.com/ysmood/gson v0.7.3 // indirect
 	github.com/ysmood/leakless v0.8.0 // indirect
 	go4.org v0.0.0-20230225012048-214862532bf5 // indirect
