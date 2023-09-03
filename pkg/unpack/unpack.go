@@ -85,6 +85,9 @@ func WalkUnpacked(packed string, hook func(io.Reader, fs.FileInfo)) error {
 				return nil
 			}
 		}
+		if tar, ok := format.(archiver.Tar); ok {
+			tar.ContinueOnError = true
+		}
 		ex, _ := format.(archiver.Extractor)
 		err = ex.Extract(context.Background(), input, nil, func(_ context.Context, f archiver.File) error {
 			if f.IsDir() {
