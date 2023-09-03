@@ -1,9 +1,7 @@
-FROM golang:bullseye AS go
+FROM golang AS go
 
 WORKDIR /moon
 COPY . /moon
-RUN apt-get update -qq \
-    && apt-get install -y -qq libtesseract-dev libleptonica-dev
 RUN go build --ldflags "-s" ./cmd/moon
 
 FROM python:3.10 AS py
@@ -27,8 +25,6 @@ RUN apt-get update \
     python3-setuptools \
     ffmpeg \
     xz-utils \
-    libtesseract4 \
-    tesseract-ocr-eng \
     && rm -rf /var/lib/apt/lists/*
 
 ADD https://github.com/just-containers/s6-overlay/releases/latest/download/s6-overlay-noarch.tar.xz /tmp
