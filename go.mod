@@ -5,7 +5,6 @@ go 1.21
 require (
 	github.com/abadojack/whatlanggo v1.0.1
 	github.com/asticode/go-astisub v0.26.0
-	github.com/bodgit/sevenzip v1.4.3
 	github.com/gen2brain/go-unarr v0.1.7
 	github.com/go-rod/rod v0.114.3
 	github.com/gogs/chardet v0.0.0-20211120154057-b7413eaefb8f
@@ -18,6 +17,7 @@ require (
 	github.com/asticode/go-astikit v0.40.0 // indirect
 	github.com/asticode/go-astits v1.13.0 // indirect
 	github.com/bodgit/plumbing v1.3.0 // indirect
+	github.com/bodgit/sevenzip v1.4.3 // indirect
 	github.com/bodgit/windows v1.0.1 // indirect
 	github.com/dsnet/compress v0.0.1 // indirect
 	github.com/golang/snappy v0.0.4 // indirect

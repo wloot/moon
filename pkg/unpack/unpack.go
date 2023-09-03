@@ -10,7 +10,6 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/bodgit/sevenzip"
 	"github.com/gen2brain/go-unarr"
 	"github.com/mholt/archiver/v4"
 )
@@ -72,41 +71,15 @@ func WalkUnpacked(packed string, hook func(io.Reader, fs.FileInfo)) error {
 	defer file.Close()
 	format, input, err := archiver.Identify("", file)
 	if err == archiver.ErrNoMatch {
-		// 7z
-		err := unarrWalkUnpacked(packed, hook)
-		if err == nil {
-			return nil
+		file.Seek(0, 0)
+		fl, err := os.Lstat(packed)
+		if err != nil {
+			return err
 		}
-		r, err := sevenzip.OpenReader(packed)
-		if err == nil {
-			for _, f := range r.File {
-				if f.FileInfo().IsDir() {
-					continue
-				}
-				rc, err := f.Open()
-				if err != nil {
-					continue
-				}
-				hook(rc, f.FileInfo())
-				rc.Close()
-			}
-			r.Close()
-		} else {
-			file.Seek(0, 0)
-			fl, err := os.Lstat(packed)
-			if err != nil {
-				return err
-			}
-			hook(file, fl)
-		}
-	} else if ex, ok := format.(archiver.Extractor); ok {
-		if format.Name() == ".rar" {
-			err := unarrWalkUnpacked(packed, hook)
-			if err == nil {
-				return nil
-			}
-		}
-		ex.Extract(context.Background(), input, nil, func(_ context.Context, f archiver.File) error {
+		hook(file, fl)
+	} else {
+		ex, _ := format.(archiver.Extractor)
+		err = ex.Extract(context.Background(), input, nil, func(_ context.Context, f archiver.File) error {
 			if f.IsDir() {
 				return nil
 			}
@@ -118,8 +91,11 @@ func WalkUnpacked(packed string, hook func(io.Reader, fs.FileInfo)) error {
 			rc.Close()
 			return nil
 		})
+		if err != nil {
+			err = unarrWalkUnpacked(packed, hook)
+		}
 	}
-	return nil
+	return err
 }
 
 func ZipRead(reader io.Reader, info fs.FileInfo) ([]byte, error) {
