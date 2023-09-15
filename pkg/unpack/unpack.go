@@ -38,6 +38,7 @@ func (u unarrFileInfo) Sys() any {
 }
 
 func unarrWalkUnpacked(packed string, hook func(io.Reader, fs.FileInfo)) error {
+	fmt.Printf("pack try unarr %v\n", packed)
 	// CGO: start
 	a, err := unarr.NewArchive(packed)
 	if err != nil {
@@ -59,11 +60,11 @@ func unarrWalkUnpacked(packed string, hook func(io.Reader, fs.FileInfo)) error {
 }
 
 func WalkUnpacked(packed string, hook func(io.Reader, fs.FileInfo)) error {
-	defer func() {
-		if r := recover(); r != nil {
-			fmt.Printf("walkUnpacked: catch panic: %v\n", r)
-		}
-	}()
+	//defer func() {
+	//	if r := recover(); r != nil {
+	//		fmt.Printf("walkUnpacked: catch panic: %v\n", r)
+	//	}
+	//}()
 	file, err := os.Open(packed)
 	if err != nil {
 		return err
@@ -71,6 +72,7 @@ func WalkUnpacked(packed string, hook func(io.Reader, fs.FileInfo)) error {
 	defer file.Close()
 	format, input, err := archiver.Identify("", file)
 	if err == archiver.ErrNoMatch {
+		fmt.Printf("pack not match %v\n", packed)
 		file.Seek(0, 0)
 		fl, err := os.Lstat(packed)
 		if err != nil {
@@ -102,6 +104,7 @@ func WalkUnpacked(packed string, hook func(io.Reader, fs.FileInfo)) error {
 			return nil
 		})
 		if err != nil && format.Name() != ".rar" {
+			fmt.Printf("pack %v ext err %v\n", packed, err)
 			err = unarrWalkUnpacked(packed, hook)
 		}
 	}
