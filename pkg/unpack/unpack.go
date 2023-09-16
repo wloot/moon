@@ -3,7 +3,6 @@ package unpack
 import (
 	"context"
 	"errors"
-	"fmt"
 	"io"
 	"io/fs"
 	"os"
@@ -38,7 +37,6 @@ func (u unarrFileInfo) Sys() any {
 }
 
 func unarrWalkUnpacked(packed string, hook func(io.Reader, fs.FileInfo)) error {
-	fmt.Printf("pack try unarr %v\n", packed)
 	// CGO: start
 	a, err := unarr.NewArchive(packed)
 	if err != nil {
@@ -72,41 +70,37 @@ func WalkUnpacked(packed string, hook func(io.Reader, fs.FileInfo)) error {
 	defer file.Close()
 	format, input, err := archiver.Identify("", file)
 	if err == archiver.ErrNoMatch {
-		fmt.Printf("pack not match %v\n", packed)
 		file.Seek(0, 0)
 		fl, err := os.Lstat(packed)
 		if err != nil {
 			return err
 		}
 		hook(file, fl)
-	} else {
-		if err == nil {
-			// https://github.com/mholt/archiver/issues/345
-			if format.Name() == ".rar" {
-				err := unarrWalkUnpacked(packed, hook)
-				if err == nil {
-					return nil
-				}
-			}
-			if tar, ok := format.(archiver.Tar); ok {
-				tar.ContinueOnError = true
-			}
-			ex, _ := format.(archiver.Extractor)
-			err = ex.Extract(context.Background(), input, nil, func(_ context.Context, f archiver.File) error {
-				if f.IsDir() {
-					return nil
-				}
-				rc, err := f.Open()
-				if err != nil {
-					return nil
-				}
-				hook(rc, f.FileInfo)
-				rc.Close()
+	} else if err == nil {
+		// https://github.com/mholt/archiver/issues/345
+		if format.Name() == ".rar" {
+			err := unarrWalkUnpacked(packed, hook)
+			if err == nil {
 				return nil
-			})
+			}
 		}
-		if err != nil && (format == nil || format.Name() != ".rar") {
-			fmt.Printf("pack %v ext err %v\n", packed, err)
+		if tar, ok := format.(archiver.Tar); ok {
+			tar.ContinueOnError = true
+		}
+		ex, _ := format.(archiver.Extractor)
+		err = ex.Extract(context.Background(), input, nil, func(_ context.Context, f archiver.File) error {
+			if f.IsDir() {
+				return nil
+			}
+			rc, err := f.Open()
+			if err != nil {
+				return nil
+			}
+			hook(rc, f.FileInfo)
+			rc.Close()
+			return nil
+		})
+		if err != nil && format.Name() != ".rar" {
 			err = unarrWalkUnpacked(packed, hook)
 		}
 	}
