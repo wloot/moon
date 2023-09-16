@@ -80,30 +80,32 @@ func WalkUnpacked(packed string, hook func(io.Reader, fs.FileInfo)) error {
 		}
 		hook(file, fl)
 	} else {
-		// https://github.com/mholt/archiver/issues/345
-		if format.Name() == ".rar" {
-			err := unarrWalkUnpacked(packed, hook)
-			if err == nil {
-				return nil
+		if err == nil {
+			// https://github.com/mholt/archiver/issues/345
+			if format.Name() == ".rar" {
+				err := unarrWalkUnpacked(packed, hook)
+				if err == nil {
+					return nil
+				}
 			}
+			if tar, ok := format.(archiver.Tar); ok {
+				tar.ContinueOnError = true
+			}
+			ex, _ := format.(archiver.Extractor)
+			err = ex.Extract(context.Background(), input, nil, func(_ context.Context, f archiver.File) error {
+				if f.IsDir() {
+					return nil
+				}
+				rc, err := f.Open()
+				if err != nil {
+					return nil
+				}
+				hook(rc, f.FileInfo)
+				rc.Close()
+				return nil
+			})
 		}
-		if tar, ok := format.(archiver.Tar); ok {
-			tar.ContinueOnError = true
-		}
-		ex, _ := format.(archiver.Extractor)
-		err = ex.Extract(context.Background(), input, nil, func(_ context.Context, f archiver.File) error {
-			if f.IsDir() {
-				return nil
-			}
-			rc, err := f.Open()
-			if err != nil {
-				return nil
-			}
-			hook(rc, f.FileInfo)
-			rc.Close()
-			return nil
-		})
-		if err != nil && format.Name() != ".rar" {
+		if err != nil && (format == nil || format.Name() != ".rar") {
 			fmt.Printf("pack %v ext err %v\n", packed, err)
 			err = unarrWalkUnpacked(packed, hook)
 		}
