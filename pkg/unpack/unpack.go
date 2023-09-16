@@ -76,6 +76,7 @@ func WalkUnpacked(packed string, hook func(io.Reader, fs.FileInfo)) error {
 			return err
 		}
 		hook(file, fl)
+		return nil
 	} else if err == nil {
 		// https://github.com/mholt/archiver/issues/345
 		if format.Name() == ".rar" {
