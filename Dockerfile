@@ -23,9 +23,13 @@ RUN apt-get update \
     ca-certificates \
     python3 \
     python3-setuptools \
-    ffmpeg \
     xz-utils \
     && rm -rf /var/lib/apt/lists/*
+
+ADD https://johnvansickle.com/ffmpeg/releases/ffmpeg-release-amd64-static.tar.xz /tmp/ffmpeg
+RUN tar -C /tmp/ffmpeg -xpf /tmp/ffmpeg/ffmpeg-release-amd64-static.tar.xz \
+    && mv /tmp/ffmpeg/ffmpeg /usr/local/bin/ffmpeg && mv /tmp/ffmpeg/ffprobe /usr/local/bin/ffprobe \
+    && rm -r /tmp/ffmpeg
 
 ADD https://github.com/just-containers/s6-overlay/releases/latest/download/s6-overlay-noarch.tar.xz /tmp
 RUN tar -C / -Jxpf /tmp/s6-overlay-noarch.tar.xz && rm /tmp/s6-overlay-noarch.tar.xz
