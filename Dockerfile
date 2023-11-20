@@ -28,7 +28,8 @@ RUN apt-get update \
 
 ADD https://johnvansickle.com/ffmpeg/releases/ffmpeg-release-amd64-static.tar.xz /tmp/ffmpeg/
 RUN tar -C /tmp/ffmpeg -xpf /tmp/ffmpeg/ffmpeg-release-amd64-static.tar.xz \
-    && mv /tmp/ffmpeg/ffmpeg /usr/local/bin/ffmpeg && mv /tmp/ffmpeg/ffprobe /usr/local/bin/ffprobe \
+    && mv /tmp/ffmpeg/ffmpeg-6.1-amd64-static/ffmpeg /usr/local/bin/ffmpeg \
+    && mv /tmp/ffmpeg/ffmpeg-6.1-amd64-static/ffprobe /usr/local/bin/ffprobe \
     && rm -r /tmp/ffmpeg
 
 ADD https://github.com/just-containers/s6-overlay/releases/latest/download/s6-overlay-noarch.tar.xz /tmp
