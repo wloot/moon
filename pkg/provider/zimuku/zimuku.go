@@ -119,7 +119,7 @@ func (z *Zimuku) SearchSeason(keywords []string, eps []emby.EmbyVideo) ([][]stri
 				continue
 			}
 			fmt.Printf("zimuku: searching keyword %v\n", k)
-			page = z.searchMainPage(ctx, pageGC, k)
+			page = z.searchMainPage(ctx, &pageGC, k)
 			if page == nil {
 				continue
 			}
@@ -214,7 +214,7 @@ func (z *Zimuku) SearchSeason(keywords []string, eps []emby.EmbyVideo) ([][]stri
 			if i >= downloadNumbers || i > 5 {
 				break
 			}
-			if deadline, ok := page.GetContext().Deadline(); ok && deadline.Sub(time.Now()) <= 0 {
+			if deadline, ok := page.GetContext().Deadline(); ok && time.Until(deadline) <= 0 {
 				fmt.Printf("zimuku: stop download as main context timeout\n")
 				if len(subFiles) > 0 {
 					out = append(out, subFiles)
@@ -228,7 +228,7 @@ func (z *Zimuku) SearchSeason(keywords []string, eps []emby.EmbyVideo) ([][]stri
 				var file string
 				ctx, cancel := context.WithTimeout(z.browser.GetContext(), 30*time.Second)
 				err := rawRod.Try(func() {
-					file = z.downloadSub(ctx, pageGC, page, v.downloadElement)
+					file = z.downloadSub(ctx, &pageGC, page, v.downloadElement)
 				})
 				cancel()
 
@@ -284,7 +284,7 @@ func (z *Zimuku) SearchMovie(movie emby.EmbyVideo) ([]string, bool) {
 				continue
 			}
 			fmt.Printf("zimuku: searching keyword %v\n", k)
-			page = z.searchMainPage(ctx, pageGC, k)
+			page = z.searchMainPage(ctx, &pageGC, k)
 			if page == nil {
 				continue
 			}
@@ -361,7 +361,7 @@ func (z *Zimuku) SearchMovie(movie emby.EmbyVideo) ([]string, bool) {
 		if i >= downloadNumbers || i > 5 {
 			break
 		}
-		if deadline, ok := page.GetContext().Deadline(); ok && deadline.Sub(time.Now()) <= 0 {
+		if deadline, ok := page.GetContext().Deadline(); ok && time.Until(deadline) <= 0 {
 			fmt.Printf("zimuku: stop download as main context timeout\n")
 			if len(subFiles) == 0 {
 				return subFiles, true
@@ -376,7 +376,7 @@ func (z *Zimuku) SearchMovie(movie emby.EmbyVideo) ([]string, bool) {
 			var file string
 			ctx, cancel := context.WithTimeout(z.browser.GetContext(), 30*time.Second)
 			err := rawRod.Try(func() {
-				file = z.downloadSub(ctx, pageGC, page, v.downloadElement)
+				file = z.downloadSub(ctx, &pageGC, page, v.downloadElement)
 			})
 			cancel()
 
@@ -406,11 +406,11 @@ func (z *Zimuku) SearchMovie(movie emby.EmbyVideo) ([]string, bool) {
 	}
 }
 
-func (z *Zimuku) downloadSub(ctx context.Context, gc []*rawRod.Page, prePage *rawRod.Page, preElement *rawRod.Element) string {
+func (z *Zimuku) downloadSub(ctx context.Context, gc *[]*rawRod.Page, prePage *rawRod.Page, preElement *rawRod.Element) string {
 	wait := prePage.Context(ctx).MustWaitOpen()
 	preElement.Context(ctx).MustClick()
 	page := wait()
-	gc = append(gc, page)
+	*gc = append(*gc, page)
 
 	element := page.MustElement("#down1")
 	element.MustEval(`() => { this.target = "" }`)
@@ -494,9 +494,9 @@ func (z *Zimuku) parseInfo(element *rawRod.Element) subInfo {
 	return sub
 }
 
-func (z *Zimuku) searchMainPage(ctx context.Context, gc []*rawRod.Page, keyword string) *rawRod.Page {
+func (z *Zimuku) searchMainPage(ctx context.Context, gc *[]*rawRod.Page, keyword string) *rawRod.Page {
 	page := z.browser.Context(ctx).MustPage("https://srtku.com/search?q=" + url.QueryEscape(keyword))
-	gc = append(gc, page)
+	*gc = append(*gc, page)
 
 	has, element, _ := page.Has("body > div.container > div > div > div.box.clearfix > div:nth-child(2) > div.title > p.tt.clearfix > a")
 	if has == false {

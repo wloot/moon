@@ -172,18 +172,18 @@ func season(v emby.EmbyVideo, embyAPI *emby.Emby, zimukuAPI *zimuku.Zimuku) (pro
 		var interval time.Duration
 		if hasExtSub == true {
 			interval = time.Hour * 24 * 30
-			if time.Now().Sub(v.GetPremiereDate()) > time.Hour*24*180 {
+			if time.Since(v.GetPremiereDate()) > time.Hour*24*180 {
 				interval = time.Hour * 24 * 90
 			}
 		} else {
 			interval = time.Hour * 24 * 14
-			if time.Now().Sub(v.GetPremiereDate()) > time.Hour*24*180 {
+			if time.Since(v.GetPremiereDate()) > time.Hour*24*180 {
 				interval = time.Hour * 24 * 60
 			}
 		}
-		if time.Now().Sub(v.GetPremiereDate()) < time.Hour*24*7 && time.Now().Sub(v.GetDateCreated()) < time.Hour*24*7 {
+		if time.Since(v.GetPremiereDate()) < time.Hour*24*7 && time.Since(v.GetDateCreated()) < time.Hour*24*7 {
 			interval = time.Hour * 24
-			if hasExtSub == false && time.Now().Sub(v.GetDateCreated()) < time.Hour*24 {
+			if hasExtSub == false && time.Since(v.GetDateCreated()) < time.Hour*24 {
 				interval = time.Hour * 6
 			}
 		}
@@ -266,18 +266,18 @@ func movie(v emby.EmbyVideo, embyAPI *emby.Emby, zimukuAPI *zimuku.Zimuku) (proc
 	var interval time.Duration
 	if hasExtSub == true {
 		interval = time.Hour * 24 * 14
-		if time.Now().Sub(v.GetPremiereDate()) > time.Hour*24*360 && time.Now().Sub(v.GetDateCreated()) > time.Hour*24*30 {
+		if time.Since(v.GetPremiereDate()) > time.Hour*24*360 && time.Since(v.GetDateCreated()) > time.Hour*24*30 {
 			interval = time.Hour * 24 * 90
 		}
 	} else {
 		interval = time.Hour * 24 * 7
-		if time.Now().Sub(v.GetPremiereDate()) > time.Hour*24*360 && time.Now().Sub(v.GetDateCreated()) > time.Hour*24*30 {
+		if time.Since(v.GetPremiereDate()) > time.Hour*24*360 && time.Since(v.GetDateCreated()) > time.Hour*24*30 {
 			interval = time.Hour * 24 * 60
 		}
 	}
-	if time.Now().Sub(v.GetPremiereDate()) < time.Hour*24*270 && time.Now().Sub(v.GetDateCreated()) < time.Hour*24*14 {
+	if time.Since(v.GetPremiereDate()) < time.Hour*24*270 && time.Since(v.GetDateCreated()) < time.Hour*24*14 {
 		interval = time.Hour * 24
-		if hasExtSub == false && time.Now().Sub(v.GetDateCreated()) < time.Hour*24 {
+		if hasExtSub == false && time.Since(v.GetDateCreated()) < time.Hour*24 {
 			interval = time.Hour * 6
 		}
 	}

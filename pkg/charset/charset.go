@@ -24,7 +24,7 @@ func AnyToUTF8(data []byte) ([]byte, error) {
 		return []byte{}, err
 	}
 	if charset.Confidence < 25 {
-		return []byte{}, errors.New("No confidence")
+		return []byte{}, errors.New("no confidence")
 	}
 	if charset.Charset == "UTF-8" {
 		return bytes.TrimPrefix(data, utf8Bom), nil
@@ -35,7 +35,7 @@ func AnyToUTF8(data []byte) ([]byte, error) {
 		return []byte{}, err
 	}
 	if encoding == nil {
-		return []byte{}, errors.New("No such charset encoding")
+		return []byte{}, errors.New("no such charset encoding")
 	}
 	transformed, err := io.ReadAll(transform.NewReader(bytes.NewReader(data), encoding.NewDecoder()))
 	if err != nil {
