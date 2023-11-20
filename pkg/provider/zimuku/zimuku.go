@@ -498,6 +498,8 @@ func (z *Zimuku) searchMainPage(ctx context.Context, gc *[]*rawRod.Page, keyword
 	page := z.browser.Context(ctx).MustPage("https://srtku.com/search?q=" + url.QueryEscape(keyword))
 	*gc = append(*gc, page)
 
+	page.WaitElementsMoreThan("div", 1)
+	page.MustWaitLoad()
 	has, element, _ := page.Has("body > div.container > div > div > div.box.clearfix > div:nth-child(2) > div.title > p.tt.clearfix > a")
 	if has == false {
 		page.Close()
@@ -505,7 +507,7 @@ func (z *Zimuku) searchMainPage(ctx context.Context, gc *[]*rawRod.Page, keyword
 	}
 	element.MustEval(`() => { this.target = "" }`)
 	element.MustClick()
-	page.WaitElementsMoreThan("div", 1)
+	page.MustWaitLoad()
 
 	return page
 }
