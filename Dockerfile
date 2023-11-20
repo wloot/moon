@@ -26,7 +26,7 @@ RUN apt-get update \
     xz-utils \
     && rm -rf /var/lib/apt/lists/*
 
-ADD https://johnvansickle.com/ffmpeg/releases/ffmpeg-release-amd64-static.tar.xz /tmp/ffmpeg
+ADD https://johnvansickle.com/ffmpeg/releases/ffmpeg-release-amd64-static.tar.xz /tmp/ffmpeg/
 RUN tar -C /tmp/ffmpeg -xpf /tmp/ffmpeg/ffmpeg-release-amd64-static.tar.xz \
     && mv /tmp/ffmpeg/ffmpeg /usr/local/bin/ffmpeg && mv /tmp/ffmpeg/ffprobe /usr/local/bin/ffprobe \
     && rm -r /tmp/ffmpeg
