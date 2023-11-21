@@ -232,6 +232,9 @@ func season(v emby.EmbyVideo, embyAPI *emby.Emby, zimukuAPI *zimuku.Zimuku) (pro
 			if succ == true {
 				embyAPI.Refresh(v.Id, false)
 			}
+			if err != nil && !succ {
+				failed = true
+			}
 		} else {
 			cache.UpdateKey(v.MediaSources[0].ID, "videos")
 		}
@@ -316,6 +319,9 @@ func movie(v emby.EmbyVideo, embyAPI *emby.Emby, zimukuAPI *zimuku.Zimuku) (proc
 	}
 	if succ == true {
 		embyAPI.Refresh(v.Id, false)
+	}
+	if err != nil && !succ {
+		failed = true
 	}
 	return
 }
@@ -445,6 +451,7 @@ func writeSub(subFiles []string, v emby.EmbyVideo, subNames ...map[string]string
 		})
 		if err != nil {
 			fmt.Printf("open sub file %v faild: %v\n", path, err)
+			return false, err
 		}
 	}
 
