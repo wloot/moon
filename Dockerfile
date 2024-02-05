@@ -1,7 +1,9 @@
-FROM golang AS go
+FROM golang:bullseye AS go
 
 WORKDIR /moon
 COPY . /moon
+RUN apt-get update -qq \
+    && apt-get install -y -qq libtesseract-dev libleptonica-dev
 RUN go build -v -ldflags "-s -w -buildid=" ./cmd/moon
 
 FROM python:3.10 AS py
@@ -24,6 +26,8 @@ RUN apt-get update \
     python3 \
     python3-setuptools \
     xz-utils \
+    libtesseract4 \
+    tesseract-ocr-eng \
     && rm -rf /var/lib/apt/lists/*
 
 ADD https://johnvansickle.com/ffmpeg/releases/ffmpeg-release-amd64-static.tar.xz /tmp/ffmpeg/

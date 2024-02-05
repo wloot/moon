@@ -2,6 +2,7 @@ package zimuku
 
 import (
 	"context"
+	"encoding/base64"
 	"fmt"
 	"moon/pkg/cache"
 	"moon/pkg/config"
@@ -14,6 +15,7 @@ import (
 	"time"
 
 	rawRod "github.com/go-rod/rod"
+	"github.com/otiai10/gosseract/v2"
 
 	"regexp"
 	"strconv"
@@ -497,9 +499,9 @@ func (z *Zimuku) parseInfo(element *rawRod.Element) subInfo {
 func (z *Zimuku) searchMainPage(ctx context.Context, gc *[]*rawRod.Page, keyword string) *rawRod.Page {
 	page := z.browser.Context(ctx).MustPage("https://srtku.com/search?q=" + url.QueryEscape(keyword))
 	*gc = append(*gc, page)
-
 	page.WaitElementsMoreThan("div", 1)
-	page.MustWaitLoad()
+	resolveCaptcha(page)
+
 	has, element, _ := page.Has("body > div.container > div > div > div.box.clearfix > div:nth-child(2) > div.title > p.tt.clearfix > a")
 	if has == false {
 		page.Close()
@@ -510,4 +512,38 @@ func (z *Zimuku) searchMainPage(ctx context.Context, gc *[]*rawRod.Page, keyword
 	page.MustWaitLoad()
 
 	return page
+}
+
+func resolveCaptcha(page *rawRod.Page) {
+	resolveTimes := 0
+	for resolveTimes < 5 {
+		page.MustWaitLoad()
+		has, element, _ := page.Has("body > div > div:nth-child(4) > table > tbody > tr:nth-child(1) > td:nth-child(3) > img")
+		if has == true {
+			img := *element.MustAttribute("src")
+			img = img[len("data:image/bmp;base64,"):]
+			b, err := base64.StdEncoding.DecodeString(img)
+			var text string
+			if err == nil {
+				// CGO: start
+				client := gosseract.NewClient()
+				client.SetImageFromBytes(b)
+				//client.SetWhitelist("0123456789")
+				text, err = client.Text()
+				client.Close()
+				// CGO: end
+			}
+			if err != nil {
+				fmt.Printf("zimuku: verify error: %v\n", err)
+				page.MustReload()
+			} else {
+				fmt.Printf("zimuku: verify code: resolved '%v'\n", text)
+				page.MustElement("#intext").MustInput(text)
+				page.MustElement("body > div > div:nth-child(4) > table > tbody > tr:nth-child(2) > td > input[type=submit]").MustClick()
+			}
+			resolveTimes += 1
+		} else {
+			break
+		}
+	}
 }

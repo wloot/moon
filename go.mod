@@ -9,6 +9,7 @@ require (
 	github.com/go-rod/rod v0.114.7
 	github.com/gogs/chardet v0.0.0-20211120154057-b7413eaefb8f
 	github.com/mholt/archiver/v4 v4.0.0-alpha.8
+	github.com/otiai10/gosseract/v2 v2.4.1
 	golang.org/x/text v0.14.0
 )
 
