@@ -2,7 +2,7 @@ FROM golang AS go
 
 WORKDIR /moon
 COPY . /moon
-RUN go build --ldflags "-s" ./cmd/moon
+RUN go build -v -ldflags "-s -w -buildid=" ./cmd/moon
 
 FROM python:3.10 AS py
 
@@ -28,8 +28,8 @@ RUN apt-get update \
 
 ADD https://johnvansickle.com/ffmpeg/releases/ffmpeg-release-amd64-static.tar.xz /tmp/ffmpeg/
 RUN tar -C /tmp/ffmpeg -xpf /tmp/ffmpeg/ffmpeg-release-amd64-static.tar.xz \
-    && mv /tmp/ffmpeg/ffmpeg-6.1-amd64-static/ffmpeg /usr/bin/ffmpeg \
-    && mv /tmp/ffmpeg/ffmpeg-6.1-amd64-static/ffprobe /usr/bin/ffprobe && rm -r /tmp/ffmpeg
+    && mv /tmp/ffmpeg/ffmpeg-*-amd64-static/ffmpeg /usr/bin/ffmpeg \
+    && mv /tmp/ffmpeg/ffmpeg-*-amd64-static/ffprobe /usr/bin/ffprobe && rm -r /tmp/ffmpeg
 
 ADD https://github.com/just-containers/s6-overlay/releases/latest/download/s6-overlay-noarch.tar.xz /tmp
 RUN tar -C / -Jxpf /tmp/s6-overlay-noarch.tar.xz && rm /tmp/s6-overlay-noarch.tar.xz
