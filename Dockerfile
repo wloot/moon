@@ -18,6 +18,7 @@ FROM ubuntu:24.04
 
 RUN apt-get update \
     && apt-get install --no-install-recommends -y \
+    libnss3 \
     python3 \
     xz-utils \
     ffmpeg \
