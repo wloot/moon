@@ -1,18 +1,17 @@
-FROM golang:bullseye AS go
+FROM golang:bookworm AS go
 
 WORKDIR /moon
 COPY . /moon
-RUN apt-get update -qq \
-    && apt-get install -y -qq libtesseract-dev libleptonica-dev
+RUN apt-get update && apt-get install -y -qq libtesseract-dev
 RUN go build -v -ldflags "-s -w -buildid=" ./cmd/moon
 
-FROM python:3.10 AS py
+FROM python:3.11 AS py
 
 RUN apt-get update \
     && apt-get install --no-install-recommends -y gcc
 RUN mkdir /ffsubsync && pip install --target /ffsubsync ffsubsync
 
-FROM ubuntu:22.04
+FROM ubuntu:24.04
 
 RUN apt-get update \
     && apt-get install --no-install-recommends -y \
@@ -26,7 +25,7 @@ RUN apt-get update \
     python3 \
     python3-setuptools \
     xz-utils \
-    libtesseract4 \
+    libtesseract5 \
     tesseract-ocr-eng \
     && rm -rf /var/lib/apt/lists/*
 
