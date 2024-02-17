@@ -10,7 +10,7 @@ RUN go build -v -ldflags "-s -w -buildid=" ./cmd/moon
 FROM python:3.11-slim AS py
 
 RUN apt-get update \
-    && apt-get install --no-install-recommends -y gcc
+    && apt-get install --no-install-recommends -y gcc libc6-dev
 RUN mkdir /ffsubsync && pip install --target /ffsubsync ffsubsync
 
 
