@@ -2,14 +2,17 @@ FROM golang:bookworm AS go
 
 WORKDIR /moon
 COPY . /moon
-RUN apt-get update && apt-get install -y -qq libtesseract-dev
+RUN apt-get update \
+    && apt-get install --no-install-recommends -y libtesseract-dev
 RUN go build -v -ldflags "-s -w -buildid=" ./cmd/moon
+
 
 FROM python:3.11 AS py
 
 RUN apt-get update \
     && apt-get install --no-install-recommends -y gcc
 RUN mkdir /ffsubsync && pip install --target /ffsubsync ffsubsync
+
 
 FROM ubuntu:24.04
 
