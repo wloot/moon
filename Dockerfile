@@ -20,6 +20,7 @@ RUN apt-get update \
     && apt-get install --no-install-recommends -y \
     libnss3 \
     libatk1.0-0 \
+    libatk-bridge2.0-0 \
     python3 \
     xz-utils \
     ffmpeg \
