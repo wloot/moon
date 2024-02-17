@@ -19,15 +19,10 @@ FROM ubuntu:24.04
 RUN apt-get update \
     && apt-get install --no-install-recommends -y \
     libnss3 \
-    libnspr4 \
-    libdrm2 \
-    libdbus-1-3 \
-    libexpat1 \
     libxcb1 \
     libatspi2.0-0  \
     libgbm1 \
     libasound2 \
-    libgcc-s1 \
     libgtk-3-0 \
     python3 \
     xz-utils \
