@@ -8,7 +8,7 @@ RUN go build -v -ldflags "-s -w -buildid=" ./cmd/moon
 
 FROM python:3.11-alpine AS py
 
-RUN apk --no-cache add gcc
+RUN apk --no-cache add gcc musl-dev
 RUN mkdir /ffsubsync && pip install --target /ffsubsync ffsubsync
 
 
