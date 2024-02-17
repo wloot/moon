@@ -1,41 +1,25 @@
-FROM golang:bookworm AS go
+FROM golang:alpine AS go
 
 WORKDIR /moon
 COPY . /moon
-RUN apt-get update \
-    && apt-get install --no-install-recommends -y libtesseract-dev
+RUN apk --no-cache add tesseract-ocr-dev
 RUN go build -v -ldflags "-s -w -buildid=" ./cmd/moon
 
 
-FROM python:3.11 AS py
+FROM python:3.11-alpine AS py
 
-RUN apt-get update \
-    && apt-get install --no-install-recommends -y gcc
+RUN apk --no-cache add gcc
 RUN mkdir /ffsubsync && pip install --target /ffsubsync ffsubsync
 
 
-FROM ubuntu:24.04
+FROM alpine:latest
 
-RUN apt-get update \
-    && apt-get install --no-install-recommends -y \
-    libnss3 \
-    libxss1 \
-    libasound2 \
-    libxtst6 \
-    libgtk-3-0 \
-    libgbm1 \
-    ca-certificates \
+RUN apk --no-cache add \
     python3 \
-    python3-setuptools \
-    xz-utils \
-    libtesseract5 \
-    tesseract-ocr-eng \
-    && rm -rf /var/lib/apt/lists/*
-
-ADD https://johnvansickle.com/ffmpeg/releases/ffmpeg-release-amd64-static.tar.xz /tmp/ffmpeg/
-RUN tar -C /tmp/ffmpeg -xpf /tmp/ffmpeg/ffmpeg-release-amd64-static.tar.xz \
-    && mv /tmp/ffmpeg/ffmpeg-*-amd64-static/ffmpeg /usr/bin/ffmpeg \
-    && mv /tmp/ffmpeg/ffmpeg-*-amd64-static/ffprobe /usr/bin/ffprobe && rm -r /tmp/ffmpeg
+    xz \
+    ffmpeg \
+    tesseract-ocr \
+    tesseract-ocr-data-eng
 
 ADD https://github.com/just-containers/s6-overlay/releases/latest/download/s6-overlay-noarch.tar.xz /tmp
 RUN tar -C / -Jxpf /tmp/s6-overlay-noarch.tar.xz && rm /tmp/s6-overlay-noarch.tar.xz
@@ -52,7 +36,6 @@ RUN mkdir -p /etc/services.d/moon \
     && chmod +x /etc/services.d/moon/run
 
 COPY --from=py /ffsubsync/ /ffsubsync/
-RUN ln -s /usr/bin/python3 /usr/local/bin/python
 ENV PYTHONPATH='/ffsubsync'
 ENV PATH="/ffsubsync/bin:${PATH}"
 
