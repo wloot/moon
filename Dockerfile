@@ -1,25 +1,29 @@
-FROM golang:alpine AS go
+FROM golang:bookworm AS go
 
 WORKDIR /moon
 COPY . /moon
-RUN apk --no-cache add tesseract-ocr-dev
+RUN apt-get update \
+    && apt-get install --no-install-recommends -y libtesseract-dev
 RUN go build -v -ldflags "-s -w -buildid=" ./cmd/moon
 
 
-FROM python:3.11-alpine AS py
+FROM python:3.11-slim AS py
 
-RUN apk --no-cache add gcc musl-dev
+RUN apt-get update \
+    && apt-get install --no-install-recommends -y gcc
 RUN mkdir /ffsubsync && pip install --target /ffsubsync ffsubsync
 
 
-FROM alpine:latest
+FROM ubuntu:24.04
 
-RUN apk --no-cache add \
+RUN apt-get update \
+    && apt-get install --no-install-recommends -y \
     python3 \
-    xz \
+    xz-utils \
     ffmpeg \
-    tesseract-ocr \
-    tesseract-ocr-data-eng
+    libtesseract5 \
+    tesseract-ocr-eng \
+    && rm -rf /var/lib/apt/lists/*
 
 ADD https://github.com/just-containers/s6-overlay/releases/latest/download/s6-overlay-noarch.tar.xz /tmp
 RUN tar -C / -Jxpf /tmp/s6-overlay-noarch.tar.xz && rm /tmp/s6-overlay-noarch.tar.xz
@@ -36,6 +40,7 @@ RUN mkdir -p /etc/services.d/moon \
     && chmod +x /etc/services.d/moon/run
 
 COPY --from=py /ffsubsync/ /ffsubsync/
+RUN ln -s /usr/bin/python3 /usr/local/bin/python
 ENV PYTHONPATH='/ffsubsync'
 ENV PATH="/ffsubsync/bin:${PATH}"
 
