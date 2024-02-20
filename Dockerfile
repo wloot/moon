@@ -25,6 +25,7 @@ RUN apt-get update \
     libasound2 \
     libgtk-3-0 \
     python3 \
+    python3-setuptools \
     xz-utils \
     ffmpeg \
     libtesseract5 \
