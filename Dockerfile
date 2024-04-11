@@ -22,7 +22,7 @@ RUN apt-get update \
     libxcb1 \
     libatspi2.0-0  \
     libgbm1 \
-    libasound2 \
+    libasound2t64 \
     libgtk-3-0 \
     python3 \
     python3-setuptools \
