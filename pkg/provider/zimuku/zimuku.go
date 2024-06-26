@@ -518,6 +518,7 @@ func resolveCaptcha(page *rawRod.Page) {
 	resolveTimes := 0
 	for resolveTimes < 5 {
 		page.WaitElementsMoreThan("div", 1)
+		page.MustWaitLoad()
 		has, element, _ := page.Has("body > div > div:nth-child(4) > table > tbody > tr:nth-child(1) > td:nth-child(3) > img")
 		if has == true {
 			img := *element.MustAttribute("src")
