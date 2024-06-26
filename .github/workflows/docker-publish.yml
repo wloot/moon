@@ -7,10 +7,8 @@ env:
   # github.repository as <account>/<repo>
   IMAGE_NAME: ${{ github.repository }}
 
-
 jobs:
   build:
-
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -29,6 +27,7 @@ jobs:
           password: ${{ secrets.DOCKER_PASSWORD }}
 
       - name: Docker meta
+        id: meta
         uses: docker/metadata-action@v5
         with:
           images: ${{ env.IMAGE_NAME }}
