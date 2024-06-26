@@ -30,6 +30,7 @@ RUN apt-get update \
     ffmpeg \
     libtesseract5 \
     tesseract-ocr-eng \
+    ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
 ADD https://github.com/just-containers/s6-overlay/releases/latest/download/s6-overlay-noarch.tar.xz /tmp
