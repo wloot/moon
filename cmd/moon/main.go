@@ -515,6 +515,25 @@ func writeSub(subFiles []string, v emby.EmbyVideo, subNames ...map[string]string
 	} else {
 		ffsubsync.Sync(name, reference, true)
 	}
+
+	var altSub *subinfo
+	for i, _ := range subSorted {
+		if subSorted[i].format == "srt" {
+			altSub = &subSorted[i]
+			break
+		}
+	}
+	if altSub == nil {
+		return true, nil
+	}
+	altName := name[:len(name)-len(filepath.Ext(name))] + ".srt"
+	err = os.WriteFile(altName, altSub.data, 0644)
+	if err != nil {
+		return true, nil
+	}
+	fmt.Printf("sub %v written to %v\n", altSub.name, altName)
+	ffsubsync.Sync(altName, name, true)
+
 	return true, nil
 }
 

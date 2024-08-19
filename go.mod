@@ -1,6 +1,6 @@
 module moon
 
-go 1.22
+go 1.23
 
 require (
 	github.com/abadojack/whatlanggo v1.0.1
